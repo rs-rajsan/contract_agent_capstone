@@ -88,5 +88,5 @@ The [Contract Understanding Atticus Dataset (CUAD)](https://www.atticusprojectai
 
 4. **Initialize Metadata** (Optional):
    ```bash
-   python update_contract_types.py
+   python scripts/update_contract_types.py
    ```

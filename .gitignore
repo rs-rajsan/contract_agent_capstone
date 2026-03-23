@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+ENV/
+
+# System
+.DS_Store
+Thumbs.db
+
+# Project-specific
+data/demo_contracts.json
+.env

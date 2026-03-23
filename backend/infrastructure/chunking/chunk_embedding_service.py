@@ -113,7 +113,12 @@ class ChunkEmbeddingService:
         
         try:
             # Generate embedding using Gemini service
-            embedding = await self.embedding_service.generate_embedding(chunk_content)
+            # Use generate_embedding_async if available, otherwise fallback to sync in thread
+            if hasattr(self.embedding_service, 'generate_embedding_async'):
+                embedding = await self.embedding_service.generate_embedding_async(chunk_content)
+            else:
+                import asyncio
+                embedding = await asyncio.to_thread(self.embedding_service.embed_query, chunk_content)
             
             # Create chunk embedding object
             chunk_embedding = ChunkEmbedding(

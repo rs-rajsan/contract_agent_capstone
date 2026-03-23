@@ -64,5 +64,14 @@ class GeminiEmbeddingService:
             logger.error(f"Batch embedding failed: {e}")
             raise RuntimeError(f"Batch embedding generation failed: {e}")
 
+    def generate_embedding(self, text: str) -> List[float]:
+        """Synchronous embedding generation for standard service callers"""
+        return self.embed_query(text)
+
+    async def generate_embedding_async(self, text: str) -> List[float]:
+        """Asynchronous embedding generation using thread pool"""
+        import asyncio
+        return await asyncio.to_thread(self.embed_query, text)
+
 # Global instance for backward compatibility
 embedding = GeminiEmbeddingService()

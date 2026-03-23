@@ -35,10 +35,11 @@ class ChunkingStorageService:
             avg_chunk_size = sum(chunk.get('size', len(chunk['content'])) for chunk in chunks) / len(chunks)
             strategy_used = chunks[0].get('chunk_type', 'unknown') if chunks else 'unknown'
             
+            import json
             self.graph.query(doc_query, {
                 'document_id': document_id,
                 'chunk_count': len(chunks),
-                'metadata': metadata or {},
+                'metadata': json.dumps(metadata or {}),
                 'strategy': strategy_used,
                 'avg_chunk_size': avg_chunk_size,
                 'total_chunks': len(chunks)

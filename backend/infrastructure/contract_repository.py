@@ -1,5 +1,6 @@
 from backend.domain.entities import IContractRepository
 from backend.shared.utils.contract_search_tool import graph, embedding
+from backend.shared.utils.utils import parse_date_to_iso
 from typing import Dict, Any
 import uuid
 from datetime import datetime
@@ -104,8 +105,8 @@ class Neo4jContractRepository(IContractRepository):
                 "contract_type": contract_data.get("contract_type", "Unknown"),
                 "contract_scope": ", ".join(contract_data.get("key_terms", [])),
                 "full_text": contract_data.get("full_text", ""),
-                "effective_date": contract_data.get("effective_date"),
-                "end_date": contract_data.get("end_date"),
+                "effective_date": parse_date_to_iso(contract_data.get("effective_date")),
+                "end_date": parse_date_to_iso(contract_data.get("end_date")),
                 "total_amount": contract_data.get("total_amount"),
                 "embedding": contract_embedding
             }
