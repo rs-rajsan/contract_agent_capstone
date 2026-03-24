@@ -44,6 +44,7 @@ See blog for more: [Agentic GraphRAG for Commercial Contracts](https://towardsda
 - **Embeddings**: **Gemini 1536-dimensional** high-precision vectors (`gemini-embedding-001`).
 - **LLM Providers**: Optimized for Google Gemini 1.5 Pro/Flash, supporting OpenAI and Claude.
 - **Backend/Frontend**: FastAPI (Async Python) and React + TypeScript with Vite.
+- **Caching (Optional)**: Redis support for high-throughput production RAG (can be enabled via `.env`).
 
 ## 📄 About CUAD
 
@@ -79,6 +80,9 @@ The [Contract Understanding Atticus Dataset (CUAD)](https://www.atticusprojectai
    | `CACHE_ENABLED` | Enable/Disable Redis caching | `false` |
    | `MONITORING_ENABLED`| Enable/Disable performance monitoring | `true` |
 
+> [!NOTE]
+> **Redis Usage**: Redis is currently disabled as it is considered overkill for the capstone/development phase. However, it can be easily enabled by setting `CACHE_ENABLED=true` to implement caching features before moving to production.
+
    For a complete list of configuration options, including timeouts and parallel processing settings, refer to the [.env.example](file:///.env.example) file.
 
 3. **Start with Docker**:
@@ -90,3 +94,15 @@ The [Contract Understanding Atticus Dataset (CUAD)](https://www.atticusprojectai
    ```bash
    python scripts/update_contract_types.py
    ```
+
+## 📈 Future Enhancements
+
+While the current platform is a complete capstone implementation, several features are designed for future production scaling:
+
+- **Distributed Caching**: Enable Redis to cache LLM responses and GraphRAG results, significantly reducing latency and API costs.
+- **Async Batch Workflows**: Further decouple long-running extraction tasks using Celery or similar workers.
+- **Multi-Tenant Isolation**: Implement logical isolation for multiple legal teams or organizations.
+- **Enhanced Adaptive Learning**: Use historical feedback to fine-tune the risk assessment scoring system.
+
+---
+*Created as part of a Legal AI Capstone Project.*

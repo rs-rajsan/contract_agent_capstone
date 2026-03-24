@@ -342,13 +342,24 @@ class ChunkStorageService(ChunkingStorageService):
     """Backward compatibility wrapper."""
     
     def store_chunks(self, contract_id: str, chunks: List, tenant_id: str = "demo_tenant_1") -> List[str]:
-        """Synchronous backward compatibility method."""
+        """Synchronous backward compatibility method handling both objects and dictionaries."""
         chunk_ids = []
         
+        def safe_get(chunk_item: Any, attr: str, default: Any = None) -> Any:
+            """Safely extract from dict or object following DRY principles."""
+            if isinstance(chunk_item, dict):
+                return chunk_item.get(attr, default)
+            return getattr(chunk_item, attr, default)
+            
         for i, chunk in enumerate(chunks):
             chunk_id = f"{contract_id}_chunk_{i}"
             
             try:
+                # Extract properties safely regardless of input type
+                content = safe_get(chunk, 'content', '')
+                chunk_type = safe_get(chunk, 'chunk_type', safe_get(chunk, 'type', 'sentence'))
+                confidence = safe_get(chunk, 'confidence', safe_get(chunk, 'quality_score', 1.0))
+                
                 self.graph.query("""
                     MERGE (dc:DocumentChunk {chunk_id: $chunk_id})
                     SET dc.contract_id = $contract_id,
@@ -369,15 +380,15 @@ class ChunkStorageService(ChunkingStorageService):
                     "contract_id": contract_id,
                     "tenant_id": tenant_id,
                     "order": i,
-                    "size": len(chunk.content),
-                    "type": chunk.chunk_type,
-                    "content": chunk.content,
-                    "confidence": chunk.confidence
+                    "size": len(content),
+                    "type": chunk_type,
+                    "content": content,
+                    "confidence": float(confidence)
                 })
                 
                 chunk_ids.append(chunk_id)
                 
             except Exception as e:
-                logger.error(f"Failed to store chunk {chunk_id}: {e}")
+                logger.error(f"Failed to store chunk {chunk_id}: {e}", exc_info=True)
         
         return chunk_ids
