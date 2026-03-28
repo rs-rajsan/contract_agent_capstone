@@ -30,18 +30,6 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 
-import torch.nn as nn
-
-# Compatibility patch for set_submodule (missing in some torch versions used by bitsandbytes)
-if not hasattr(nn.Module, "set_submodule"):
-    def set_submodule(self, target: str, module: nn.Module):
-        segments = target.split(".")
-        arm = self
-        for name in segments[:-1]:
-            arm = getattr(arm, name)
-        setattr(arm, segments[-1], module)
-    nn.Module.set_submodule = set_submodule
-
 import jsonlines
 import yaml
 from tqdm import tqdm

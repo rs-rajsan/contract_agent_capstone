@@ -10,6 +10,21 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Dict, TypeVar, Generic, Optional, List, Any
 
+# ---------------------------------------------------------------------------
+# Compatibility patch for set_submodule 
+# (missing in some torch/transformers pairs used by bitsandbytes)
+# ---------------------------------------------------------------------------
+import torch.nn as nn
+if not hasattr(nn.Module, "set_submodule"):
+    def set_submodule(self, target: str, module: nn.Module):
+        segments = target.split(".")
+        arm = self
+        for name in segments[:-1]:
+            arm = getattr(arm, name)
+        setattr(arm, segments[-1], module)
+    nn.Module.set_submodule = set_submodule
+
+
 T = TypeVar("T")
 
 
