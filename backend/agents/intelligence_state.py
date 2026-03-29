@@ -6,6 +6,7 @@ class IntelligenceState(TypedDict):
     
     # Input data
     contract_text: str
+    metadata: dict  # NEW: For upload/parser metadata
     
     # Processing results (structured data, not strings)
     extracted_clauses: List[dict]
@@ -22,8 +23,13 @@ class IntelligenceState(TypedDict):
     pattern_used: str
     pattern_analysis: dict
     
+    # Compliance results (NEW)
+    compliance_status: dict  # HIPAA, FHIR, SOX results
+    mcp_context: dict       # Data retrieved via MCP
+    
     # Workflow metadata
     messages: List[Any]
     current_step: str
     processing_result: ProcessingResult
+    human_review_required: bool  # NEW: For HITL
     is_complete: bool

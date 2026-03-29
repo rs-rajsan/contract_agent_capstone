@@ -48,7 +48,7 @@ interface ContractIntelligenceProps {
 
 export const ContractIntelligence: React.FC<ContractIntelligenceProps> = ({ 
   contractId, 
-  model = 'gemini-2.5-flash',
+  model = import.meta.env.VITE_DEFAULT_MODEL || 'gemini-2.5-flash',
   onWorkflowUpdate,
   onAnalysisComplete
 }) => {

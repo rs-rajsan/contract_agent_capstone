@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, BackgroundTasks, Query, Depends, Request
 from fastapi.responses import StreamingResponse
-from backend.application.services.document_processing_service import DocumentServiceFactory
+from backend.application.services.document_processing_service import DocumentServiceFactory, DEFAULT_MODEL
 from backend.domain.entities import DocumentProcessingRequest
 from backend.llm_manager import LLMManager
 from backend.infrastructure.audit_logger import AuditLogger, AuditEventType, audit_log
@@ -88,7 +88,7 @@ async def debug_contract_types():
 async def upload_pdf(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    model: str = Query(default="gemini-2.5-flash", description="LLM model to use for processing"),
+    model: str = Query(default=DEFAULT_MODEL, description="LLM model to use for processing"),
     enable_enhanced: bool = Query(default=False, description="Enable enhanced processing with sections/clauses"),
     llm_mgr: LLMManager = Depends(get_llm_manager)
 ):
@@ -152,7 +152,6 @@ async def upload_pdf(
             # Check for duplicate by filename
             logger.info("Step 3: Checking for duplicates")
             try:
-                duplicate_check = llm_mgr.agents["gemini-2.5-flash"]._llm if hasattr(llm_mgr.agents["gemini-2.5-flash"], '_llm') else llm_mgr.agents["gemini-2.5-flash"]
                 from backend.infrastructure.contract_repository import Neo4jContractRepository
                 repo = Neo4jContractRepository()
                 logger.info("Repository initialized successfully")
@@ -401,7 +400,7 @@ async def upload_pdf(
 @router.post("/upload-stream")
 async def upload_pdf_stream(
     file: UploadFile = File(...),
-    model: str = Query(default="gemini-2.5-flash", description="LLM model to use for processing"),
+    model: str = Query(default=DEFAULT_MODEL, description="LLM model to use for processing"),
     llm_mgr: LLMManager = Depends(get_llm_manager)
 ):
     """

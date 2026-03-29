@@ -1,5 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query, Depends, Request
 from backend.application.services.enhanced_document_processing_service import EnhancedDocumentServiceFactory
+from backend.application.services.document_processing_service import DEFAULT_MODEL
 from backend.domain.entities import DocumentProcessingRequest
 from backend.llm_manager import LLMManager
 import os
@@ -20,7 +21,7 @@ def get_llm_manager(request: Request):
 @router.post("/upload")
 async def upload_pdf_enhanced(
     file: UploadFile = File(...),
-    model: str = Query(default="gemini-2.5-flash", description="LLM model to use for processing"),
+    model: str = Query(default=DEFAULT_MODEL, description="LLM model to use for processing"),
     enable_embeddings: bool = Query(default=True, description="Enable multi-level embeddings processing"),
     llm_mgr: LLMManager = Depends(get_llm_manager)
 ):

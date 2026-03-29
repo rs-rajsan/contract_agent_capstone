@@ -148,13 +148,14 @@ class EnterpriseSchemaMigration:
     
     def _add_embeddings_storage(self):
         """Add vector embeddings storage"""
+        _embedding_model = os.getenv("EMBEDDING_MODEL", "gemini-embedding-001")
         queries = [
-            # Create DocumentEmbedding nodes
-            """
-            MERGE (de:DocumentEmbedding {embedding_id: 'sample_embedding'})
+            # Create DocumentEmbedding nodes (model name sourced from EMBEDDING_MODEL env var)
+            f"""
+            MERGE (de:DocumentEmbedding {{embedding_id: 'sample_embedding'}})
             SET de.chunk_id = 'sample_chunk',
                 de.tenant_id = 'demo_tenant_1',
-                de.model_name = 'gemini-embedding-001',
+                de.model_name = '{_embedding_model}',
                 de.vector_dimensions = 1536,
                 de.created_at = datetime()
             """,

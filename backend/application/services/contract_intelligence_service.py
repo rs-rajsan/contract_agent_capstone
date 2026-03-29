@@ -1,6 +1,7 @@
 from backend.agents.contract_intelligence_agents import ContractIntelligenceAgentFactory
 from backend.domain.entities import ContractIntelligence, ContractClause, PolicyViolation, RiskAssessment, RedlineRecommendation
 from backend.infrastructure.contract_repository import Neo4jContractRepository
+from backend.application.services.document_processing_service import DEFAULT_MODEL
 from backend.llm_manager import LLMManager
 import json
 import logging
@@ -17,7 +18,7 @@ class ContractIntelligenceService:
         self.llm_manager = llm_manager
         self.repository = Neo4jContractRepository()
     
-    def analyze_contract_intelligence(self, contract_text: str, model: str = "gemini-2.5-flash", use_planning: bool = True) -> ContractIntelligence:
+    def analyze_contract_intelligence(self, contract_text: str, model: str = DEFAULT_MODEL, use_planning: bool = True) -> ContractIntelligence:
         """Perform complete contract intelligence analysis using multi-agent system"""
         
         start_time = time.time()
@@ -65,7 +66,7 @@ class ContractIntelligenceService:
                 processing_time=time.time() - start_time
             )
     
-    def analyze_contract_by_id(self, contract_id: str, model: str = "gemini-2.5-flash", use_planning: bool = True) -> Optional[ContractIntelligence]:
+    def analyze_contract_by_id(self, contract_id: str, model: str = DEFAULT_MODEL, use_planning: bool = True) -> Optional[ContractIntelligence]:
         """Analyze contract intelligence for an existing contract by ID"""
         
         try:

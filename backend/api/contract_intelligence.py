@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query, BackgroundTasks, Depends, Request
 from fastapi.responses import StreamingResponse
 from backend.application.services.contract_intelligence_service import ContractIntelligenceServiceFactory
+from backend.application.services.document_processing_service import DEFAULT_MODEL
 from backend.llm_manager import LLMManager
 from backend.infrastructure.contract_repository import Neo4jContractRepository
 import json
@@ -23,7 +24,7 @@ def get_llm_manager(request: Request):
 @router.post("/contracts/{contract_id}/analyze")
 async def analyze_contract_intelligence(
     contract_id: str,
-    model: str = Query(default="gemini-2.5-flash", description="LLM model to use for analysis"),
+    model: str = Query(default=DEFAULT_MODEL, description="LLM model to use for analysis"),
     use_planning: bool = Query(default=True, description="Use autonomous planning agent"),
     llm_mgr: LLMManager = Depends(get_llm_manager)
 ):
@@ -156,7 +157,7 @@ async def get_intelligence_status(contract_id: str):
 async def batch_analyze_contracts(
     background_tasks: BackgroundTasks,
     contract_ids: list[str],
-    model: str = Query(default="gemini-2.5-flash", description="LLM model to use for analysis")
+    model: str = Query(default=DEFAULT_MODEL, description="LLM model to use for analysis")
 ):
     """
     Batch analyze multiple contracts for intelligence
@@ -244,8 +245,8 @@ async def get_available_models(llm_mgr: LLMManager = Depends(get_llm_manager)):
         
         return {
             "available_models": available_models,
-            "default_model": "gemini-2.5-flash",
-            "recommended_models": ["gemini-2.5-flash", "gemini-1.5-pro"]
+            "default_model": DEFAULT_MODEL,
+            "recommended_models": list(llm_mgr.agents.keys())
         }
         
     except Exception as e:

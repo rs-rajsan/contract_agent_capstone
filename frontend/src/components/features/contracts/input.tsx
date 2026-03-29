@@ -20,6 +20,10 @@ export function ChatInput() {
     const { addMessage, addMessagePart, updateMessageGenerating, reset } = useChat();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+    const DEFAULT_MODEL = import.meta.env.VITE_DEFAULT_MODEL || 'gemini-2.5-flash';
+    const AVAILABLE_MODELS_ENV = import.meta.env.VITE_AVAILABLE_MODELS || 'gemini-2.5-flash,gemini-1.5-pro,gpt-4o,sonnet-3.5';
+    const modelOptions = AVAILABLE_MODELS_ENV.split(',').map(m => m.trim());
+
     const handleSubmit = async (event: any) => {
         event.preventDefault();
         const formData = new FormData(event.target);
@@ -114,15 +118,15 @@ export function ChatInput() {
                     ref={textareaRef}
                 />
                 <div className="flex gap-2">
-                    <Select name="model" defaultValue="gemini-2.5-flash">
+                    <Select name="model" defaultValue={DEFAULT_MODEL}>
                         <SelectTrigger className=" flex-1 text-foreground">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
-                                <SelectItem value="gemini-1.5-pro">gemini-1.5-pro</SelectItem>
-                                <SelectItem value="gemini-2.5-flash">gemini-2.5-flash</SelectItem>
-                                <SelectItem value="gpt-4o">gpt-4o</SelectItem>
+                                {modelOptions.map(model => (
+                                    <SelectItem key={model} value={model}>{model}</SelectItem>
+                                ))}
                             </SelectGroup>
                         </SelectContent>
                     </Select>

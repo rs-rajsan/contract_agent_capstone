@@ -20,7 +20,7 @@ interface UploadResult {
 
 export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   onUploadComplete,
-  modelSelection = "gemini-2.5-flash",
+  modelSelection = import.meta.env.VITE_DEFAULT_MODEL || "gemini-2.5-flash",
   onWorkflowUpdate,
   onUploadStart
 }) => {

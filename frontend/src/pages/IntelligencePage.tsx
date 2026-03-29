@@ -15,7 +15,12 @@ interface UploadResult {
 }
 
 export const IntelligencePage: React.FC = () => {
-  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash');
+  const DEFAULT_MODEL = import.meta.env.VITE_DEFAULT_MODEL || 'gemini-2.5-flash';
+  const AVAILABLE_MODELS_ENV = import.meta.env.VITE_AVAILABLE_MODELS || 'gemini-2.5-flash,gemini-1.5-pro,gpt-4o,sonnet-3.5';
+  
+  const modelOptions = AVAILABLE_MODELS_ENV.split(',').map(m => m.trim());
+  
+  const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [workflowStatus, setWorkflowStatus] = useState<any>(null);
   const [showWorkflow, setShowWorkflow] = useState(false);
@@ -77,10 +82,11 @@ export const IntelligencePage: React.FC = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="gemini-2.5-flash">Gemini 2.0 Flash</SelectItem>
-                <SelectItem value="gemini-1.5-pro">Gemini 1.5 Pro</SelectItem>
-                <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                <SelectItem value="sonnet-3.5">Claude Sonnet 3.5</SelectItem>
+                {modelOptions.map(model => (
+                  <SelectItem key={model} value={model}>
+                    {model.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

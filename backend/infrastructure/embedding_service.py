@@ -6,9 +6,13 @@ Strategy Pattern for different embedding approaches
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
 import logging
+import os
 
 from backend.shared.utils.logger import get_logger
 logger = get_logger(__name__)
+
+# Module-level constant — keeps Neo4j metadata in sync with the configured model
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "gemini-embedding-001")
 
 class IEmbeddingStrategy(ABC):
     """Strategy interface for embedding generation"""
@@ -93,7 +97,7 @@ class EmbeddingService:
         query = """
         MATCH (s:Section {section_id: $section_id})
         SET s.embedding = $embedding,
-            s.embedding_model = 'gemini-embedding-001',
+            s.embedding_model = $embedding_model,
             s.embedding_dimensions = $dimensions,
             s.embedding_generated_at = datetime()
         """
@@ -101,6 +105,7 @@ class EmbeddingService:
         self.repository.graph.query(query, {
             "section_id": section_id,
             "embedding": embedding,
+            "embedding_model": EMBEDDING_MODEL,
             "dimensions": len(embedding)
         })
     
@@ -109,7 +114,7 @@ class EmbeddingService:
         query = """
         MATCH (cl:Clause {clause_id: $clause_id})
         SET cl.embedding = $embedding,
-            cl.embedding_model = 'gemini-embedding-001',
+            cl.embedding_model = $embedding_model,
             cl.embedding_dimensions = $dimensions,
             cl.embedding_generated_at = datetime()
         """
@@ -117,6 +122,7 @@ class EmbeddingService:
         self.repository.graph.query(query, {
             "clause_id": clause_id,
             "embedding": embedding,
+            "embedding_model": EMBEDDING_MODEL,
             "dimensions": len(embedding)
         })
     

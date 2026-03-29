@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, BackgroundTasks, Query, Depends, Request
 from fastapi.responses import StreamingResponse
-from backend.application.services.document_processing_service import DocumentServiceFactory
+from backend.application.services.document_processing_service import DocumentServiceFactory, DEFAULT_MODEL
 from backend.domain.entities import DocumentProcessingRequest
 from backend.llm_manager import LLMManager
 import os
@@ -23,7 +23,7 @@ def get_llm_manager(request: Request):
 async def upload_contract(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    model: str = Query(default="gemini-2.5-flash", description="LLM model to use for processing"),
+    model: str = Query(default=DEFAULT_MODEL, description="LLM model to use for processing"),
     llm_mgr: LLMManager = Depends(get_llm_manager)
 ):
     """Upload and process PDF contract - PRODUCTION ENDPOINT"""

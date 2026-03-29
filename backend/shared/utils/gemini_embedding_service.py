@@ -36,8 +36,9 @@ class GeminiEmbeddingService:
         
         # Use Google GenAI client for 1536 dimensions
         self.client = genai.Client(api_key=api_key)
-        self.model = "gemini-embedding-001"
-        self.dimensions = 1536
+        self.model = os.getenv('EMBEDDING_MODEL', 'gemini-embedding-001')
+        self.dimensions = int(os.getenv('EMBEDDING_DIMENSIONS', '1536'))
+        logger.info(f"Initialized GeminiEmbeddingService with model: {self.model} ({self.dimensions} dims)")
         self._initialized = True
     
     def embed_query(self, text: str) -> List[float]:

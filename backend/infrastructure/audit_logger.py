@@ -10,6 +10,7 @@ from enum import Enum
 from functools import wraps
 import json
 
+import os
 from backend.shared.utils.logger import get_logger
 logger = get_logger(__name__)
 
@@ -32,6 +33,10 @@ class AuditLogger:
     def __init__(self):
         from backend.infrastructure.contract_repository import Neo4jContractRepository
         self.repository = Neo4jContractRepository()
+        self.jsonl_log_path = os.path.join(os.getcwd(), "logs", "audit.jsonl")
+        
+        # Ensure logs directory exists
+        os.makedirs(os.path.dirname(self.jsonl_log_path), exist_ok=True)
     
     def log_event(
         self,
@@ -44,10 +49,34 @@ class AuditLogger:
         status: str = "success",
         error_details: Optional[str] = None
     ) -> str:
-        """Log audit event to Neo4j"""
+        """Log audit event to Neo4j and local JSONL for compliance"""
+        audit_id = f"audit_{datetime.utcnow().timestamp()}"
+        timestamp = datetime.utcnow().isoformat()
+        
+        # 1. JSONL Logging
         try:
-            audit_id = f"audit_{datetime.utcnow().timestamp()}"
+            log_entry = {
+                "audit_id": audit_id,
+                "timestamp": timestamp,
+                "event_type": event_type.value,
+                "resource_id": resource_id,
+                "action": action,
+                "user_id": user_id,
+                "tenant_id": tenant_id,
+                "status": status,
+                "metadata": metadata or {},
+                "error_details": error_details
+            }
             
+            with open(self.jsonl_log_path, "a") as f:
+                f.write(json.dumps(log_entry) + "\n")
+                
+            logger.info(f"Audit JSONL appended: {event_type.value}")
+        except Exception as e:
+            logger.error(f"Failed to log to JSONL: {e}")
+
+        # 2. Neo4j Logging (Existing)
+        try:
             query = """
             MERGE (a:AuditLog {audit_id: $audit_id})
             SET a.event_type = $event_type,
@@ -62,7 +91,7 @@ class AuditLogger:
             RETURN a.audit_id as audit_id
             """
             
-            result = self.repository.graph.query(query, {
+            self.repository.graph.query(query, {
                 "audit_id": audit_id,
                 "event_type": event_type.value,
                 "resource_id": resource_id,
@@ -74,12 +103,12 @@ class AuditLogger:
                 "error_details": error_details
             })
             
-            logger.info(f"Audit logged: {event_type.value} - {resource_id} - {status}")
-            return result[0]["audit_id"] if result else audit_id
+            logger.info(f"Audit Neo4j logged: {event_type.value}")
+            return audit_id
             
         except Exception as e:
-            logger.error(f"Failed to log audit event: {e}")
-            return ""
+            logger.error(f"Failed to log audit event to Neo4j: {e}")
+            return audit_id
     
     def get_audit_trail(self, resource_id: str, limit: int = 100) -> list:
         """Retrieve audit trail for a resource"""
