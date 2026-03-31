@@ -302,15 +302,15 @@ class EnhancedPrecedentMatcherTool(PrecedentMatcherTool):
         # Use object.__setattr__ to bypass Pydantic validation
         object.__setattr__(self, 'repository', Neo4jContractRepository())
     
-    def _run(self, clauses_json: str) -> str:
-        """Enhanced precedent matching with real database"""
+    def _run(self, clauses_json: str, tenant_id: str = "demo_tenant_1") -> str:
+        """Enhanced precedent matching with real database - Enforces multi-tenancy"""
         try:
             clauses = json.loads(clauses_json)
             matches = []
             
             for clause in clauses:
                 # Get real precedents from database
-                real_precedents = self._find_real_precedents(clause)
+                real_precedents = self._find_real_precedents(clause, tenant_id)
                 
                 if real_precedents:
                     analysis = self._analyze_precedents(real_precedents, clause)
@@ -343,15 +343,15 @@ class EnhancedPrecedentMatcherTool(PrecedentMatcherTool):
             logger.error(f"Enhanced precedent matching failed: {e}")
             return json.dumps([])
     
-    def _find_real_precedents(self, clause: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Find real precedents from contract database"""
+    def _find_real_precedents(self, clause: Dict[str, Any], tenant_id: str) -> List[Dict[str, Any]]:
+        """Find real precedents from contract database with tenant-level isolation"""
         try:
             clause_type = clause.get("clause_type", "").lower()
             clause_content = clause.get("content", "")
             
-            # Query similar clauses from Neo4j
+            # Query similar clauses from Neo4j - Multi-tenant enabled
             query = """
-            MATCH (c:Contract)-[:CONTAINS]->(cl:Clause)
+            MATCH (c:Contract {tenant_id: $tenant_id})-[:CONTAINS]->(cl:Clause)
             WHERE toLower(cl.clause_type) CONTAINS $clause_type
             AND c.intelligence_status = 'completed'
             RETURN cl.clause_type as type,
@@ -363,7 +363,10 @@ class EnhancedPrecedentMatcherTool(PrecedentMatcherTool):
             LIMIT 10
             """
             
-            results = self.repository.graph.query(query, {"clause_type": clause_type})
+            results = self.repository.graph.query(query, {
+                "clause_type": clause_type,
+                "tenant_id": tenant_id
+            })
             
             precedents = []
             for result in results:
