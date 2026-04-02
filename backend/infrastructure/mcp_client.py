@@ -1,69 +1,99 @@
-import os
+import asyncio
 import json
-from datetime import datetime
-from typing import Dict, Any, List
+import os
+import sys
+from typing import Any, Dict, List, Optional
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
 
-from backend.shared.utils.logger import get_logger
-logger = get_logger(__name__)
+from backend.shared.utils.mcp_logger import get_mcp_logger
 
-class MCPClient:
+logger = get_mcp_logger("mcp_client")
+
+class ContractMCPClient:
     """
-    Model Context Protocol (MCP) Client for specialized legal retrieval.
-    This client interacts with MCP servers to fetch precedents, regulatory updates, 
-    and specialized legal knowledge.
+    Client to interact with the ContractIntelligence MCP server.
+    Enables multi-agent systems to invoke specialized retrieval tools.
     """
     
-    def __init__(self, endpoint: str = None):
-        """Initialize MCP client. Port 8100 avoids conflict with FastAPI backend on 8000.
+    def __init__(self):
+        # Resolve the path to the server script
+        base_dir = os.path.abspath(os.path.join(os.getcwd()))
+        server_script = os.path.join(base_dir, "backend", "mcp_server.py")
         
-        NOTE: The endpoint is pulled from 'MCP_ENDPOINT' or 'MCP_PORT' env vars.
-        Fallback to localhost:8100 if none provided.
+        # Configure server parameters for stdio communication
+        self.server_params = StdioServerParameters(
+            command=sys.executable,
+            args=[server_script],
+            env={**os.environ, "PYTHONPATH": base_dir}
+        )
+        logger.info(f"Initialized MCP Client pointing to: {server_script}")
+
+    async def call_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Any:
         """
-        if endpoint:
-            self.endpoint = endpoint
-        else:
-            mcp_port = os.getenv('MCP_PORT', '8100')
-            self.endpoint = os.getenv('MCP_ENDPOINT', f"http://localhost:{mcp_port}")
-            
-        self.connected = False
-        
-    async def connect(self):
-        """Connect to the MCP server."""
-        logger.info(f"Connecting to MCP server at {self.endpoint}")
-        # Mock connection logic
-        self.connected = True
-        return True
-        
-    async def retrieve_context(self, query: str, context_type: str = "precedent") -> Dict[str, Any]:
-        """
-        Retrieve context from MCP server.
+        Call a specific tool on the MCP server.
         
         Args:
-            query: The search query or data to analyze.
-            context_type: Type of context to retrieve (e.g., 'precedent', 'regulation').
+            tool_name: The name of the tool to invoke.
+            arguments: Dictionary of arguments for the tool.
         """
-        if not self.connected:
-            await self.connect()
-            
-        logger.info(f"MCP Retrieval: {context_type} for query: {query[:50]}...")
+        logger.info(f"Invoking tool {tool_name} via MCP Client", metadata={"arguments": arguments})
         
-        # Mock retrieval logic
-        return {
-            "query": query,
-            "context_type": context_type,
-            "timestamp": datetime.now().isoformat(),
-            "results": [
-                {
-                    "title": "Standard Liability Precedent",
-                    "content": "Liability should be capped at 12 months fee for non-breach scenarios.",
-                    "relevance": 0.95
-                }
-            ],
-            "metadata": {
-                "server": self.endpoint,
-                "version": "1.0.0"
-            }
-        }
+        try:
+            async with stdio_client(self.server_params) as (read, write):
+                async with ClientSession(read, write) as session:
+                    await session.initialize()
+                    result = await session.call_tool(tool_name, arguments)
+                    
+                    if hasattr(result, 'content') and result.content:
+                        # MCP tool results usually have a 'content' field which is a list of items
+                        item = result.content[0]
+                        text_content = item.text if hasattr(item, 'text') else str(item)
+                        try:
+                            return json.loads(text_content)
+                        except (json.JSONDecodeError, TypeError):
+                            return text_content
+                    
+                    return result
+        except Exception as e:
+            logger.error(f"Failed to call MCP tool {tool_name}", e)
+            return {"success": False, "error": str(e)}
 
-# Singleton instance
-mcp_client = MCPClient()
+    def call_tool_sync(self, tool_name: str, arguments: Dict[str, Any]) -> Any:
+        """Synchronous wrapper for call_tool (DRY helper for LangGraph nodes)."""
+        import concurrent.futures
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    return executor.submit(asyncio.run, self.call_tool(tool_name, arguments)).result()
+            return loop.run_until_complete(self.call_tool(tool_name, arguments))
+        except RuntimeError:
+            return asyncio.run(self.call_tool(tool_name, arguments))
+
+# Singleton helper for easy access
+_client = None
+
+def get_mcp_client() -> ContractMCPClient:
+    global _client
+    if _client is None:
+        _client = ContractMCPClient()
+    return _client
+
+# Export singleton instance for direct import
+mcp_client = get_mcp_client()
+
+async def main():
+    """Test script for MCP Client"""
+    client = get_mcp_client()
+    
+    # Test 1: Fetch metadata
+    print("Testing fetch_contract_metadata...")
+    result = await client.call_tool("fetch_contract_metadata", {
+        "contract_id": "UPLOADED_TEST",
+        "tenant_id": "demo_tenant_1"
+    })
+    print(f"Result: {json.dumps(result, indent=2)}")
+
+if __name__ == "__main__":
+    asyncio.run(main())

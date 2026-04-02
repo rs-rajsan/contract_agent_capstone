@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from abc import ABC, abstractmethod
 
 from backend.shared.utils.gemini_embedding_service import GeminiEmbeddingService
-from backend.shared.utils.contract_search_tool import graph
+from backend.shared.utils.graph_utils import get_graph
 
 
 @dataclass
@@ -38,8 +38,14 @@ class ChunkEmbeddingService:
     
     def __init__(self):
         self.embedding_service = GeminiEmbeddingService()
-        self.graph = graph
+        self._graph = None
         self._observers: List[EmbeddingObserver] = []
+    
+    @property
+    def graph(self):
+        if self._graph is None:
+            self._graph = get_graph()
+        return self._graph
     
     def add_observer(self, observer: EmbeddingObserver) -> None:
         """Add an observer for embedding events."""

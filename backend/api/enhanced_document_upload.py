@@ -9,6 +9,7 @@ import logging
 from typing import Optional
 
 from backend.shared.utils.logger import get_logger
+from backend.shared.utils.graph_utils import get_graph
 logger = get_logger(__name__)
 
 # Create router
@@ -192,12 +193,7 @@ async def upload_pdf_enhanced(
 async def get_embedding_status(contract_id: str):
     """Get embedding status for a specific contract"""
     try:
-        from langchain_neo4j import Neo4jGraph
-        
-        graph = Neo4jGraph(
-            refresh_schema=False, 
-            driver_config={"notifications_min_severity": "OFF"}
-        )
+        graph = get_graph()
         
         # Check embedding status
         query = """

@@ -11,6 +11,7 @@ from functools import wraps
 import json
 
 import os
+import re
 from backend.shared.utils.logger import get_logger
 logger = get_logger(__name__)
 
@@ -38,6 +39,27 @@ class AuditLogger:
         # Ensure logs directory exists
         os.makedirs(os.path.dirname(self.jsonl_log_path), exist_ok=True)
     
+    def _mask_pii(self, data: Any) -> Any:
+        """
+        Recursively masks PII/PHI patterns in strings, lists, and dicts. (HIPAA Compliance)
+        Patterns: Email, Phone, SSN, and generic 'ID' fields in metadata.
+        """
+        email_regex = r"[\w\.-]+@[\w\.-]+\.\w+"
+        phone_regex = r"\b(?:\+?1[-. ]?)?\(?([2-9][0-8][0-9])\)?[-. ]?([2-9][0-9]{2})[-. ]?([0-9]{4})\b"
+        ssn_regex = r"\b\d{3}-\d{2}-\d{4}\b"
+        
+        if isinstance(data, str):
+            data = re.sub(email_regex, "[EMAIL_MASKED]", data)
+            data = re.sub(phone_regex, "[PHONE_MASKED]", data)
+            data = re.sub(ssn_regex, "[SSN_MASKED]", data)
+            return data
+        elif isinstance(data, list):
+            return [self._mask_pii(item) for item in data]
+        elif isinstance(data, dict):
+            return {k: self._mask_pii(v) if k.lower() not in ["email", "phone", "ssn"] else "[MASKED]" 
+                    for k, v in data.items()}
+        return data
+
     def log_event(
         self,
         event_type: AuditEventType,
@@ -49,9 +71,13 @@ class AuditLogger:
         status: str = "success",
         error_details: Optional[str] = None
     ) -> str:
-        """Log audit event to Neo4j and local JSONL for compliance"""
+        """Log audit event to Neo4j and local JSONL with PII masking."""
         audit_id = f"audit_{datetime.utcnow().timestamp()}"
         timestamp = datetime.utcnow().isoformat()
+        
+        # Apply PII Masking before logging
+        masked_metadata = self._mask_pii(metadata or {})
+        masked_error = self._mask_pii(error_details) if error_details else None
         
         # 1. JSONL Logging
         try:
@@ -64,8 +90,8 @@ class AuditLogger:
                 "user_id": user_id,
                 "tenant_id": tenant_id,
                 "status": status,
-                "metadata": metadata or {},
-                "error_details": error_details
+                "metadata": masked_metadata,
+                "error_details": masked_error
             }
             
             with open(self.jsonl_log_path, "a") as f:
@@ -99,8 +125,8 @@ class AuditLogger:
                 "user_id": user_id,
                 "tenant_id": tenant_id,
                 "status": status,
-                "metadata": json.dumps(metadata or {}),
-                "error_details": error_details
+                "metadata": json.dumps(masked_metadata),
+                "error_details": masked_error
             })
             
             logger.info(f"Audit Neo4j logged: {event_type.value}")

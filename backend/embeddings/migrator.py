@@ -1,5 +1,5 @@
 from typing import List, Dict, Any
-from langchain_neo4j import Neo4jGraph
+from backend.shared.utils.graph_utils import get_graph
 from .orchestrator import EmbeddingOrchestrator
 from .validator import EmbeddingValidator
 import logging
@@ -11,12 +11,15 @@ class EmbeddingMigrator:
     """Handles migration of existing contracts to multi-level embeddings"""
     
     def __init__(self):
-        self.graph = Neo4jGraph(
-            refresh_schema=False, 
-            driver_config={"notifications_min_severity": "OFF"}
-        )
+        self._graph = None
         self.orchestrator = EmbeddingOrchestrator()
         self.validator = EmbeddingValidator()
+    
+    @property
+    def graph(self):
+        if self._graph is None:
+            self._graph = get_graph()
+        return self._graph
     
     def migrate_existing_contracts(self, batch_size: int = 10) -> Dict[str, Any]:
         """Migrate existing contracts to multi-level embeddings"""

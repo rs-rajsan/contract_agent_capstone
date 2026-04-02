@@ -5,7 +5,7 @@ from backend.agents.agent_workflow_tracker import workflow_tracker
 from backend.embeddings.orchestrator import EmbeddingOrchestrator
 from backend.embeddings.validator import EmbeddingValidator
 from backend.application.services.document_processing_service import DEFAULT_MODEL, MODEL_ALIAS_MAP
-from langchain_neo4j import Neo4jGraph
+from backend.shared.utils.graph_utils import get_graph
 import os
 import logging
 
@@ -22,10 +22,13 @@ class EnhancedDocumentProcessingService:
         self.pdf_agent_factory = PDFAgentFactory()
         self.embedding_orchestrator = EmbeddingOrchestrator()
         self.embedding_validator = EmbeddingValidator()
-        self.graph = Neo4jGraph(
-            refresh_schema=False, 
-            driver_config={"notifications_min_severity": "OFF"}
-        )
+        self._graph = None
+    
+    @property
+    def graph(self):
+        if self._graph is None:
+            self._graph = get_graph()
+        return self._graph
     
     def process_pdf_with_embeddings(self, request: DocumentProcessingRequest) -> dict:
         """

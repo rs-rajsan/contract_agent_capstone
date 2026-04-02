@@ -32,4 +32,6 @@ class IntelligenceState(TypedDict):
     current_step: str
     processing_result: ProcessingResult
     human_review_required: bool  # NEW: For HITL
+    refinement_needed: bool      # NEW: For governance refinement loops
+    paused_at: str               # NEW: Timestamp of HITL interruption
     is_complete: bool

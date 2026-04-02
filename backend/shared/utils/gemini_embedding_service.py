@@ -65,6 +65,22 @@ class GeminiEmbeddingService:
             logger.error(f"Batch embedding failed: {e}")
             raise RuntimeError(f"Batch embedding generation failed: {e}")
 
+    @staticmethod
+    def cosine_similarity(v1: List[float], v2: List[float]) -> float:
+        """Calculate cosine similarity between two vectors"""
+        import math
+        if not v1 or not v2 or len(v1) != len(v2):
+            return 0.0
+        
+        dot_product = sum(a * b for a, b in zip(v1, v2))
+        magnitude1 = math.sqrt(sum(a * a for a in v1))
+        magnitude2 = math.sqrt(sum(a * a for a in v2))
+        
+        if magnitude1 == 0 or magnitude2 == 0:
+            return 0.0
+            
+        return dot_product / (magnitude1 * magnitude2)
+
     def generate_embedding(self, text: str) -> List[float]:
         """Synchronous embedding generation for standard service callers"""
         return self.embed_query(text)
