@@ -5,7 +5,7 @@ from typing import Dict, Any, List
 from backend.agents.supervisor.interfaces import IAgent, AgentContext, AgentResult
 from backend.infrastructure.chunking.factory import ChunkingFactory
 from backend.infrastructure.chunking.storage_service import ChunkingStorageService
-from backend.shared.utils.contract_search_tool import graph
+from backend.shared.utils.graph_utils import get_graph
 from backend.domain.policies.entities import PolicyDocument, PolicyRule, PolicyViolation
 
 
@@ -124,6 +124,7 @@ class PolicyExtractionAgent(IAgent):
             CREATE (p)-[:HAS_RULE]->(r)
             """
             
+            graph = get_graph()
             graph.query(query, {
                 'document_id': document_id,
                 'tenant_id': tenant_id,
@@ -185,6 +186,7 @@ class PolicyComplianceAgent(IAgent):
                r.section_reference as section_reference
         """
         
+        graph = get_graph()
         result = graph.query(query, {
             'tenant_id': tenant_id,
             'contract_type': contract_type or 'general'

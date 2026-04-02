@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from langchain_core.tools import BaseTool
 from backend.shared.utils.gemini_embedding_service import embedding
 from langchain_neo4j import Neo4jGraph
+from backend.shared.utils.graph_utils import get_graph
 from pydantic import BaseModel, Field
 
 load_dotenv()
@@ -31,9 +32,6 @@ class Location(BaseModel):
     country: Optional[str] = Field(None, description="Use two-letter ISO standard")
     state: Optional[str]
 
-graph: Neo4jGraph = Neo4jGraph(
-    refresh_schema=False, driver_config={"notifications_min_severity": "OFF"}
-)
 # embedding imported from gemini_embedding_service (1536 dimensions)
 
 def get_contracts_multi_level(
@@ -136,6 +134,7 @@ def _search_documents(embeddings, summary_search, filters, params,
     } AS result
     """
     
+    graph = get_graph()
     output = graph.query(cypher_statement, params)
     return [convert_neo4j_date(el) for el in output]
 
@@ -175,6 +174,7 @@ def _search_sections(embeddings, summary_search, section_types, filters, params)
     } AS result
     """
     
+    graph = get_graph()
     output = graph.query(cypher_statement, params)
     return [convert_neo4j_date(el) for el in output]
 
@@ -216,6 +216,7 @@ def _search_clauses(embeddings, summary_search, clause_types, filters, params):
     } AS result
     """
     
+    graph = get_graph()
     output = graph.query(cypher_statement, params)
     return [convert_neo4j_date(el) for el in output]
 
@@ -252,6 +253,7 @@ def _search_relationships(embeddings, summary_search, parties, filters, params):
     } AS result
     """
     
+    graph = get_graph()
     output = graph.query(cypher_statement, params)
     return [convert_neo4j_date(el) for el in output]
 
@@ -344,6 +346,7 @@ def _search_chunks(embeddings, summary_search, filters, params):
         ORDER BY c.chunk_index DESC
         """
     
+    graph = get_graph()
     output = graph.query(cypher_statement, params)
     return [convert_neo4j_date(el) for el in output]
 

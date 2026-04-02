@@ -43,9 +43,19 @@ cd contract_agent_capstone/training
 ## Step 3: Install Dependencies (~2 min)
 
 ```bash
-pip install --quiet --upgrade pip
 pip install --quiet -r requirements.txt
 ```
+
+---
+
+## Step 3.5: Enable Session Persistence (CRITICAL)
+
+To prevent training from stopping when you close your laptop:
+
+1.  **Start a Session**: Type `screen -S training`
+2.  Now run all subsequent steps inside this window.
+3.  **To Leave**: Press `Ctrl + A` then `D` (the training will keep running!).
+4.  **To Return**: Type `screen -r training`
 
 > [!TIP]
 > Or run the setup script which also pre-caches model configs:
@@ -118,7 +128,7 @@ python -m training.scripts.generate_internal_dataset --stats --output-dir ./data
 ## Step 7: Train Teacher Model (~1.5–2 hrs)
 
 ```bash
-python -m training.scripts.train_teacher --config configs/teacher_qlora.yaml
+python -m training.scripts.train_teacher --config training/configs/teacher_qlora.yaml
 ```
 
 **What happens**:
@@ -131,14 +141,14 @@ python -m training.scripts.train_teacher --config configs/teacher_qlora.yaml
 
 > [!IMPORTANT]
 > If training crashes with OOM, reduce batch size:
-> Edit [configs/teacher_qlora.yaml](file:///Users/karthikvenkatesan/contract_agent_capstone/training/configs/teacher_qlora.yaml) → set `per_device_train_batch_size: 2`
+> Edit [training/configs/teacher_qlora.yaml](file:///Users/karthikvenkatesan/contract_agent_capstone/training/configs/teacher_qlora.yaml) → set `per_device_train_batch_size: 2`
 
 ---
 
 ## Step 8: Train Student Model (~45 min–1 hr)
 
 ```bash
-python -m training.scripts.train_student --config configs/student_qlora.yaml
+python -m training.scripts.train_student --config training/configs/student_qlora.yaml
 ```
 
 **What happens**:
@@ -152,14 +162,14 @@ python -m training.scripts.train_student --config configs/student_qlora.yaml
 
 ```bash
 # Run both phases (labels + training)
-python -m training.scripts.distill --config configs/distillation.yaml
+python -m training.scripts.distill --config training/configs/distillation.yaml
 
 # Or run phases separately to manage costs:
 # Phase 1: Generate teacher labels (~1–2 hrs)
-python -m training.scripts.distill --config configs/distillation.yaml --phase labels
+python -m training.scripts.distill --config training/configs/distillation.yaml --phase labels
 
 # Phase 2: Train student on teacher outputs (~1 hr)
-python -m training.scripts.distill --config configs/distillation.yaml --phase train
+python -m training.scripts.distill --config training/configs/distillation.yaml --phase train
 ```
 
 **Saves to**: `./outputs/student_distilled/`
@@ -252,5 +262,5 @@ python -m training.scripts.generate_internal_dataset \
 python -m training.scripts.generate_internal_dataset --merge --output-dir ./data/internal
 
 # Retrain with new data
-python -m training.scripts.train_teacher --config configs/teacher_qlora.yaml --resume
+python -m training.scripts.train_teacher --config training/configs/teacher_qlora.yaml --resume
 ```

@@ -4,7 +4,8 @@ from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 import logging
 
-from backend.shared.utils.contract_search_tool import graph, embedding
+from backend.shared.utils.contract_search_tool import embedding
+from backend.shared.utils.graph_utils import get_graph
 
 from backend.shared.utils.logger import get_logger
 logger = get_logger(__name__)
@@ -81,6 +82,7 @@ class AdvancedRAGAgent:
             LIMIT 5
             """
             
+            graph = get_graph()
             result = graph.query(cypher_query, {
                 'query_embedding': query_embedding,
                 'exclude_id': exclude_contract_id
@@ -118,6 +120,7 @@ class AdvancedRAGAgent:
                 LIMIT 3
                 """
                 
+                graph = get_graph()
                 result = graph.query(precedent_query, {
                     'contract_type': contract_type,
                     'query_term': query
@@ -144,6 +147,7 @@ class AdvancedRAGAgent:
             LIMIT 10
             """
             
+            graph = get_graph()
             result = graph.query(history_query, {'current_id': current_contract_id})
             history = [dict(record) for record in result]
             

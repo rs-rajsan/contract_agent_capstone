@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Any, List, Dict
 from backend.domain.search_entities import SearchParams, SearchResult
-from backend.shared.utils.contract_search_tool import graph, embedding
+from backend.shared.utils.contract_search_tool import embedding
+from backend.shared.utils.graph_utils import get_graph
 from backend.shared.utils.utils import convert_neo4j_date
 
 class SearchStrategy(ABC):
@@ -73,7 +74,7 @@ class DocumentSearchStrategy(SearchStrategy):
                 })[..10]
             } AS result
             """
-            
+            graph = get_graph()
             output = graph.query(cypher_statement, cypher_params)
             
             if output and len(output) > 0 and "result" in output[0]:
@@ -131,7 +132,7 @@ class ClauseSearchStrategy(SearchStrategy):
                 })[..10]
             } AS result
             """
-            
+            graph = get_graph()
             output = graph.query(cypher_statement, cypher_params)
             
             if output and len(output) > 0 and "result" in output[0]:
@@ -189,7 +190,7 @@ class SectionSearchStrategy(SearchStrategy):
                 })[..10]
             } AS result
             """
-            
+            graph = get_graph()
             output = graph.query(cypher_statement, cypher_params)
             
             if output and len(output) > 0 and "result" in output[0]:
@@ -244,7 +245,7 @@ class RelationshipSearchStrategy(SearchStrategy):
                 })[..10]
             } AS result
             """
-            
+            graph = get_graph()
             output = graph.query(cypher_statement, cypher_params)
             
             if output and len(output) > 0 and "result" in output[0]:

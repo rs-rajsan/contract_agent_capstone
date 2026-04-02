@@ -106,11 +106,17 @@ class TeacherLabelGenerator:
         self._model.eval()
 
     def generate_labels(self, source_dir: Path, output_dir: Path,
-                        tasks: List[str], max_examples: int = 10000) -> Path:
+                        tasks: List[str], max_examples: int = 10000,
+                        resume: bool = False) -> Path:
         """Generate teacher labels on source data."""
-        self._load_model()
         output_dir.mkdir(parents=True, exist_ok=True)
+        output_file = output_dir / "teacher_labels.jsonl"
 
+        if resume and output_file.exists():
+            logger.info(f"⏭ Resuming Phase 1: Found existing labels at {output_file}. Skipping generation.")
+            return output_file
+
+        self._load_model()
         all_examples = self._load_source_data(source_dir, tasks, max_examples)
         logger.info(f"Generating teacher labels for {len(all_examples)} examples…")
 
@@ -206,7 +212,7 @@ class DistillationTrainer:
     def __init__(self, config: DistillationConfig):
         self.config = config
 
-    def train(self, teacher_labels_path: Path):
+    def train(self, teacher_labels_path: Path, resume: bool = False):
         """Train student on teacher labels."""
         from training.scripts.train_teacher import TrainingConfig, QLoRATrainer
 
@@ -272,7 +278,7 @@ class DistillationTrainer:
         # Reuse QLoRATrainer (DRY)
         config = TrainingConfig(str(config_path))
         trainer = QLoRATrainer(config)
-        trainer.run()
+        trainer.run(resume=resume)
 
         # Cleanup temp config
         config_path.unlink(missing_ok=True)
@@ -306,6 +312,8 @@ def main():
                         help="Path to distillation.yaml config")
     parser.add_argument("--phase", type=str, choices=["all", "labels", "train"],
                         default="all", help="Which phase to run")
+    parser.add_argument("--resume", action="store_true",
+                        help="Resume from existing labels or checkpoint")
     args = parser.parse_args()
 
     config = DistillationConfig(args.config)
@@ -318,14 +326,14 @@ def main():
     if args.phase in ("all", "labels"):
         logger.info("=== Phase 1: Generating Teacher Labels ===")
         teacher_gen = TeacherLabelGenerator(config.teacher_base, config.teacher_adapter)
-        labels_path = teacher_gen.generate_labels(source_dir, labels_dir, tasks, max_examples)
+        labels_path = teacher_gen.generate_labels(source_dir, labels_dir, tasks, max_examples, resume=args.resume)
     else:
         labels_path = labels_dir / "teacher_labels.jsonl"
 
     if args.phase in ("all", "train"):
         logger.info("=== Phase 2: Distillation Training ===")
         trainer = DistillationTrainer(config)
-        trainer.train(labels_path)
+        trainer.train(labels_path, resume=args.resume)
 
     logger.info("✓ Distillation complete!")
 

@@ -1,7 +1,8 @@
 from backend.domain.entities import IContractRepository
-from backend.shared.utils.contract_search_tool import graph, embedding
+from backend.shared.utils.graph_utils import get_graph
+from backend.shared.utils.contract_search_tool import embedding
 from backend.shared.utils.utils import parse_date_to_iso
-from typing import Dict, Any
+from typing import Dict, Any, List
 import uuid
 from datetime import datetime
 import logging
@@ -13,14 +14,20 @@ class Neo4jContractRepository(IContractRepository):
     """Repository implementation using existing Neo4j infrastructure - DRY principle"""
     
     def __init__(self):
-        self.graph = graph  # Reuse existing connection
+        self._graph = None
         self.embedding_service = embedding  # Reuse existing embedding service
     
-    def get_contract_by_id(self, contract_id: str) -> Dict[str, Any]:
-        """Get contract data by ID"""
+    @property
+    def graph(self):
+        if self._graph is None:
+            self._graph = get_graph()
+        return self._graph
+    
+    def get_contract_by_id(self, contract_id: str, tenant_id: str = "demo_tenant_1") -> Dict[str, Any]:
+        """Get contract data by ID - Enforces multi-tenant isolation"""
         try:
             query = """
-            MATCH (c:Contract {file_id: $contract_id})
+            MATCH (c:Contract {file_id: $contract_id, tenant_id: $tenant_id})
             OPTIONAL MATCH (c)<-[r:PARTY_TO]-(p:Party)
             RETURN c.file_id as file_id,
                    c.contract_type as contract_type,
@@ -33,7 +40,7 @@ class Neo4jContractRepository(IContractRepository):
                    collect({name: p.name, role: r.role}) as parties
             """
             
-            result = self.graph.query(query, {"contract_id": contract_id})
+            result = self.graph.query(query, {"contract_id": contract_id, "tenant_id": tenant_id})
             
             if result:
                 contract_data = result[0]
@@ -93,6 +100,7 @@ class Neo4jContractRepository(IContractRepository):
                 end_date: CASE WHEN $end_date IS NOT NULL THEN date($end_date) ELSE NULL END,
                 total_amount: $total_amount,
                 embedding: $embedding,
+                tenant_id: $tenant_id,
                 upload_date: datetime(),
                 source: 'PDF_UPLOAD'
             })
@@ -101,6 +109,7 @@ class Neo4jContractRepository(IContractRepository):
             
             contract_params = {
                 "file_id": contract_id,
+                "tenant_id": contract_data.get("tenant_id", "demo_tenant_1"),
                 "summary": contract_data.get("summary", ""),
                 "contract_type": contract_data.get("contract_type", "Unknown"),
                 "contract_scope": ", ".join(contract_data.get("key_terms", [])),
@@ -164,6 +173,31 @@ class Neo4jContractRepository(IContractRepository):
             self.graph.query(party_query, party_params)
             logger.info(f"Created party relationship: {party_data['name']}")
     
+    def find_clauses_by_type(self, clause_type: str, tenant_id: str, limit: int = 10) -> List[Dict[str, Any]]:
+        """Find clauses by type with tenant isolation - Centralized Data Access Layer"""
+        try:
+            query = """
+            MATCH (c:Contract {tenant_id: $tenant_id})-[:CONTAINS]->(cl:Clause)
+            WHERE toLower(cl.clause_type) CONTAINS toLower($clause_type)
+            AND c.intelligence_status = 'completed'
+            RETURN cl.clause_type as type,
+                   cl.content as content,
+                   cl.risk_level as risk_level,
+                   c.risk_score as contract_risk,
+                   c.file_id as contract_id,
+                   c.contract_type as contract_type
+            LIMIT $limit
+            """
+            
+            return self.graph.query(query, {
+                "clause_type": clause_type,
+                "tenant_id": tenant_id,
+                "limit": limit
+            })
+        except Exception as e:
+            logger.error(f"Failed to find clauses by type: {e}")
+            return []
+
     def _create_governing_law_relationship(self, contract_id: str, governing_law: str):
         """Create governing law relationship"""
         

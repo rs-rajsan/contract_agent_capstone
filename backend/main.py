@@ -43,7 +43,15 @@ except Exception as e:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup - Initialize once
-    app.state.llm_manager = LLMManager()
+    try:
+        app.state.llm_manager = LLMManager()
+        logger.info("LLMManager initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize LLMManager: {e}")
+        # Initialize with dummy or None to prevent attribute errors but allow boot
+        app.state.llm_manager = None 
+    
+    logger.info("FastAPI Backend Listening on http://0.0.0.0:8000")
     yield
     # Shutdown - cleanup if needed
 

@@ -5,7 +5,8 @@ from datetime import datetime
 import hashlib
 import json
 
-from backend.shared.utils.contract_search_tool import graph, embedding
+from backend.shared.utils.graph_utils import get_graph
+from backend.shared.utils.contract_search_tool import embedding
 from backend.domain.policies.entities import PolicyDocument, PolicyRule
 
 
@@ -13,8 +14,14 @@ class PolicyRepository:
     """Extends existing contract repository patterns for policies."""
     
     def __init__(self):
-        self.graph = graph  # Reuse existing connection
+        self._graph = None
         self.embedding_service = embedding  # Reuse existing embedding service
+    
+    @property
+    def graph(self):
+        if self._graph is None:
+            self._graph = get_graph()
+        return self._graph
     
     def store_policy_document(self, policy_data: Dict[str, Any]) -> str:
         """Store policy document using existing patterns."""
