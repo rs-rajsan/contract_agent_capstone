@@ -129,7 +129,7 @@ Legal AI cannot "hallucinate." We use three layers to ensure safety:
 
 | Issue | Solution |
 | :--- | :--- |
-| **CUDA Out of Memory (OOM)** | Reduce `per_device_train_batch_size` or enable `gradient_checkpointing: true` in the YAML config. |
+| **CUDA Out of Memory (OOM)** | Reduce `per_device_train_batch_size` (try 2) and enable `gradient_checkpointing: true`. Also set `export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`. |
 | **AttributeError: set_submodule** | This is a `bitsandbytes` version conflict. Our `utils.py` includes a monkey-patch to fix this automatically. |
 | **ValueError: CVE-2025-32434** | `torch.load` security check. Upgrade torch via: `pip install --upgrade torch>=2.6.0` or don't use `--resume`. |
 | **Slow Training** | Ensure `bf16: true` is set and you are using an RTX 3090 or better. |
@@ -180,11 +180,12 @@ You keep the original Qwen base model and just move the small (200MB) adapter fi
 
 ## 11. Deployment Flow: Step-by-Step
 
-1.  **Stage 1**: `python -m training.scripts.format_datasets --raw-dir ./data/raw --output-dir ./data/processed`
-2.  **Stage 2**: `python -m training.scripts.train_teacher --config training/configs/teacher_qlora.yaml`
-3.  **Stage 3**: `python -m training.scripts.generate_internal_dataset` (Creates redlines in `./data/internal`)
-4.  **Stage 4**: `python -m training.scripts.train_student --config training/configs/student_qlora.yaml`
-5.  **Final**: `merge_adapter.py` & Update Backend `.env`.
+1.  **Stage 1**: `format_datasets.py` (✓ Done)
+2.  **Stage 2**: `train_teacher.py` (✓ Done - Teacher Expert trained)
+3.  **Stage 3**: `generate_internal_dataset.py` (✓ Done - 5k synthetic labels)
+4.  **Stage 4**: `train_student.py` (✓ Done - Student Base trained)
+9.  **Stage 9**: `distill.py` (**PENDING** - Resume on new Pod)
+10. **Final**: `merge_adapter.py` & Update Backend `.env`.
 
 ---
 
