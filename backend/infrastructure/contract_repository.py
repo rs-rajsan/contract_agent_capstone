@@ -16,11 +16,11 @@ class Neo4jContractRepository(IContractRepository):
         self.graph = graph  # Reuse existing connection
         self.embedding_service = embedding  # Reuse existing embedding service
     
-    def get_contract_by_id(self, contract_id: str) -> Dict[str, Any]:
-        """Get contract data by ID"""
+    def get_contract_by_id(self, contract_id: str, tenant_id: str = "demo_tenant_1") -> Dict[str, Any]:
+        """Get contract data by ID - Enforces multi-tenant isolation"""
         try:
             query = """
-            MATCH (c:Contract {file_id: $contract_id})
+            MATCH (c:Contract {file_id: $contract_id, tenant_id: $tenant_id})
             OPTIONAL MATCH (c)<-[r:PARTY_TO]-(p:Party)
             RETURN c.file_id as file_id,
                    c.contract_type as contract_type,
@@ -33,7 +33,7 @@ class Neo4jContractRepository(IContractRepository):
                    collect({name: p.name, role: r.role}) as parties
             """
             
-            result = self.graph.query(query, {"contract_id": contract_id})
+            result = self.graph.query(query, {"contract_id": contract_id, "tenant_id": tenant_id})
             
             if result:
                 contract_data = result[0]
@@ -93,6 +93,7 @@ class Neo4jContractRepository(IContractRepository):
                 end_date: CASE WHEN $end_date IS NOT NULL THEN date($end_date) ELSE NULL END,
                 total_amount: $total_amount,
                 embedding: $embedding,
+                tenant_id: $tenant_id,
                 upload_date: datetime(),
                 source: 'PDF_UPLOAD'
             })
@@ -101,6 +102,7 @@ class Neo4jContractRepository(IContractRepository):
             
             contract_params = {
                 "file_id": contract_id,
+                "tenant_id": contract_data.get("tenant_id", "demo_tenant_1"),
                 "summary": contract_data.get("summary", ""),
                 "contract_type": contract_data.get("contract_type", "Unknown"),
                 "contract_scope": ", ".join(contract_data.get("key_terms", [])),

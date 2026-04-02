@@ -131,6 +131,7 @@ Legal AI cannot "hallucinate." We use three layers to ensure safety:
 | :--- | :--- |
 | **CUDA Out of Memory (OOM)** | Reduce `per_device_train_batch_size` or enable `gradient_checkpointing: true` in the YAML config. |
 | **AttributeError: set_submodule** | This is a `bitsandbytes` version conflict. Our `utils.py` includes a monkey-patch to fix this automatically. |
+| **ValueError: CVE-2025-32434** | `torch.load` security check. Upgrade torch via: `pip install --upgrade torch>=2.6.0` or don't use `--resume`. |
 | **Slow Training** | Ensure `bf16: true` is set and you are using an RTX 3090 or better. |
 | **Spot Interruption** | Re-run the script with the `--resume` flag. It will look in `./outputs/` for the latest checkpoint. |
 
@@ -138,7 +139,21 @@ Legal AI cannot "hallucinate." We use three layers to ensure safety:
 
 ---
 
-## 10. Post-Training: Merged vs. Adapter Inference
+## 10. Understanding Training Steps (The Math)
+
+If you see `0/4705 steps` in your logs, here is how that number is calculated:
+
+*   **Dataset Size**: 30,109 examples.
+*   **Effective Batch Size**: 32 (Batch 4 x Accumulation 8).
+*   **Steps per Epoch**: 30,109 / 32 = ~941 steps.
+*   **Total Steps (5 Epochs)**: 941 x 5 = **4,705 steps**.
+
+> [!TIP]
+> **1 Step = 1 Learning Update**. In each step, the model looks at 32 examples, calculates the error, and updates its weights.
+
+---
+
+## 11. Post-Training: Merged vs. Adapter Inference
 
 You have two ways to run the fine-tuned model on your production server.
 
@@ -165,10 +180,10 @@ You keep the original Qwen base model and just move the small (200MB) adapter fi
 
 ## 11. Deployment Flow: Step-by-Step
 
-1.  **Stage 1**: `format_datasets.py` (Prep legal corpus).
-2.  **Stage 2**: `train_teacher.py` (Fine-tune 7B Expert).
-3.  **Stage 3**: `generate_internal_dataset.py` (Create 5k redlines).
-4.  **Stage 4**: `distill.py` (Train 3B Student).
+1.  **Stage 1**: `python -m training.scripts.format_datasets --raw-dir ./data/raw --output-dir ./data/processed`
+2.  **Stage 2**: `python -m training.scripts.train_teacher --config training/configs/teacher_qlora.yaml`
+3.  **Stage 3**: `python -m training.scripts.generate_internal_dataset` (Creates redlines in `./data/internal`)
+4.  **Stage 4**: `python -m training.scripts.train_student --config training/configs/student_qlora.yaml`
 5.  **Final**: `merge_adapter.py` & Update Backend `.env`.
 
 ---
@@ -190,8 +205,30 @@ To ensure you don't lose data or waste money on spot instances:
     export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
     ```
 3.  **The Resume Workflow**:
-    If your pod is terminated, simply start a new one, mount the same volume, and run:
+    If your pod is terminated or you close your laptop, simply connect back and run:
     ```bash
-    python -m training.scripts.train_teacher --config ... --resume
+    python -m training.scripts.train_student --config training/configs/student_qlora.yaml --resume
     ```
-    The `Trainer` will see the `checkpoint-XXX` folders in `outputs/` and automatically pick up from the last saved step.
+
+4.  **Running in Background (Laptop Safety)**:
+    Don't keep your terminal open for 6 hours! Use `screen` to run in the background. 
+    
+    *   **Install Screen** (If missing): `apt-get update && apt-get install -y screen`
+    *   **Start**: `screen -S training`
+    *   **Run**: Launch your command inside the screen.
+    *   **Detach**: Press `Ctrl+A` then `D`.
+    *   **Close Laptop**: You are safe!
+    *   **Check Stats**: Reconnect and type `screen -r training`.
+
+4.  **Session Persistence (Laptop Safety)**:
+    If you don't want the training to stop when you close your laptop, use `screen`:
+    1.  Start a new session: `screen -S training`
+    2.  Run your training command.
+    3.  **Detach**: Press `Ctrl + A` then `D`.
+    4.  **Close your laptop**.
+    5.  **Reattach later**: Open terminal and type `screen -r training`.
+5.  **Managing Background Processes**:
+    If you started a process with `nohup` or `screen` and need to stop it:
+    *   **Find PID**: `ps aux | grep training.scripts`
+    *   **Kill Specific**: `kill <PID_Number>`
+    *   **Kill All**: `pkill -f training.scripts`

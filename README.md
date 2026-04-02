@@ -29,6 +29,22 @@ See blog for more: [Agentic GraphRAG for Commercial Contracts](https://towardsda
 - **Autonomous Planning**: Dynamically generates and adopts execution strategies based on query complexity.
 - **Multi-Level Semantic Search**: Contextual retrieval at document, section, clause, and relationship levels.
 - **Policy Compliance Engine**: Automated violation detection against custom policy playbooks.
+- **Model Context Protocol (MCP)**: Standardized interface for AI models to access the contract intelligence library with full data isolation and tracing.
+
+## 🔗 Model Context Protocol (MCP)
+
+This repository includes a standalone **MCP Server** that exposes our contract intelligence capabilities to any MCP-compatible AI client (like Claude Desktop).
+
+### Available Tools:
+- **`search_clause_library`**: Semantic search across ingested contract clauses for legal research.
+- **`get_playbook_rule`**: Fetch specific corporate policies and compliance requirements by contract type.
+- **`search_prior_approved_clauses`**: Find similar language and approval rates from historical contracts.
+- **`fetch_contract_metadata`**: Retrieve structured contract-level data (Parties, Dates, Law).
+
+### Security & Best Practices:
+- **Hardened Multi-Tenancy**: Data isolation is enforced at the database query level using `tenant_id`.
+- **Request Tracing**: Centralized logging system generates a unique `trace_id` for every request, propagated across all layers.
+- **Privacy**: Zero integration with browser `console.log`; all logs are handled server-side for maximum security.
 
 ## 🧠 Advanced AI Patterns
 
@@ -106,3 +122,13 @@ While the current platform is a complete capstone implementation, several featur
 
 ---
 *Created as part of a Legal AI Capstone Project.*
+
+5. **Run the MCP Server**:
+   ```bash
+   PYTHONPATH=. python3 backend/mcp_server.py
+   ```
+
+6. **Verify Installation**:
+   ```bash
+   PYTHONPATH=. python3 backend/tests/test_mcp_capabilities.py
+   ```
