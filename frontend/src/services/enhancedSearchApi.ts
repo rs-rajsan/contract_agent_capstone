@@ -1,4 +1,4 @@
-import { EnhancedSearchParams } from '../components/search/EnhancedSearchInterface';
+import { EnhancedSearchParams } from '../components/features/search/EnhancedSearchInterface';
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 

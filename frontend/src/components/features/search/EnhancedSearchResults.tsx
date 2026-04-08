@@ -1,5 +1,5 @@
-import React from 'react';
-import { FileText, Hash, Users, Link } from 'lucide-react';
+import { FC } from 'react';
+import { FileText, Hash, Users } from 'lucide-react';
 
 interface SearchResult {
   documents?: DocumentResult[];
@@ -47,7 +47,7 @@ interface EnhancedSearchResultsProps {
   className?: string;
 }
 
-export const EnhancedSearchResults: React.FC<EnhancedSearchResultsProps> = ({
+export const EnhancedSearchResults: FC<EnhancedSearchResultsProps> = ({
   results,
   searchLevel,
   totalCount,

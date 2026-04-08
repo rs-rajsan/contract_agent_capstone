@@ -332,7 +332,8 @@ class BatchProcessor:
         
         for chunk in batch:
             try:
-                embedding = await embedding_service.generate_embedding(chunk.content)
+                # Use async method correctly
+                embedding = await embedding_service.generate_embedding_async(chunk.content)
                 results.append((chunk, embedding))
                 
                 # Small delay to avoid rate limits

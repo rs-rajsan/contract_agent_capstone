@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, FC } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Badge } from '../../shared/ui/badge';
 import { agents, getAgentTools, agentPatterns } from '../../../data/agents';
@@ -13,7 +13,7 @@ const getPatternIcon = (status: string) => {
   }
 };
 
-export const AgentsTab: React.FC = () => {
+export const AgentsTab: FC = () => {
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'agents' | 'patterns'>('agents');
 

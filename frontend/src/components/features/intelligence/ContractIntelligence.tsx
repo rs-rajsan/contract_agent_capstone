@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useEffect, FC } from 'react';
 import { Button } from '../../shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Badge } from '../../shared/ui/badge';
@@ -8,6 +8,8 @@ import { ClausesDetail } from './ClausesDetail';
 import { ViolationsDetail } from './ViolationsDetail';
 import { RiskDetail } from './RiskDetail';
 import { useModal } from '../../../lib/useModal';
+import { useModel } from '../../../contexts/ModelContext';
+import { useWorkflowStatus } from '../../../hooks/useWorkflowStatus';
 
 interface ContractClause {
   clause_type: string;
@@ -41,43 +43,39 @@ interface IntelligenceResults {
 
 interface ContractIntelligenceProps {
   contractId: string;
-  model?: string;
   onWorkflowUpdate?: (status: any) => void;
-  onAnalysisComplete?: (contractId: string, riskScore?: number, riskLevel?: string) => void;
+  onAnalysisComplete?: (contractId: string, riskScore?: number, riskLevel?: string, results?: any) => void;
 }
 
-export const ContractIntelligence: React.FC<ContractIntelligenceProps> = ({ 
+export const ContractIntelligence: FC<ContractIntelligenceProps> = ({ 
   contractId, 
-  model = 'gemini-2.5-flash',
   onWorkflowUpdate,
   onAnalysisComplete
 }) => {
+  const { selectedModel } = useModel();
   const [results, setResults] = useState<IntelligenceResults | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [networkError, setNetworkError] = useState(false);
   const { openModal, closeModal, isOpen } = useModal();
 
+  // Use centralized workflow hook
+  const { status: workflowStatus } = useWorkflowStatus(loading, 500);
+
+  // Surface workflow status to parent
+  useEffect(() => {
+    if (workflowStatus) {
+      onWorkflowUpdate?.(workflowStatus);
+    }
+  }, [workflowStatus, onWorkflowUpdate]);
+
   const analyzeContract = async () => {
     setLoading(true);
     setError(null);
     setNetworkError(false);
-    
-    // Start polling for workflow status
-    const pollWorkflow = setInterval(async () => {
-      try {
-        const workflowResponse = await fetch('/api/workflow/status');
-        if (workflowResponse.ok) {
-          const workflowData = await workflowResponse.json();
-          onWorkflowUpdate?.(workflowData);
-        }
-      } catch (e) {
-        // Ignore workflow polling errors
-      }
-    }, 500);
-    
+
     try {
-      const response = await fetch(`/api/intelligence/contracts/${contractId}/analyze?model=${model}`, {
+      const response = await fetch(`/api/intelligence/contracts/${contractId}/analyze?model=${selectedModel}`, {
         method: 'POST',
       });
       
@@ -103,19 +101,6 @@ export const ContractIntelligence: React.FC<ContractIntelligenceProps> = ({
       if (data.results?.risk_assessment) {
         onAnalysisComplete?.(contractId, data.results.risk_assessment.overall_risk_score, data.results.risk_assessment.risk_level, data.results);
       }
-      
-      // Final workflow status update
-      setTimeout(async () => {
-        try {
-          const workflowResponse = await fetch('/api/workflow/status');
-          if (workflowResponse.ok) {
-            const workflowData = await workflowResponse.json();
-            onWorkflowUpdate?.(workflowData);
-          }
-        } catch (e) {
-          // Ignore final workflow polling error
-        }
-      }, 1000);
     } catch (err) {
       if (err instanceof TypeError && err.message.includes('fetch')) {
         setNetworkError(true);
@@ -124,7 +109,6 @@ export const ContractIntelligence: React.FC<ContractIntelligenceProps> = ({
         setError(err instanceof Error ? err.message : 'Analysis failed');
       }
     } finally {
-      clearInterval(pollWorkflow);
       setLoading(false);
     }
   };
@@ -359,7 +343,7 @@ export const ContractIntelligence: React.FC<ContractIntelligenceProps> = ({
         title={`Contract Clauses Analysis (${results?.clauses?.length || 0} found)`}
       >
         {results?.clauses && results.clauses.length > 0 ? (
-          <ClausesDetail clauses={results.clauses} contractId={contractId} />
+          <ClausesDetail clauses={results.clauses} />
         ) : (
           <div className="text-center py-8">
             <FileText className="h-12 w-12 text-slate-400 mx-auto mb-4" />

@@ -1,4 +1,4 @@
-import React from 'react';
+import { FC } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Badge } from '../../shared/ui/badge';
 import { Shield, AlertTriangle, CheckCircle, XCircle, Calculator, Target, TrendingUp, Download, Calendar } from 'lucide-react';
@@ -16,7 +16,7 @@ interface RiskDetailProps {
   contractId?: string;
 }
 
-export const RiskDetail: React.FC<RiskDetailProps> = ({ riskAssessment, contractId }) => {
+export const RiskDetail: FC<RiskDetailProps> = ({ riskAssessment, contractId }) => {
   const getRiskColor = (level: string) => {
     switch (level.toUpperCase()) {
       case 'CRITICAL': return 'bg-red-500 text-white';

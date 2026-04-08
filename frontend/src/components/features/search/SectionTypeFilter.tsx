@@ -1,4 +1,4 @@
-import React from 'react';
+import { FC } from 'react';
 
 interface SectionTypeFilterProps {
   selectedTypes: string[];
@@ -6,7 +6,7 @@ interface SectionTypeFilterProps {
   className?: string;
 }
 
-export const SectionTypeFilter: React.FC<SectionTypeFilterProps> = ({
+export const SectionTypeFilter: FC<SectionTypeFilterProps> = ({
   selectedTypes,
   onChange,
   className = ''

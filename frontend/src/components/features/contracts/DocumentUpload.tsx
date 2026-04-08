@@ -1,11 +1,10 @@
-import React, { useState, useCallback } from 'react';
-import { Button } from '../../shared/ui/button';
-import { Card } from '../../shared/ui/card';
+import { useState, useCallback, FC } from 'react';
 import { Loader } from '../../shared/ui/loader';
+import { useModel } from '../../../contexts/ModelContext';
+import { useWorkflowStatus } from '../../../hooks/useWorkflowStatus';
 
 interface DocumentUploadProps {
   onUploadComplete?: (result: UploadResult) => void;
-  modelSelection?: string;
   onWorkflowUpdate?: (status: any) => void;
   onUploadStart?: () => void;
 }
@@ -15,19 +14,23 @@ interface UploadResult {
   status: string;
   contract_id?: string;
   details?: string;
+  error?: string;
   error_details?: string;
+  final_result?: string;
   model_used: string;
 }
 
-export const DocumentUpload: React.FC<DocumentUploadProps> = ({
+export const DocumentUpload: FC<DocumentUploadProps> = ({
   onUploadComplete,
-  modelSelection = "gemini-2.5-flash",
-  onWorkflowUpdate,
   onUploadStart
 }) => {
+  const { selectedModel } = useModel();
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
+
+  // Use centralized workflow hook
+  useWorkflowStatus(isUploading, 500);
 
   const handleFiles = useCallback(async (files: FileList) => {
     const file = files[0];
@@ -49,23 +52,10 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
     setUploadResult(null);
     onUploadStart?.();
 
-    // Start polling for workflow status
-    const pollWorkflow = setInterval(async () => {
-      try {
-        const workflowResponse = await fetch('/api/workflow/status');
-        if (workflowResponse.ok) {
-          const workflowData = await workflowResponse.json();
-          onWorkflowUpdate?.(workflowData);
-        }
-      } catch (e) {
-        // Ignore workflow polling errors
-      }
-    }, 500);
-
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('model', modelSelection);
+      formData.append('model', selectedModel);
 
       const correlationId = crypto.randomUUID();
       const response = await fetch('/api/documents/upload', {
@@ -76,54 +66,37 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
         body: formData
       });
 
+      // Special handling for non-200 responses
       if (!response.ok) {
-        const errorText = await response.text();
-        // removed console error
-        throw new Error(`Upload failed: ${response.status} - ${errorText}`);
+        const contentType = response.headers.get("content-type");
+        let errorMessage = `Upload failed: ${response.status}`;
+        
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+          const errorJson = await response.json();
+          errorMessage = errorJson.detail || errorJson.error || errorMessage;
+        } else {
+          errorMessage = await response.text() || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
-      const responseText = await response.text();
-      // removed console log
-
-      let result: UploadResult;
-      try {
-        result = JSON.parse(responseText);
-      } catch (parseError) {
-        // removed console error
-        throw new Error(`Invalid response format: ${responseText.substring(0, 100)}`);
-      }
+      const result: UploadResult = await response.json();
       setUploadResult(result);
 
       if (onUploadComplete) {
         onUploadComplete(result);
       }
-
-      // Final workflow status update
-      setTimeout(async () => {
-        try {
-          const workflowResponse = await fetch('/api/workflow/status');
-          if (workflowResponse.ok) {
-            const workflowData = await workflowResponse.json();
-            onWorkflowUpdate?.(workflowData);
-          }
-        } catch (e) {
-          // Ignore final workflow polling error
-        }
-      }, 1000);
-
     } catch (error) {
-      // removed console error
       setUploadResult({
         filename: file.name,
         status: 'error',
         error_details: error instanceof Error ? error.message : 'Upload failed',
-        model_used: modelSelection
+        model_used: selectedModel
       });
     } finally {
-      clearInterval(pollWorkflow);
       setIsUploading(false);
     }
-  }, [modelSelection, onUploadComplete]);
+  }, [selectedModel, onUploadComplete, onUploadStart]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -154,7 +127,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'success': return 'text-green-600';
-      case 'error': return 'text-red-600';
+      case 'error': return 'text-red-500 font-bold';
       case 'review_required': return 'text-yellow-600';
       case 'skipped': return 'text-gray-600';
       default: return 'text-blue-600';
@@ -166,7 +139,9 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       case 'success':
         return `✅ Contract created successfully! ID: ${result.contract_id}`;
       case 'error':
-        return `❌ Processing failed: ${result.error_details || 'Unknown error'}`;
+        // Try all possible error content fields
+        const msg = result.error || result.error_details || result.final_result || result.details || 'Unknown error';
+        return `❌ Processing failed: ${msg}`;
       case 'review_required':
         return `⚠️ Manual review required: ${result.details}`;
       case 'skipped':
@@ -177,41 +152,68 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   };
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <Card className="p-6">
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Upload PDF Contract</h3>
+    <div className="w-full relative overflow-hidden rounded-3xl group">
+      {/* Dynamic Background Gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 transition-all duration-700 group-hover:scale-105" />
+      <div className="absolute inset-0 opacity-20 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-500 blur-[100px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-teal-500 blur-[100px]" />
+      </div>
 
-          {/* Upload Area */}
-          <div
-            className={`
-              border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-              ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'}
-              ${isUploading ? 'pointer-events-none opacity-50' : ''}
-            `}
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-            onClick={() => document.getElementById('file-input')?.click()}
-          >
-            {isUploading ? (
-              <div className="space-y-2">
-                <Loader className="mx-auto" />
-                <p className="text-sm text-gray-600">Processing PDF...</p>
+      <div className="relative z-10 p-1 lg:p-1.5 h-full">
+        <div 
+          className={`
+            h-full rounded-[1.4rem] border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center py-12 px-6
+            ${dragActive ? 'border-white/50 bg-white/10' : 'border-white/20 hover:border-white/40 hover:bg-white/5'}
+            ${isUploading ? 'pointer-events-none opacity-80' : 'cursor-pointer'}
+          `}
+          onDragEnter={handleDrag}
+          onDragLeave={handleDrag}
+          onDragOver={handleDrag}
+          onDrop={handleDrop}
+          onClick={() => document.getElementById('file-input')?.click()}
+        >
+          {isUploading ? (
+            <div className="space-y-4 text-center">
+              <Loader className="mx-auto text-white w-10 h-10" />
+              <div className="space-y-1">
+                <p className="text-white font-bold text-lg">Intelligent Ingestion in Progress</p>
+                <p className="text-white/60 text-sm">Our AI agents are extracting clauses and assessing risks...</p>
               </div>
-            ) : (
+            </div>
+          ) : (
+            <div className="space-y-6 text-center max-w-lg">
+              <div className="w-20 h-20 bg-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center mx-auto border border-white/20 shadow-2xl group-hover:scale-110 transition-transform duration-500">
+                <span className="text-4xl">📄</span>
+              </div>
+              
               <div className="space-y-2">
-                <div className="text-4xl">📄</div>
-                <p className="text-sm font-medium">
-                  Drop PDF here or click to browse
-                </p>
-                <p className="text-xs text-gray-500">
-                  Maximum file size: 50MB
+                <h3 className="text-2xl font-bold text-white tracking-tight">
+                  Drag & drop contracts or <span className="text-blue-400">browse</span>
+                </h3>
+                <p className="text-white/60 text-sm font-medium">
+                  Supported formats: PDF, DOCX (Max 50MB)
                 </p>
               </div>
-            )}
-          </div>
+
+              <div className="pt-4">
+                <div className="inline-flex items-center gap-2 px-8 py-3 bg-white text-slate-900 rounded-xl font-bold text-sm shadow-xl hover:bg-blue-50 transition-colors">
+                  Upload & Analyze
+                </div>
+              </div>
+
+              <div className="pt-6 flex justify-center gap-8">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+                  <span className="text-[10px] uppercase font-bold text-white/40 tracking-widest">Secure AES-256</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                  <span className="text-[10px] uppercase font-bold text-white/40 tracking-widest">Model: {selectedModel}</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           <input
             id="file-input"
@@ -221,25 +223,20 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
             className="hidden"
             disabled={isUploading}
           />
-
-          {/* Model Selection Display */}
-          <div className="text-sm text-gray-600">
-            Using model: <span className="font-medium">{modelSelection}</span>
-          </div>
-
-          {/* Upload Result */}
-          {uploadResult && (
-            <div className={`p-3 rounded-lg border ${getStatusColor(uploadResult.status)}`}>
-              <p className="text-sm font-medium">
-                {uploadResult.filename}
-              </p>
-              <p className="text-xs mt-1">
-                {getStatusMessage(uploadResult)}
-              </p>
-            </div>
-          )}
         </div>
-      </Card>
+      </div>
+
+      {/* Upload Result Overlay (Toast-like) */}
+      {uploadResult && (
+        <div className="absolute bottom-4 right-4 z-50 animate-in slide-in-from-right-10 duration-500 max-w-xs">
+          <div className={`p-4 rounded-xl border-2 backdrop-blur-xl shadow-2xl glass ${getStatusColor(uploadResult.status)}`}>
+            <p className="text-xs font-bold uppercase tracking-wider mb-1">Upload Notification</p>
+            <p className="text-[11px] font-medium opacity-90 leading-tight">
+              {uploadResult.filename}: {getStatusMessage(uploadResult)}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,29 +1,22 @@
 import React, { KeyboardEvent, useRef } from "react";
 import { Textarea } from "../../shared/ui/textarea";
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectTrigger,
-    SelectValue
-} from "../../shared/ui/select";
 import { Button } from "../../shared/ui/button";
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { MouseEvent } from 'react';
 import { SendHorizontal } from "lucide-react";
 import { Message, MessagePart, useChat } from "./provider";
+import { useModel } from "../../../contexts/ModelContext";
 
 export function ChatInput() {
     const history = useRef<string[]>([])
     const [submiting, setSubmiting] = React.useState(false);
     const { addMessage, addMessagePart, updateMessageGenerating, reset } = useChat();
+    const { selectedModel } = useModel();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     const handleSubmit = async (event: any) => {
         event.preventDefault();
         const formData = new FormData(event.target);
-        const model = formData.get("model") as string;
         const prompt = formData.get("prompt") as string;
 
         if (!prompt.trim()) {
@@ -58,7 +51,7 @@ export function ChatInput() {
                 'Content-Type': 'application/json',
                 'X-Correlation-ID': correlationId
             },
-            body: JSON.stringify({ model, prompt, history: JSON.stringify(history.current) }),
+            body: JSON.stringify({ model: selectedModel, prompt, history: JSON.stringify(history.current) }),
             onmessage(event) {
                 const data: MessagePart = JSON.parse(event.data);
 
@@ -76,7 +69,7 @@ export function ChatInput() {
             onclose() {
                 setSubmiting(false);
             },
-            onerror(err) {
+            onerror() {
                 setSubmiting(false);
                 // removed console error
                 addMessagePart(aiMessage.id, { type: "ai_message", content: "Error: Failed to generate the response." });
@@ -116,18 +109,9 @@ export function ChatInput() {
                     ref={textareaRef}
                 />
                 <div className="flex gap-2">
-                    <Select name="model" defaultValue="gemini-2.5-flash">
-                        <SelectTrigger className=" flex-1 text-foreground">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectGroup>
-                                <SelectItem value="gemini-1.5-pro">gemini-1.5-pro</SelectItem>
-                                <SelectItem value="gemini-2.5-flash">gemini-2.5-flash</SelectItem>
-                                <SelectItem value="gpt-4o">gpt-4o</SelectItem>
-                            </SelectGroup>
-                        </SelectContent>
-                    </Select>
+                    <div className="flex-1 flex items-center px-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md text-xs text-slate-500">
+                        Using model: <span className="ml-1 font-semibold text-blue-600">{selectedModel}</span>
+                    </div>
                     <Button variant="outline" className="flex-0" onClick={handleClear}>
                         Reset
                     </Button>

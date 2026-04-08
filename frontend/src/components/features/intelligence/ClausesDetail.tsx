@@ -1,4 +1,4 @@
-import React from 'react';
+import { FC } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Badge } from '../../shared/ui/badge';
 import { Shield, AlertTriangle, TrendingDown, CheckCircle, Clock, Target } from 'lucide-react';
@@ -15,7 +15,7 @@ interface ClausesDetailProps {
   clauses: ContractClause[];
 }
 
-export const ClausesDetail: React.FC<ClausesDetailProps> = ({ clauses }) => {
+export const ClausesDetail: FC<ClausesDetailProps> = ({ clauses }) => {
   const getRiskColor = (level: string) => {
     switch (level.toUpperCase()) {
       case 'CRITICAL': return 'bg-red-500 text-white';
@@ -37,7 +37,7 @@ export const ClausesDetail: React.FC<ClausesDetailProps> = ({ clauses }) => {
   };
 
   const getPolicyAlignment = (clauseType: string, riskLevel: string) => {
-    const alignments = {
+    const alignments: Record<string, { compliant: boolean; policy: string; requirement: string; concern: string | null }> = {
       'Termination': {
         compliant: riskLevel.toUpperCase() === 'LOW',
         policy: 'Contract Termination Policy 2.1',
@@ -90,8 +90,8 @@ export const ClausesDetail: React.FC<ClausesDetailProps> = ({ clauses }) => {
     };
   };
 
-  const getRiskImpact = (riskLevel: string, clauseType: string) => {
-    const impacts = {
+  const getRiskImpact = (riskLevel: string) => {
+    const impacts: Record<string, { business: string; legal: string; operational: string; financial: string; timeline: string }> = {
       'CRITICAL': {
         business: 'Severe business disruption and financial loss likely',
         legal: 'High litigation risk and potential regulatory violations',
@@ -125,8 +125,8 @@ export const ClausesDetail: React.FC<ClausesDetailProps> = ({ clauses }) => {
     return impacts[riskLevel.toUpperCase()] || impacts['MEDIUM'];
   };
 
-  const getRecommendedActions = (riskLevel: string, clauseType: string) => {
-    const actions = {
+  const getRecommendedActions = (riskLevel: string) => {
+    const actions: Record<string, string[]> = {
       'CRITICAL': [
         'Engage legal counsel immediately for clause revision',
         'Do not execute contract until clause is renegotiated',
@@ -164,8 +164,8 @@ export const ClausesDetail: React.FC<ClausesDetailProps> = ({ clauses }) => {
       
       {clauses.map((clause, index) => {
         const policyAlignment = getPolicyAlignment(clause.clause_type, clause.risk_level);
-        const riskImpact = getRiskImpact(clause.risk_level, clause.clause_type);
-        const recommendedActions = getRecommendedActions(clause.risk_level, clause.clause_type);
+        const riskImpact = getRiskImpact(clause.risk_level);
+        const recommendedActions = getRecommendedActions(clause.risk_level);
 
         return (
           <Card key={index} className="border-slate-200">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, FC } from 'react';
 import { SearchLevelSelector, SearchLevel } from './SearchLevelSelector';
 import { ClauseTypeFilter } from './ClauseTypeFilter';
 import { SectionTypeFilter } from './SectionTypeFilter';
@@ -20,7 +20,7 @@ export interface EnhancedSearchParams {
   active?: boolean;
 }
 
-export const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({
+export const EnhancedSearchInterface: FC<EnhancedSearchInterfaceProps> = ({
   onSearch,
   isLoading = false,
   className = ''

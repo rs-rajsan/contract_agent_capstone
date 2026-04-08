@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ThemeProvider } from './components/shared/theme-provider';
 import { Navigation } from './components/layout/Navigation';
 import { ChatPage } from './pages/ChatPage';
@@ -7,6 +7,7 @@ import { DocumentationPage } from './pages/DocumentationPage';
 import { SearchPage } from './pages/SearchPage';
 import { ErrorBoundary } from './components/shared/ErrorBoundary';
 import { ContractHistoryProvider } from './contexts/ContractHistoryContext';
+import { ModelProvider } from './contexts/ModelContext';
 import { useRouter } from './lib/useRouter';
 import { Menu, X } from 'lucide-react';
 import { Button } from './components/shared/ui/button';
@@ -44,7 +45,8 @@ function App() {
 
   return (
     <ContractHistoryProvider>
-      <ThemeProvider defaultTheme={APP_CONFIG.DEFAULT_THEME} storageKey={APP_CONFIG.STORAGE_KEYS.THEME}>
+      <ModelProvider>
+        <ThemeProvider defaultTheme={APP_CONFIG.DEFAULT_THEME} storageKey={APP_CONFIG.STORAGE_KEYS.THEME}>
         <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
           {/* Mobile Overlay */}
           {isSidebarOpen && (
@@ -83,6 +85,7 @@ function App() {
           </main>
         </div>
       </ThemeProvider>
+      </ModelProvider>
     </ContractHistoryProvider>
   );
 }

@@ -89,7 +89,7 @@ class OptimizedPrecedentMatcherTool(EnhancedPrecedentMatcherTool):
     description: str = "High-performance precedent matching with intelligent caching"
     
     @track_performance("precedent_matching")
-    def _run(self, clauses_json: str) -> str:
+    def _run(self, clauses_json: str, tenant_id: str = "demo_tenant_1") -> str:
         """Optimized precedent matching with clause-level caching"""
         try:
             clauses = json.loads(clauses_json)
@@ -98,7 +98,7 @@ class OptimizedPrecedentMatcherTool(EnhancedPrecedentMatcherTool):
             # Process clauses in parallel for better performance
             with ThreadPoolExecutor(max_workers=5) as executor:
                 futures = {
-                    executor.submit(self._process_clause_precedents, clause): clause 
+                    executor.submit(self._process_clause_precedents, clause, tenant_id): clause 
                     for clause in clauses
                 }
                 
@@ -117,10 +117,10 @@ class OptimizedPrecedentMatcherTool(EnhancedPrecedentMatcherTool):
             return json.dumps([])
     
     @cache_result("precedent_clause", ttl=7200)  # 2 hour cache per clause
-    def _process_clause_precedents(self, clause: Dict[str, Any]) -> Dict[str, Any]:
+    def _process_clause_precedents(self, clause: Dict[str, Any], tenant_id: str = "demo_tenant_1") -> Dict[str, Any]:
         """Process precedents for individual clause with caching"""
         # Get real precedents from database
-        real_precedents = self._find_real_precedents(clause)
+        real_precedents = self._find_real_precedents(clause, tenant_id)
         
         if real_precedents:
             analysis = self._analyze_precedents(real_precedents, clause)

@@ -1,9 +1,23 @@
-import React, { useState } from 'react';
+import { useState, FC, Fragment } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Badge } from '../../shared/ui/badge';
 import { ArrowRight } from 'lucide-react';
 
-const workflows = {
+interface WorkflowStep {
+  agent: string;
+  description: string;
+  tech: string;
+  isNew?: boolean;
+  isEnhanced?: boolean;
+}
+
+interface Workflow {
+  title: string;
+  description: string;
+  steps: WorkflowStep[];
+}
+
+const workflows: Record<string, Workflow> = {
   storage: {
     title: 'Document Upload & Dataset Storage',
     description: 'Complete flow for storing uploaded documents in searchable dataset',
@@ -34,7 +48,7 @@ const workflows = {
   }
 };
 
-export const WorkflowsTab: React.FC = () => {
+export const WorkflowsTab: FC = () => {
   const [activeWorkflows, setActiveWorkflows] = useState<Set<string>>(new Set());
 
   const toggleWorkflow = (key: string) => {
@@ -72,17 +86,17 @@ export const WorkflowsTab: React.FC = () => {
             </div>
           </CardHeader>
           {activeWorkflows.has(key) && (
-            <CardContent className="p-6 border-t">
-              <div className="flex items-center justify-between">
+            <CardContent className="p-6 border-t overflow-x-auto">
+              <div className="flex items-center justify-between min-w-max pb-4">
                 {workflow.steps.map((step, idx) => (
-                  <React.Fragment key={idx}>
-                    <div className="flex flex-col items-center text-center max-w-32">
+                  <Fragment key={idx}>
+                    <div className="flex flex-col items-center text-center max-w-40 px-2">
                       <div className="p-3 bg-slate-100 rounded-full mb-2 hover:bg-blue-100 transition-colors">
                         📄
                       </div>
                       <h4 className={`font-semibold text-sm mb-1 ${
-                        step.isNew ? 'text-red-600' : 
-                        step.isEnhanced ? 'text-red-600' : 
+                        step.isNew ? 'text-blue-600' : 
+                        step.isEnhanced ? 'text-indigo-600' : 
                         'text-slate-800'
                       }`}>
                         {step.agent}
@@ -93,9 +107,9 @@ export const WorkflowsTab: React.FC = () => {
                       </div>
                     </div>
                     {idx < workflow.steps.length - 1 && (
-                      <ArrowRight className="w-5 h-5 text-slate-400 mx-2 animate-pulse" />
+                      <ArrowRight className="w-5 h-5 text-slate-400 mx-2 animate-pulse flex-shrink-0" />
                     )}
-                  </React.Fragment>
+                  </Fragment>
                 ))}
               </div>
             </CardContent>

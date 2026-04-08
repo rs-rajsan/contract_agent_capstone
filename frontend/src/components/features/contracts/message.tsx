@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, ReactNode } from "react";
 import { Loader } from "../../shared/ui/loader";
 import { Message } from "./provider";
 
@@ -25,10 +25,10 @@ export function ChatMessage({ message }: Props) {
                                 <code className="block p-1 bg-muted rounded-sm overflow-x-auto font-mono text-sm">{content}</code>
                             </details>
                         default:
-                            let displayContent: React.ReactNode = content;
+                            let displayContent: ReactNode = content;
                             if (typeof content === 'object' && content !== null) {
                                 if (Array.isArray(content)) {
-                                    displayContent = content.map((c: any) => c.text || JSON.stringify(c)).join('');
+                                    displayContent = (content as any[]).map((c: any) => c.text || JSON.stringify(c)).join('');
                                 } else {
                                     displayContent = (content as any).text || JSON.stringify(content);
                                 }
