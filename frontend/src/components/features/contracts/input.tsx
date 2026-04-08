@@ -51,10 +51,12 @@ export function ChatInput() {
         // Clear the form after submission
         event.target.reset();
 
+        const correlationId = crypto.randomUUID();
         await fetchEventSource('/api/run/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'X-Correlation-ID': correlationId
             },
             body: JSON.stringify({ model, prompt, history: JSON.stringify(history.current) }),
             onmessage(event) {

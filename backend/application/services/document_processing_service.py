@@ -4,6 +4,7 @@ from backend.domain.value_objects import ProcessingResult, ProcessingStatus
 from backend.agents.agent_workflow_tracker import workflow_tracker
 from backend.embeddings.orchestrator import EmbeddingOrchestrator
 from backend.embeddings.validator import EmbeddingValidator
+from backend.shared.config.phase3_config import AppConfig
 import os
 import logging
 
@@ -35,8 +36,8 @@ class DocumentProcessingService:
                 raise FileNotFoundError(f"File not found: {request.file_path}")
             
             # 2. Get appropriate LLM model
-            model_name = request.processing_options.get("model", "gemini-2.5-flash")
-            llm = self._get_llm_for_model(model_name)
+            model_name = request.processing_options.get("model", AppConfig.DEFAULT_MODEL)
+            llm = self.agent_manager.get_llm_instance(model_name)
             
             # 3. Create PDF processing agent
             pdf_agent = self.pdf_agent_factory.create_agent(llm)
@@ -54,27 +55,6 @@ class DocumentProcessingService:
             logger.error(f"PDF processing failed for {request.filename}: {e}")
             self._cleanup_file(request.file_path)
             raise
-    
-    def _get_llm_for_model(self, model_name: str):
-        """Get LLM instance - DRY principle"""
-        if model_name == "gpt-4o":
-            from langchain_openai import ChatOpenAI
-            return ChatOpenAI(model="gpt-4o", temperature=0)
-        elif model_name in ["gemini-1.5-pro", "gemini-2.5-flash-exp", "gemini-2.5-flash", "gemini-2.5-flash"]:
-            from langchain_google_genai import ChatGoogleGenerativeAI
-            model_mapping = {
-                "gemini-2.5-flash-exp": "gemini-2.5-flash",
-                "gemini-2.5-flash": "gemini-2.5-flash",
-                "gemini-2.5-flash": "gemini-2.5-flash",
-                "gemini-1.5-pro": "gemini-1.5-pro"
-            }
-            actual_model = model_mapping.get(model_name, "gemini-2.5-flash")
-            return ChatGoogleGenerativeAI(model=actual_model, temperature=0)
-        elif model_name == "sonnet-3.5":
-            from langchain_anthropic import ChatAnthropic
-            return ChatAnthropic(model="claude-3-5-sonnet-latest", temperature=0)
-        else:
-            raise ValueError(f"Unknown model: {model_name}")
     
     def _process_with_agent(self, pdf_agent, request: DocumentProcessingRequest) -> dict:
         """Process document using PDF agent with structured output"""

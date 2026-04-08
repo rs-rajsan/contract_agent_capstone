@@ -15,7 +15,8 @@ from .quality_validator import QualityValidator, QualityMetricsCollector
 from .performance_optimizer import get_performance_optimizer, PerformanceMonitor
 from .factory import ChunkingFactory
 from .chunk_embedding_service import ChunkEmbeddingService
-
+from backend.shared.utils.logger import get_logger
+logger = get_logger(__name__)
 
 @dataclass
 class ChunkingCommand:
@@ -182,7 +183,7 @@ class ChunkingOrchestrator:
                 
             except Exception as e:
                 # Log error and try next strategy
-                print(f"Strategy {strategy_name} failed: {e}")
+                logger.warning(f"Strategy {strategy_name} failed: {e}")
                 continue
         
         # If all strategies fail, use basic sentence chunking
@@ -256,7 +257,7 @@ class ChunkingOrchestrator:
             return embedding_results
             
         except Exception as e:
-            print(f"Embedding generation failed: {e}")
+            logger.error(f"Embedding generation failed: {e}")
             return []
     
     def get_performance_report(self) -> Dict[str, Any]:

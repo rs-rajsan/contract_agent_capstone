@@ -3,6 +3,7 @@ from backend.shared.utils.contract_search_tool import CONTRACT_TYPES
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
 from langchain_core.output_parsers import PydanticOutputParser
+import time
 import logging
 
 from backend.shared.utils.logger import get_logger
@@ -43,6 +44,22 @@ class LLMContractAnalyzer(IContractAnalyzer):
 
 Use contract_type from: {CONTRACT_TYPES}"""
         
+        start_time = time.perf_counter()
         response = self.llm.invoke(prompt)
+        latency = int((time.perf_counter() - start_time) * 1000)
+        
+        # Expert Recommendation: Extract token usage metadata if available
+        tokens = response.response_metadata.get("token_usage", {}).get("total_tokens", 0) if hasattr(response, "response_metadata") else 0
+        
+        logger.info(
+            "Contract analysis extraction complete", 
+            extra={
+                "agent_name": "LLMContractAnalyzer",
+                "operation": "analyze_contract",
+                "latency_ms": latency,
+                "tokens": tokens
+            }
+        )
+        
         result = self.parser.parse(response.content)
         return result.dict()

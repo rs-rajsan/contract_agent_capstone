@@ -30,8 +30,14 @@ class AuditLogger:
     """Centralized audit logging with Neo4j persistence"""
     
     def __init__(self):
-        from backend.infrastructure.contract_repository import Neo4jContractRepository
-        self.repository = Neo4jContractRepository()
+        self._repository = None
+    
+    @property
+    def repository(self):
+        if self._repository is None:
+            from backend.infrastructure.contract_repository import Neo4jContractRepository
+            self._repository = Neo4jContractRepository()
+        return self._repository
     
     def log_event(
         self,
@@ -44,10 +50,20 @@ class AuditLogger:
         status: str = "success",
         error_details: Optional[str] = None
     ) -> str:
-        """Log audit event to Neo4j"""
+        """Log audit event to Neo4j with high resilience"""
         try:
             audit_id = f"audit_{datetime.utcnow().timestamp()}"
             
+            # Robust property access (catches initialization errors)
+            try:
+                repo = self.repository
+                if not repo or not hasattr(repo, 'graph'):
+                    logger.warning("Audit repository unavailable, falling back to local logs only")
+                    return audit_id
+            except Exception as repo_err:
+                logger.warning(f"Failed to initialize audit repository: {repo_err}")
+                return audit_id
+
             query = """
             MERGE (a:AuditLog {audit_id: $audit_id})
             SET a.event_type = $event_type,
@@ -62,7 +78,7 @@ class AuditLogger:
             RETURN a.audit_id as audit_id
             """
             
-            result = self.repository.graph.query(query, {
+            result = repo.graph.query(query, {
                 "audit_id": audit_id,
                 "event_type": event_type.value,
                 "resource_id": resource_id,
@@ -78,7 +94,8 @@ class AuditLogger:
             return result[0]["audit_id"] if result else audit_id
             
         except Exception as e:
-            logger.error(f"Failed to log audit event: {e}")
+            # Final fallback: never allow audit logging to crash the primary request
+            logger.error(f"Audit logging failed silently: {e}")
             return ""
     
     def get_audit_trail(self, resource_id: str, limit: int = 100) -> list:

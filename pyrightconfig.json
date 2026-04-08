@@ -1,0 +1,15 @@
+{
+  "include": ["backend"],
+  "exclude": ["**/node_modules", "**/__pycache__", "backend/.venv"],
+  "executionEnvironments": [
+    {
+      "root": "backend",
+      "venvPath": "backend",
+      "venv": ".venv",
+      "extraPaths": ["."]
+    }
+  ],
+  "reportMissingImports": "warning",
+  "pythonVersion": "3.12",
+  "pythonPlatform": "Windows"
+}

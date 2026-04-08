@@ -19,7 +19,7 @@ class RedisCache:
         """Connect to Redis with fallback to in-memory cache"""
         try:
             import redis
-            redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+            redis_url = os.getenv("REDIS_URL", "redis://redis:6379")
             self.redis_client = redis.from_url(redis_url, decode_responses=True)
             self.redis_client.ping()
             logger.info("Connected to Redis cache")

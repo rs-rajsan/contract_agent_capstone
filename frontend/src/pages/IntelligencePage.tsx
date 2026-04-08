@@ -26,7 +26,7 @@ export const IntelligencePage: React.FC = () => {
     setUploadResult(result);
     setShowWorkflow(true);
     setIsUploading(false);
-    
+
     // Add to contract history
     if (result.contract_id) {
       addContract({
@@ -62,7 +62,7 @@ export const IntelligencePage: React.FC = () => {
       <div className="text-center bg-white rounded-lg p-8 shadow-sm border border-slate-200">
         <h1 className="text-3xl font-bold text-slate-800 mb-3">Contract Intelligence Platform</h1>
         <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-          Upload legal contracts and leverage AI-powered analysis for comprehensive insights, 
+          Upload legal contracts and leverage AI-powered analysis for comprehensive insights,
           risk assessment, and compliance review.
         </p>
       </div>
@@ -77,7 +77,7 @@ export const IntelligencePage: React.FC = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="gemini-2.5-flash">Gemini 2.0 Flash</SelectItem>
+                <SelectItem value="gemini-2.5-flash">Gemini 2.5 Flash</SelectItem>
                 <SelectItem value="gemini-1.5-pro">Gemini 1.5 Pro</SelectItem>
                 <SelectItem value="gpt-4o">GPT-4o</SelectItem>
                 <SelectItem value="sonnet-3.5">Claude Sonnet 3.5</SelectItem>
@@ -95,8 +95,8 @@ export const IntelligencePage: React.FC = () => {
           <h2 className="text-xl font-semibold text-slate-800 mb-4">Recent Contracts</h2>
           <div className="space-y-2">
             {contracts.slice(0, 5).map((contract) => (
-              <div 
-                key={contract.contract_id} 
+              <div
+                key={contract.contract_id}
                 className="flex items-center justify-between p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100"
                 onClick={() => {
                   setSelectedContract(contract.contract_id);
@@ -114,13 +114,12 @@ export const IntelligencePage: React.FC = () => {
                   <p className="text-sm text-slate-500">
                     {new Date(contract.upload_date).toLocaleDateString()} • {contract.model_used}
                     {contract.analysis_completed && contract.risk_level && (
-                      <span className={`ml-2 px-2 py-1 rounded text-xs ${
-                        contract.risk_level === 'HIGH' || contract.risk_level === 'CRITICAL' 
+                      <span className={`ml-2 px-2 py-1 rounded text-xs ${contract.risk_level === 'HIGH' || contract.risk_level === 'CRITICAL'
                           ? 'bg-red-100 text-red-700'
                           : contract.risk_level === 'MEDIUM'
-                          ? 'bg-yellow-100 text-yellow-700' 
-                          : 'bg-green-100 text-green-700'
-                      }`}>
+                            ? 'bg-yellow-100 text-yellow-700'
+                            : 'bg-green-100 text-green-700'
+                        }`}>
                         {contract.risk_level} Risk
                       </span>
                     )}
@@ -145,13 +144,13 @@ export const IntelligencePage: React.FC = () => {
             <p className="text-slate-600 text-sm mb-6">
               Upload PDF contracts for AI-powered analysis and extraction of key legal terms.
             </p>
-            <DocumentUpload 
+            <DocumentUpload
               onUploadComplete={handleUploadComplete}
               modelSelection={selectedModel}
               onWorkflowUpdate={handleWorkflowUpdate}
               onUploadStart={handleUploadStart}
             />
-            
+
             {/* PDF Processing Workflow */}
             {(workflowStatus?.agent_executions?.length > 0 || isUploading || uploadResult) && (
               <div className="mt-4">
@@ -181,7 +180,7 @@ export const IntelligencePage: React.FC = () => {
                 {/* Intelligence Analysis Workflow */}
                 {workflowStatus && workflowStatus.agent_executions?.length > 0 && (
                   <div className="mb-4">
-                    <AgentWorkflowTracker 
+                    <AgentWorkflowTracker
                       workflowStatus={{
                         ...workflowStatus,
                         agent_executions: workflowStatus.agent_executions.filter((e: any) => e.agent_name !== 'PDF Processing Agent')
@@ -190,7 +189,7 @@ export const IntelligencePage: React.FC = () => {
                     />
                   </div>
                 )}
-                <ContractIntelligence 
+                <ContractIntelligence
                   contractId={uploadResult.contract_id}
                   model={selectedModel}
                   onWorkflowUpdate={handleWorkflowUpdate}

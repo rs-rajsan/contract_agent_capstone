@@ -56,10 +56,18 @@ def get_llm_manager(request: Request):
 
 app.add_middleware(TracingMiddleware)
 
+# Configure CORS
+try:
+    cors_origins_str = os.getenv("CORS_ALLOWED_ORIGINS", '["*"]')
+    allow_origins = json.loads(cors_origins_str)
+except Exception as e:
+    logger.warning(f"Failed to parse CORS_ALLOWED_ORIGINS, defaulting to ['*']: {e}")
+    allow_origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=["*"],  # Allow all origins
+    allow_origins=allow_origins,
     allow_methods=["*"],  # Allow all methods
     allow_headers=["*"],  # Allow all headers
 )

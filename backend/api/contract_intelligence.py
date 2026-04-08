@@ -8,6 +8,8 @@ import logging
 from typing import Optional
 
 from backend.shared.utils.logger import get_logger
+from backend.shared.config.phase3_config import AppConfig
+
 logger = get_logger(__name__)
 
 # Create router
@@ -23,7 +25,7 @@ def get_llm_manager(request: Request):
 @router.post("/contracts/{contract_id}/analyze")
 async def analyze_contract_intelligence(
     contract_id: str,
-    model: str = Query(default="gemini-2.5-flash", description="LLM model to use for analysis"),
+    model: str = Query(default=AppConfig.DEFAULT_MODEL, description="LLM model to use for analysis"),
     use_planning: bool = Query(default=True, description="Use autonomous planning agent"),
     llm_mgr: LLMManager = Depends(get_llm_manager)
 ):
@@ -156,7 +158,8 @@ async def get_intelligence_status(contract_id: str):
 async def batch_analyze_contracts(
     background_tasks: BackgroundTasks,
     contract_ids: list[str],
-    model: str = Query(default="gemini-2.5-flash", description="LLM model to use for analysis")
+    model: str = Query(default=AppConfig.DEFAULT_MODEL, description="LLM model to use for analysis"),
+    llm_mgr: LLMManager = Depends(get_llm_manager)
 ):
     """
     Batch analyze multiple contracts for intelligence
@@ -169,6 +172,9 @@ async def batch_analyze_contracts(
         # For prototype, limit batch size
         if len(contract_ids) > 10:
             raise HTTPException(status_code=400, detail="Batch size limited to 10 contracts for prototype")
+        
+        # Create service with injected agent manager
+        intelligence_service = ContractIntelligenceServiceFactory.create_service(llm_mgr)
         
         # Add background task for each contract
         for contract_id in contract_ids:
@@ -244,8 +250,8 @@ async def get_available_models(llm_mgr: LLMManager = Depends(get_llm_manager)):
         
         return {
             "available_models": available_models,
-            "default_model": "gemini-2.5-flash",
-            "recommended_models": ["gemini-2.5-flash", "gemini-1.5-pro"]
+            "default_model": AppConfig.DEFAULT_MODEL,
+            "recommended_models": [AppConfig.DEFAULT_MODEL, AppConfig.PRO_MODEL]
         }
         
     except Exception as e:

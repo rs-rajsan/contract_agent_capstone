@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
 import logging
 
+from backend.shared.config.phase3_config import AppConfig
 from backend.shared.utils.logger import get_logger
 logger = get_logger(__name__)
 
@@ -93,7 +94,7 @@ class EmbeddingService:
         query = """
         MATCH (s:Section {section_id: $section_id})
         SET s.embedding = $embedding,
-            s.embedding_model = 'gemini-embedding-001',
+            s.embedding_model = $model,
             s.embedding_dimensions = $dimensions,
             s.embedding_generated_at = datetime()
         """
@@ -101,6 +102,7 @@ class EmbeddingService:
         self.repository.graph.query(query, {
             "section_id": section_id,
             "embedding": embedding,
+            "model": AppConfig.EMBEDDING_MODEL_DEFAULT,
             "dimensions": len(embedding)
         })
     
@@ -109,7 +111,7 @@ class EmbeddingService:
         query = """
         MATCH (cl:Clause {clause_id: $clause_id})
         SET cl.embedding = $embedding,
-            cl.embedding_model = 'gemini-embedding-001',
+            cl.embedding_model = $model,
             cl.embedding_dimensions = $dimensions,
             cl.embedding_generated_at = datetime()
         """
@@ -117,6 +119,7 @@ class EmbeddingService:
         self.repository.graph.query(query, {
             "clause_id": clause_id,
             "embedding": embedding,
+            "model": AppConfig.EMBEDDING_MODEL_DEFAULT,
             "dimensions": len(embedding)
         })
     

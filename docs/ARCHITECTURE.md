@@ -70,7 +70,7 @@ The heart of the system is a LangGraph-powered agent that:
 
 Manages multiple LLM providers and their configurations:
 - **OpenAI**: GPT-4o
-- **Google**: Gemini 1.5 Pro, Gemini 2.0 Flash
+- **Google**: Gemini 2.5 Pro, Gemini 2.5 Flash
 - **Anthropic**: Claude 3.5 Sonnet
 - **Mistral**: Mistral Large
 

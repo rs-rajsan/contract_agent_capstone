@@ -8,6 +8,8 @@ import time
 from typing import Dict, Any, Optional
 
 from backend.shared.utils.logger import get_logger
+from backend.shared.config.phase3_config import AppConfig
+
 logger = get_logger(__name__)
 
 class ContractIntelligenceService:
@@ -17,7 +19,7 @@ class ContractIntelligenceService:
         self.llm_manager = llm_manager
         self.repository = Neo4jContractRepository()
     
-    def analyze_contract_intelligence(self, contract_text: str, model: str = "gemini-2.5-flash", use_planning: bool = True) -> ContractIntelligence:
+    def analyze_contract_intelligence(self, contract_text: str, model: str = AppConfig.DEFAULT_MODEL, use_planning: bool = True) -> ContractIntelligence:
         """Perform complete contract intelligence analysis using multi-agent system"""
         
         start_time = time.time()
@@ -65,7 +67,7 @@ class ContractIntelligenceService:
                 processing_time=time.time() - start_time
             )
     
-    def analyze_contract_by_id(self, contract_id: str, model: str = "gemini-2.5-flash", use_planning: bool = True) -> Optional[ContractIntelligence]:
+    def analyze_contract_by_id(self, contract_id: str, model: str = AppConfig.DEFAULT_MODEL, use_planning: bool = True) -> Optional[ContractIntelligence]:
         """Analyze contract intelligence for an existing contract by ID"""
         
         try:
@@ -102,18 +104,12 @@ class ContractIntelligenceService:
             return None
     
     def _get_llm_for_model(self, model: str):
-        """Get LLM instance for the specified model"""
+        """Get LLM instance for the specified model via LLMManager"""
         try:
-            return self.llm_manager.agents[model]._llm if hasattr(self.llm_manager.agents[model], '_llm') else self.llm_manager.agents[model]
-        except KeyError:
-            logger.warning(f"Model {model} not found, using default")
-            # Use first available model as fallback
-            available_models = list(self.llm_manager.agents.keys())
-            if available_models:
-                fallback_model = available_models[0]
-                return self.llm_manager.agents[fallback_model]._llm if hasattr(self.llm_manager.agents[fallback_model], '_llm') else self.llm_manager.agents[fallback_model]
-            else:
-                raise ValueError("No LLM models available")
+            return self.llm_manager.get_llm_instance(model)
+        except Exception as e:
+            logger.error(f"Failed to get LLM instance for model {model}: {e}")
+            raise
     
     def _convert_to_domain_entities(self, analysis_result: Dict[str, Any]) -> ContractIntelligence:
         """Convert analysis results to domain entities"""

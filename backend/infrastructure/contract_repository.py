@@ -15,6 +15,15 @@ class Neo4jContractRepository(IContractRepository):
     def __init__(self):
         self.graph = graph  # Reuse existing connection
         self.embedding_service = embedding  # Reuse existing embedding service
+        
+    def check_connection(self) -> bool:
+        """Check if Neo4j connection is active"""
+        try:
+            self.graph.query("RETURN 1")
+            return True
+        except Exception as e:
+            logger.error(f"Neo4j connection check failed: {e}")
+            return False
     
     def get_contract_by_id(self, contract_id: str, tenant_id: str = "demo_tenant_1") -> Dict[str, Any]:
         """Get contract data by ID - Enforces multi-tenant isolation"""

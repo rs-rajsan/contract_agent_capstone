@@ -2,12 +2,15 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, Query, Depends, 
 from backend.application.services.enhanced_document_processing_service import EnhancedDocumentServiceFactory
 from backend.domain.entities import DocumentProcessingRequest
 from backend.llm_manager import LLMManager
+import tempfile
 import os
 import uuid
 import logging
 from typing import Optional
 
 from backend.shared.utils.logger import get_logger
+from backend.shared.config.phase3_config import AppConfig
+
 logger = get_logger(__name__)
 
 # Create router
@@ -20,7 +23,7 @@ def get_llm_manager(request: Request):
 @router.post("/upload")
 async def upload_pdf_enhanced(
     file: UploadFile = File(...),
-    model: str = Query(default="gemini-2.5-flash", description="LLM model to use for processing"),
+    model: str = Query(default=AppConfig.DEFAULT_MODEL, description="LLM model to use for processing"),
     enable_embeddings: bool = Query(default=True, description="Enable multi-level embeddings processing"),
     llm_mgr: LLMManager = Depends(get_llm_manager)
 ):
@@ -79,7 +82,8 @@ async def upload_pdf_enhanced(
         # Save file temporarily
         logger.info("Step 4: Saving file temporarily")
         temp_filename = f"{uuid.uuid4().hex}_{file.filename}"
-        temp_path = f"/tmp/{temp_filename}"
+        temp_dir = tempfile.gettempdir()
+        temp_path = os.path.join(temp_dir, temp_filename)
         
         try:
             with open(temp_path, "wb") as temp_file:
@@ -142,7 +146,7 @@ async def upload_pdf_enhanced(
                 "filename": file.filename,
                 "status": "error",
                 "contract_id": None,
-                "details": f"Processing error: {str(proc_error)}",
+                "error_details": f"Processing error: {str(proc_error)}",
                 "model_used": model,
                 "enhanced_embeddings": False,
                 "error_type": type(proc_error).__name__

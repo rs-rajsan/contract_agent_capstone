@@ -1,6 +1,7 @@
 """Enhanced chunking agent with planning, self-reflection, and advanced strategy selection."""
 
 import asyncio
+import time
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 import logging
@@ -50,6 +51,7 @@ class ChunkingAgent:
         from backend.infrastructure.chunking.chunking_orchestrator import ChunkingOrchestrator, ChunkingCommandFactory
         
         try:
+            start_time = time.perf_counter()
             # Use orchestrator for comprehensive processing
             orchestrator = ChunkingOrchestrator()
             
@@ -65,6 +67,17 @@ class ChunkingAgent:
                 # Store chunks using existing storage service
                 storage_result = await self.storage_service.store_chunks(
                     document_id, result.chunks, metadata
+                )
+                
+                latency = int((time.perf_counter() - start_time) * 1000)
+                logger.info(
+                    f"Chunking process completed for {document_id}", 
+                    extra={
+                        "agent_name": "ChunkingAgent",
+                        "operation": "process_document",
+                        "latency_ms": latency,
+                        "chunk_count": len(result.chunks)
+                    }
                 )
                 
                 return {
@@ -88,7 +101,7 @@ class ChunkingAgent:
                 return await self._fallback_to_original_processing(document_id, content, metadata)
                 
         except Exception as e:
-            logger.error(f"Orchestrator processing failed: {e}")
+            logger.error(f"Orchestrator processing failed: {e}", extra={"agent_name": "ChunkingAgent", "operation": "process_document"})
             # Fallback to original method
             return await self._fallback_to_original_processing(document_id, content, metadata)
     

@@ -10,14 +10,20 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY-}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY-}
       - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006/v1/traces
+      - REDIS_URL=redis://redis:6379
     networks:
       - net
     x-develop:
       watch:
-        - action: rebuild
+        - action: sync
           path: ./backend
+          target: /app/backend
+        - action: rebuild
+          path: ./backend/pyproject.toml
     ports:
       - 8000:8000
+    volumes:
+      - ./logs:/app/logs
   ui:
     build:
       context: ./frontend
@@ -38,6 +44,15 @@ services:
       - 4317:4317
     networks:
       - net
+  redis:
+    image: redis:alpine
+    networks:
+      - net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
 networks:
   net:

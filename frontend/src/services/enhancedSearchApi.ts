@@ -1,6 +1,6 @@
 import { EnhancedSearchParams } from '../components/search/EnhancedSearchInterface';
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
 export interface EnhancedSearchResponse {
   success: boolean;
@@ -64,7 +64,7 @@ class EnhancedSearchApi {
 
   async uploadEnhancedDocument(
     file: File, 
-    model: string = 'gemini-2.5-flash',
+    model: string = import.meta.env.VITE_GEMINI_MODEL_DEFAULT || 'gemini-2.5-flash',
     enableEmbeddings: boolean = true
   ): Promise<any> {
     const formData = new FormData();

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, BackgroundTasks, Query, Depends, Request
+from langchain_core.messages import HumanMessage
 from fastapi.responses import StreamingResponse
 from backend.application.services.document_processing_service import DocumentServiceFactory
 from backend.domain.entities import DocumentProcessingRequest
@@ -8,6 +9,8 @@ from backend.infrastructure.content_validator import ContentValidationService
 from backend.infrastructure.error_tracker import ErrorTracker, ErrorCategory, ErrorSeverity, error_tracking_context
 from backend.agents.chunking_agent import ChunkingAgent
 from backend.infrastructure.chunking.storage_service import ChunkStorageService
+from backend.shared.config.phase3_config import AppConfig
+import tempfile
 import os
 import uuid
 import json
@@ -15,6 +18,12 @@ import logging
 from typing import Optional
 
 from backend.shared.utils.logger import get_logger
+from backend.infrastructure.contract_repository import Neo4jContractRepository
+from backend.infrastructure.text_extractors import TextExtractionService
+from backend.shared.utils.gemini_embedding_service import GeminiEmbeddingService
+from backend.factories.document_processor_factory import DocumentProcessorFactory
+from backend.agents.pdf_processing_agent import PDFAgentFactory
+
 logger = get_logger(__name__)
 
 # Create router
@@ -28,7 +37,6 @@ def get_llm_manager(request: Request):
 async def debug_contracts():
     """Debug endpoint to see all contracts"""
     try:
-        from backend.infrastructure.contract_repository import Neo4jContractRepository
         repo = Neo4jContractRepository()
         
         query = """
@@ -64,7 +72,6 @@ async def debug_contracts():
 async def debug_contract_types():
     """Debug endpoint to see contract type distribution"""
     try:
-        from backend.infrastructure.contract_repository import Neo4jContractRepository
         repo = Neo4jContractRepository()
         
         query = """
@@ -88,7 +95,7 @@ async def debug_contract_types():
 async def upload_pdf(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    model: str = Query(default="gemini-2.5-flash", description="LLM model to use for processing"),
+    model: str = Query(default=AppConfig.DEFAULT_MODEL, description="LLM model to use for processing"),
     enable_enhanced: bool = Query(default=False, description="Enable enhanced processing with sections/clauses"),
     llm_mgr: LLMManager = Depends(get_llm_manager)
 ):
@@ -152,8 +159,6 @@ async def upload_pdf(
             # Check for duplicate by filename
             logger.info("Step 3: Checking for duplicates")
             try:
-                duplicate_check = llm_mgr.agents["gemini-2.5-flash"]._llm if hasattr(llm_mgr.agents["gemini-2.5-flash"], '_llm') else llm_mgr.agents["gemini-2.5-flash"]
-                from backend.infrastructure.contract_repository import Neo4jContractRepository
                 repo = Neo4jContractRepository()
                 logger.info("Repository initialized successfully")
             except Exception as repo_error:
@@ -182,7 +187,8 @@ async def upload_pdf(
             # Save file temporarily
             logger.info("Step 4: Saving file temporarily")
             temp_filename = f"{uuid.uuid4().hex}_{file.filename}"
-            temp_path = f"/tmp/{temp_filename}"
+            temp_dir = tempfile.gettempdir()
+            temp_path = os.path.join(temp_dir, temp_filename)
             
             try:
                 with open(temp_path, "wb") as temp_file:
@@ -195,7 +201,6 @@ async def upload_pdf(
             # Extract full text for storage
             logger.info("Step 5: Extracting text from PDF")
             try:
-                from backend.infrastructure.text_extractors import TextExtractionService
                 text_extractor = TextExtractionService()
                 full_text = text_extractor.extract_with_fallback(temp_path)
                 logger.info(f"Text extraction completed. Length: {len(full_text)} characters")
@@ -219,7 +224,6 @@ async def upload_pdf(
                 logger.info("Step 5.5: Enhanced intelligent chunking with embeddings")
                 try:
                     # Initialize embedding service
-                    from backend.shared.utils.gemini_embedding_service import GeminiEmbeddingService
                     embedding_service = GeminiEmbeddingService()
                     
                     chunking_agent = ChunkingAgent(embedding_service)
@@ -307,7 +311,6 @@ async def upload_pdf(
                 
                 if enable_enhanced:
                     # Use enhanced processor with sections/clauses
-                    from backend.factories.document_processor_factory import DocumentProcessorFactory
                     processor = DocumentProcessorFactory.create_processor("full", llm_mgr.agents[model])
                     result = processor.process_document(temp_path, processing_request.processing_options)
                     
@@ -345,7 +348,7 @@ async def upload_pdf(
                     "filename": file.filename,
                     "status": "error",
                     "contract_id": None,
-                    "details": f"Processing error: {str(proc_error)}",
+                    "error_details": str(proc_error),
                     "model_used": model,
                     "error_type": type(proc_error).__name__
                 }
@@ -384,7 +387,8 @@ async def upload_pdf(
             logger.error(f"Error: {e}")
             logger.error(f"Error type: {type(e).__name__}")
             import traceback
-            logger.error(f"Full traceback: {traceback.format_exc()}")
+            error_trace = traceback.format_exc()
+            logger.error(f"Full traceback: {error_trace}")
             
             # Cleanup temp file if it exists
             if 'temp_path' in locals() and temp_path and os.path.exists(temp_path):
@@ -393,15 +397,25 @@ async def upload_pdf(
                     logger.info(f"Cleaned up temp file: {temp_path}")
                 except Exception as cleanup_error:
                     logger.error(f"Failed to cleanup temp file: {cleanup_error}")
-                    
-            raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
+            
+            # Return detailed error instead of generic 500
+            error_msg = f"Processing failed: {str(e)}"
+            return {
+                "message": "PDF upload failed",
+                "filename": file.filename if file else "unknown",
+                "status": "error",
+                "error_details": error_msg,
+                "error_type": type(e).__name__,
+                "model_used": model,
+                "contract_id": None
+            }
         finally:
             logger.info(f"=== UPLOAD END: {file.filename if file else 'unknown'} ===")
 
 @router.post("/upload-stream")
 async def upload_pdf_stream(
     file: UploadFile = File(...),
-    model: str = Query(default="gemini-2.5-flash", description="LLM model to use for processing"),
+    model: str = Query(default=AppConfig.DEFAULT_MODEL, description="LLM model to use for processing"),
     llm_mgr: LLMManager = Depends(get_llm_manager)
 ):
     """
@@ -420,7 +434,8 @@ async def upload_pdf_stream(
         
         # Save file temporarily
         temp_filename = f"{uuid.uuid4().hex}_{file.filename}"
-        temp_path = f"/tmp/{temp_filename}"
+        temp_dir = tempfile.gettempdir()
+        temp_path = os.path.join(temp_dir, temp_filename)
         
         with open(temp_path, "wb") as temp_file:
             temp_file.write(file_content)
@@ -439,11 +454,8 @@ async def upload_pdf_stream(
                 document_service = DocumentServiceFactory.create_service(llm_mgr)
                 # Get LLM and create agent
                 llm = document_service._get_llm_for_model(model)
-                from backend.agents.pdf_processing_agent import PDFAgentFactory
                 pdf_agent = PDFAgentFactory.create_agent(llm)
                 
-                # Create processing message
-                from langchain_core.messages import HumanMessage
                 processing_message = HumanMessage(content=f"""
                 Process this PDF contract document:
                 

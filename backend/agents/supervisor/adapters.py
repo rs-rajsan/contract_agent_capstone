@@ -2,6 +2,7 @@ from typing import Dict, Any
 from .base_adapter import BaseAgentAdapter, AgentConfig
 from .interfaces import AgentContext, AgentResult
 from ...llm_manager import LLMManager
+from ...shared.config.phase3_config import AppConfig
 
 class PDFProcessingAdapter(BaseAgentAdapter):
     def __init__(self, config: AgentConfig, llm_manager: LLMManager):
@@ -23,7 +24,7 @@ class PDFProcessingAdapter(BaseAgentAdapter):
         request = DocumentProcessingRequest(
             file_path=input_data["file_path"],
             filename=input_data["filename"],
-            processing_options={"model": "gemini-2.5-flash"}
+            processing_options={"model": AppConfig.DEFAULT_MODEL}
         )
         
         return service.process_pdf_upload(request)
@@ -57,7 +58,7 @@ class ClauseExtractionAdapter(BaseAgentAdapter):
         
         contract_id = input_data["contract_id"]
         if contract_id:
-            return service.analyze_contract_by_id(contract_id, "gemini-2.5-flash")
+            return service.analyze_contract_by_id(contract_id, AppConfig.DEFAULT_MODEL)
         else:
             return {"clauses": [], "status": "no_contract_id"}
     
@@ -102,7 +103,7 @@ class RiskAssessmentAdapter(BaseAgentAdapter):
         
         contract_id = input_data["contract_id"]
         if contract_id:
-            return service.analyze_contract_by_id(contract_id, "gemini-2.5-flash")
+            return service.analyze_contract_by_id(contract_id, AppConfig.DEFAULT_MODEL)
         else:
             return {"risk_assessment": None}
     

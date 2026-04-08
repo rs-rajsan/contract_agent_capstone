@@ -14,7 +14,8 @@ interface UploadResult {
   filename: string;
   status: string;
   contract_id?: string;
-  details: string;
+  details?: string;
+  error_details?: string;
   model_used: string;
 }
 
@@ -66,8 +67,12 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       formData.append('file', file);
       formData.append('model', modelSelection);
 
+      const correlationId = crypto.randomUUID();
       const response = await fetch('/api/documents/upload', {
         method: 'POST',
+        headers: {
+          'X-Correlation-ID': correlationId
+        },
         body: formData
       });
 
@@ -111,7 +116,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       setUploadResult({
         filename: file.name,
         status: 'error',
-        details: error instanceof Error ? error.message : 'Upload failed',
+        error_details: error instanceof Error ? error.message : 'Upload failed',
         model_used: modelSelection
       });
     } finally {
@@ -161,7 +166,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       case 'success':
         return `✅ Contract created successfully! ID: ${result.contract_id}`;
       case 'error':
-        return `❌ Processing failed: ${result.details}`;
+        return `❌ Processing failed: ${result.error_details || 'Unknown error'}`;
       case 'review_required':
         return `⚠️ Manual review required: ${result.details}`;
       case 'skipped':

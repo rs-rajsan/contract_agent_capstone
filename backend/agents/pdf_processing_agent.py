@@ -7,6 +7,7 @@ from backend.infrastructure.contract_analyzer import LLMContractAnalyzer
 from backend.infrastructure.contract_repository import Neo4jContractRepository
 import logging
 import json
+import time
 
 from backend.shared.utils.logger import get_logger
 logger = get_logger(__name__)
@@ -24,8 +25,13 @@ def get_pdf_processing_agent(llm):
     def extract_text_node(state: PDFProcessingState) -> PDFProcessingState:
         """Extract text from PDF - Single Responsibility"""
         try:
+            start_time = time.perf_counter()
             text = text_extractor.extract_with_fallback(state["file_path"])
-            logger.info(f"Extracted {len(text)} characters")
+            latency = int((time.perf_counter() - start_time) * 1000)
+            logger.info(
+                f"Extracted {len(text)} characters", 
+                extra={"agent_name": "PDFAgent", "operation": "extract_text", "latency_ms": latency}
+            )
             return {**state, "extracted_text": text}
         except Exception as e:
             logger.error(f"Text extraction failed: {e}")
@@ -43,7 +49,10 @@ def get_pdf_processing_agent(llm):
             )}
         
         try:
+            start_timer = time.perf_counter()
             analysis = contract_analyzer.analyze_contract(state["extracted_text"])
+            latency = int((time.perf_counter() - start_timer) * 1000)
+            
             contract_data = ContractData(
                 is_contract=analysis["is_contract"],
                 confidence_score=analysis["confidence_score"],
@@ -57,7 +66,10 @@ def get_pdf_processing_agent(llm):
                 key_terms=analysis.get("key_terms", []),
                 full_text=state["extracted_text"]
             )
-            logger.info(f"Analysis complete: confidence={contract_data.confidence_score}")
+            logger.info(
+                f"Analysis complete: confidence={contract_data.confidence_score}", 
+                extra={"agent_name": "PDFAgent", "operation": "analyze_contract", "latency_ms": latency}
+            )
             return {**state, "contract_data": contract_data}
         except Exception as e:
             logger.error(f"Contract analysis failed: {e}")
@@ -104,8 +116,14 @@ def get_pdf_processing_agent(llm):
                 "full_text": contract_data.full_text
             }
             
+            start_time = time.perf_counter()
             contract_id = contract_repository.store_contract(data_dict)
-            logger.info(f"Contract stored with ID: {contract_id}")
+            latency = int((time.perf_counter() - start_time) * 1000)
+            
+            logger.info(
+                f"Contract stored with ID: {contract_id}", 
+                extra={"agent_name": "PDFAgent", "operation": "store_contract", "latency_ms": latency}
+            )
             
             return {**state, "processing_result": ProcessingResult(
                 status=ProcessingStatus.SUCCESS,

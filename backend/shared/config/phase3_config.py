@@ -1,8 +1,33 @@
 import os
 from typing import Dict, Any
 
-class Phase3Config:
-    """Configuration for Phase 3 optimizations"""
+class AppConfig:
+    """Centralized configuration for the Contract Intelligence system"""
+    
+    # General Configuration
+    ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+    
+    # Model Configuration
+    DEFAULT_MODEL = os.getenv("GEMINI_MODEL_DEFAULT", "gemini-2.5-flash")
+    PRO_MODEL = os.getenv("GEMINI_PRO_MODEL", "gemini-1.5-pro")
+    
+    OPENAI_MODEL = os.getenv("OPENAI_MODEL_DEFAULT", "gpt-4o")
+    ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL_DEFAULT", "claude-3-5-sonnet-latest")
+    MISTRAL_MODEL = os.getenv("MISTRAL_MODEL_DEFAULT", "mistral-large-latest")
+    
+    LLM_TEMPERATURE = float(os.getenv("LLM_DEFAULT_TEMPERATURE", "0.0"))
+    
+    # Embedding Configuration
+    EMBEDDING_MODEL_DEFAULT = os.getenv("GEMINI_EMBEDDING_MODEL", "gemini-embedding-001")
+    EMBEDDING_DIMENSION = int(os.getenv("EMBEDDING_DIMENSION", "1536"))
+    
+    # CORS Configuration
+    try:
+        cors_origins_str = os.getenv("CORS_ALLOWED_ORIGINS", '["*"]')
+        import json
+        CORS_ALLOWED_ORIGINS = json.loads(cors_origins_str)
+    except Exception:
+        CORS_ALLOWED_ORIGINS = ["*"]
     
     # Cache Configuration
     REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
@@ -108,3 +133,6 @@ class Phase3Config:
                 "phase_fallback": cls.ENABLE_PHASE_FALLBACK
             }
         }
+
+# Alias for backward compatibility
+Phase3Config = AppConfig

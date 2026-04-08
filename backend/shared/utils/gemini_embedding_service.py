@@ -27,17 +27,16 @@ class GeminiEmbeddingService:
         if self._initialized:
             return
         
-        from dotenv import load_dotenv
-        load_dotenv()
+        from backend.shared.config.phase3_config import AppConfig
         
         api_key = os.getenv('GOOGLE_API_KEY') or os.getenv('GEMINI_API_KEY')
         if not api_key:
             raise ValueError("GOOGLE_API_KEY or GEMINI_API_KEY required for production")
         
-        # Use Google GenAI client for 1536 dimensions
+        # Use Google GenAI client for configurable dimensions
         self.client = genai.Client(api_key=api_key)
-        self.model = "gemini-embedding-001"
-        self.dimensions = 1536
+        self.model = AppConfig.EMBEDDING_MODEL_DEFAULT
+        self.dimensions = AppConfig.EMBEDDING_DIMENSION
         self._initialized = True
     
     def embed_query(self, text: str) -> List[float]:

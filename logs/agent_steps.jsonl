@@ -1,0 +1,359 @@
+{"timestamp": "2026-04-08T01:28:59.353306Z", "level": "WARNING", "name": "backend.shared.cache.redis_cache", "message": "Redis connection failed, using in-memory cache: Error 111 connecting to localhost:6379. Connection refused."}
+{"timestamp": "2026-04-08T01:29:00.331494Z", "level": "INFO", "name": "uvicorn.error", "message": "Started server process [10]"}
+{"timestamp": "2026-04-08T01:29:00.335811Z", "level": "INFO", "name": "uvicorn.error", "message": "Waiting for application startup."}
+{"timestamp": "2026-04-08T01:29:03.970613Z", "level": "INFO", "name": "uvicorn.error", "message": "Application startup complete."}
+{"timestamp": "2026-04-08T01:29:03.982763Z", "level": "INFO", "name": "uvicorn.error", "message": "Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)"}
+{"timestamp": "2026-04-08T01:46:00.664972Z", "level": "INFO", "name": "uvicorn.error", "message": "Shutting down"}
+{"timestamp": "2026-04-08T01:46:00.772606Z", "level": "INFO", "name": "uvicorn.error", "message": "Waiting for application shutdown."}
+{"timestamp": "2026-04-08T01:46:00.778675Z", "level": "INFO", "name": "uvicorn.error", "message": "Application shutdown complete."}
+{"timestamp": "2026-04-08T01:46:00.787801Z", "level": "INFO", "name": "uvicorn.error", "message": "Finished server process [10]"}
+{"timestamp": "2026-04-08T01:49:26.591687Z", "level": "INFO", "name": "backend.shared.cache.redis_cache", "message": "Connected to Redis cache"}
+{"timestamp": "2026-04-08T01:49:27.360400Z", "level": "INFO", "name": "uvicorn.error", "message": "Started server process [10]"}
+{"timestamp": "2026-04-08T01:49:27.362756Z", "level": "INFO", "name": "uvicorn.error", "message": "Waiting for application startup."}
+{"timestamp": "2026-04-08T01:49:29.948100Z", "level": "INFO", "name": "uvicorn.error", "message": "Application startup complete."}
+{"timestamp": "2026-04-08T01:49:29.956013Z", "level": "INFO", "name": "uvicorn.error", "message": "Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)"}
+{"timestamp": "2026-04-08T01:57:33.352706Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "13836a67-b3cd-4c16-911d-5878cd5ab981"}
+{"timestamp": "2026-04-08T01:59:38.683972Z", "level": "INFO", "name": "uvicorn.error", "message": "Shutting down"}
+{"timestamp": "2026-04-08T01:59:38.789826Z", "level": "INFO", "name": "uvicorn.error", "message": "Waiting for application shutdown."}
+{"timestamp": "2026-04-08T01:59:38.796819Z", "level": "INFO", "name": "uvicorn.error", "message": "Application shutdown complete."}
+{"timestamp": "2026-04-08T01:59:38.806479Z", "level": "INFO", "name": "uvicorn.error", "message": "Finished server process [10]"}
+{"timestamp": "2026-04-08T02:00:49.735093Z", "level": "INFO", "name": "backend.shared.cache.redis_cache", "message": "Connected to Redis cache"}
+{"timestamp": "2026-04-08T02:00:50.505413Z", "level": "INFO", "name": "uvicorn.error", "message": "Started server process [10]"}
+{"timestamp": "2026-04-08T02:00:50.509068Z", "level": "INFO", "name": "uvicorn.error", "message": "Waiting for application startup."}
+{"timestamp": "2026-04-08T02:00:53.544198Z", "level": "INFO", "name": "uvicorn.error", "message": "Application startup complete."}
+{"timestamp": "2026-04-08T02:00:53.551972Z", "level": "INFO", "name": "uvicorn.error", "message": "Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)"}
+{"timestamp": "2026-04-08T02:06:21.812730Z", "level": "INFO", "name": "uvicorn.error", "message": "Shutting down"}
+{"timestamp": "2026-04-08T02:06:21.920465Z", "level": "INFO", "name": "uvicorn.error", "message": "Waiting for application shutdown."}
+{"timestamp": "2026-04-08T02:06:21.926337Z", "level": "INFO", "name": "uvicorn.error", "message": "Application shutdown complete."}
+{"timestamp": "2026-04-08T02:06:21.931773Z", "level": "INFO", "name": "uvicorn.error", "message": "Finished server process [10]"}
+{"timestamp": "2026-04-08T02:08:07.766022Z", "level": "INFO", "name": "backend.shared.cache.redis_cache", "message": "Connected to Redis cache"}
+{"timestamp": "2026-04-08T02:08:08.515606Z", "level": "INFO", "name": "uvicorn.error", "message": "Started server process [10]"}
+{"timestamp": "2026-04-08T02:08:08.519794Z", "level": "INFO", "name": "uvicorn.error", "message": "Waiting for application startup."}
+{"timestamp": "2026-04-08T02:08:11.869231Z", "level": "INFO", "name": "uvicorn.error", "message": "Application startup complete."}
+{"timestamp": "2026-04-08T02:08:11.878423Z", "level": "INFO", "name": "uvicorn.error", "message": "Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)"}
+{"timestamp": "2026-04-08T02:14:24.275163Z", "level": "INFO", "name": "uvicorn.error", "message": "Shutting down"}
+{"timestamp": "2026-04-08T02:14:24.380966Z", "level": "INFO", "name": "uvicorn.error", "message": "Waiting for application shutdown."}
+{"timestamp": "2026-04-08T02:14:24.387231Z", "level": "INFO", "name": "uvicorn.error", "message": "Application shutdown complete."}
+{"timestamp": "2026-04-08T02:14:24.391507Z", "level": "INFO", "name": "uvicorn.error", "message": "Finished server process [10]"}
+{"timestamp": "2026-04-08T02:15:17.651594Z", "level": "INFO", "name": "backend.shared.cache.redis_cache", "message": "Connected to Redis cache"}
+{"timestamp": "2026-04-08T02:15:18.336836Z", "level": "INFO", "name": "uvicorn.error", "message": "Started server process [10]"}
+{"timestamp": "2026-04-08T02:15:18.340270Z", "level": "INFO", "name": "uvicorn.error", "message": "Waiting for application startup."}
+{"timestamp": "2026-04-08T02:15:20.677213Z", "level": "INFO", "name": "uvicorn.error", "message": "Application startup complete."}
+{"timestamp": "2026-04-08T02:15:20.684204Z", "level": "INFO", "name": "uvicorn.error", "message": "Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)"}
+{"timestamp": "2026-04-08T02:26:48.664157Z", "level": "INFO", "name": "uvicorn.error", "message": "Shutting down"}
+{"timestamp": "2026-04-08T02:26:48.773526Z", "level": "INFO", "name": "uvicorn.error", "message": "Waiting for application shutdown."}
+{"timestamp": "2026-04-08T02:26:48.788598Z", "level": "INFO", "name": "uvicorn.error", "message": "Application shutdown complete."}
+{"timestamp": "2026-04-08T02:26:48.798889Z", "level": "INFO", "name": "uvicorn.error", "message": "Finished server process [10]"}
+{"timestamp": "2026-04-08T02:35:58.953992Z", "level": "INFO", "name": "backend.shared.cache.redis_cache", "message": "Connected to Redis cache"}
+{"timestamp": "2026-04-08T02:35:59.822042Z", "level": "INFO", "name": "uvicorn.error", "message": "Started server process [10]"}
+{"timestamp": "2026-04-08T02:35:59.825015Z", "level": "INFO", "name": "uvicorn.error", "message": "Waiting for application startup."}
+{"timestamp": "2026-04-08T02:36:02.430441Z", "level": "INFO", "name": "uvicorn.error", "message": "Application startup complete."}
+{"timestamp": "2026-04-08T02:36:02.438975Z", "level": "INFO", "name": "uvicorn.error", "message": "Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)"}
+{"timestamp": "2026-04-08T02:41:06.142232Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /", "correlation_id": "6d1d72e5-fce2-4a46-9c63-5a44ee8c211e"}
+{"timestamp": "2026-04-08T02:43:53.097528Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: POST /api/documents/upload", "correlation_id": "e6cff117-b008-4246-b68f-cca16f36a845"}
+{"timestamp": "2026-04-08T02:52:01.395123Z", "level": "INFO", "name": "backend.shared.cache.redis_cache", "message": "Connected to Redis cache"}
+{"timestamp": "2026-04-08T02:52:02.375543Z", "level": "INFO", "name": "uvicorn.error", "message": "Started server process [10]"}
+{"timestamp": "2026-04-08T02:52:02.378484Z", "level": "INFO", "name": "uvicorn.error", "message": "Waiting for application startup."}
+{"timestamp": "2026-04-08T02:52:04.606270Z", "level": "INFO", "name": "uvicorn.error", "message": "Application startup complete."}
+{"timestamp": "2026-04-08T02:52:04.612723Z", "level": "INFO", "name": "uvicorn.error", "message": "Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)"}
+{"timestamp": "2026-04-08T02:54:03.088522Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: POST /api/documents/upload", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:03.093502Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "3c7bd163-f081-4aee-b7ae-1e45f7f4d7f5"}
+{"timestamp": "2026-04-08T02:54:03.104174Z", "level": "INFO", "name": "backend.api.document_upload", "message": "=== UPLOAD START: Clean_SOW.pdf ===", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:03.105599Z", "level": "INFO", "name": "backend.api.document_upload", "message": "Step 1: Input validation for file: Clean_SOW.pdf", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:03.106831Z", "level": "INFO", "name": "backend.api.document_upload", "message": "Step 2: Reading file content", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:03.109057Z", "level": "INFO", "name": "backend.api.document_upload", "message": "File size: 5627 bytes", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:03.110691Z", "level": "INFO", "name": "backend.api.document_upload", "message": "Step 3: Checking for duplicates", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:03.112042Z", "level": "INFO", "name": "backend.api.document_upload", "message": "Repository initialized successfully", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:03.432466Z", "level": "INFO", "name": "backend.api.document_upload", "message": "Duplicate check completed. Found: 0 matches", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:03.434514Z", "level": "INFO", "name": "backend.api.document_upload", "message": "Step 4: Saving file temporarily", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:03.439691Z", "level": "INFO", "name": "backend.api.document_upload", "message": "File saved successfully: Clean_SOW.pdf -> /tmp/e2c42ebb2a97434dbdfbcc360ad16fa8_Clean_SOW.pdf", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:03.441045Z", "level": "INFO", "name": "backend.api.document_upload", "message": "Step 5: Extracting text from PDF", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:04.412785Z", "level": "WARNING", "name": "pypdf._reader", "message": "incorrect startxref pointer(1)", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:04.415296Z", "level": "WARNING", "name": "pypdf._reader", "message": "parsing for Object Streams", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:04.478253Z", "level": "INFO", "name": "backend.infrastructure.text_extractors", "message": "Successfully extracted text using PyPDFExtractor", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:04.479598Z", "level": "INFO", "name": "backend.api.document_upload", "message": "Text extraction completed. Length: 1597 characters", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:04.656168Z", "level": "INFO", "name": "backend.infrastructure.audit_logger", "message": "Audit logged: validation_failure - Clean_SOW.pdf - failure", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:04.657986Z", "level": "WARNING", "name": "backend.api.document_upload", "message": "Content validation issues: {'total_checks': 8, 'passed': 3, 'failed': 5, 'errors': 1, 'warnings': 4}", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:04.660065Z", "level": "INFO", "name": "backend.api.document_upload", "message": "Step 5.5: Enhanced intelligent chunking with embeddings", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:05.126536Z", "level": "INFO", "name": "httpx", "message": "HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:batchEmbedContents \"HTTP/1.1 200 OK\"", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:05.134817Z", "level": "ERROR", "name": "backend.infrastructure.chunking.embedding_optimizer", "message": "Failed to generate embedding for chunk: object list can't be used in 'await' expression", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:05.324288Z", "level": "INFO", "name": "httpx", "message": "HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:batchEmbedContents \"HTTP/1.1 200 OK\"", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:05.334401Z", "level": "ERROR", "name": "backend.infrastructure.chunking.embedding_optimizer", "message": "Failed to generate embedding for chunk: object list can't be used in 'await' expression", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:05.337791Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "8cf014a4-2644-463e-ab04-b46c556c1cb7"}
+{"timestamp": "2026-04-08T02:54:05.941158Z", "level": "INFO", "name": "backend.agents.chunking_agent", "message": "Chunking process completed for Clean_SOW", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2", "agent_name": "ChunkingAgent", "operation": "process_document", "latency_ms": 1182}
+{"timestamp": "2026-04-08T02:54:05.943004Z", "level": "WARNING", "name": "backend.api.document_upload", "message": "Async chunking failed: 'dict' object has no attribute 'strategy_type', trying sync method", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:06.406651Z", "level": "INFO", "name": "backend.api.document_upload", "message": "Sync chunking completed: 2 chunks, strategy: sentence, quality: 0.94", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:06.408010Z", "level": "INFO", "name": "backend.api.document_upload", "message": "Step 6: Creating processing request", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:06.409637Z", "level": "INFO", "name": "backend.api.document_upload", "message": "Processing request created successfully", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:06.411093Z", "level": "INFO", "name": "backend.api.document_upload", "message": "Step 7: Starting document processing for: Clean_SOW.pdf", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:06.412539Z", "level": "INFO", "name": "backend.application.services.document_processing_service", "message": "Starting PDF processing for: Clean_SOW.pdf", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:06.439922Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "\ud83d\ude80 MULTI-AGENT CONTRACT ANALYSIS WORKFLOW STARTED", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:06.441531Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "\ud83e\udd16 AGENT STARTED: PDF Processing Agent", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:06.443201Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Role: Extract text and analyze contract structure from PDF", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:06.444693Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Input: PDF file: Clean_SOW.pdf", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:06.446308Z", "level": "INFO", "name": "backend.application.services.document_processing_service", "message": "Starting PDF agent processing with structured state", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:06.473731Z", "level": "WARNING", "name": "pypdf._reader", "message": "incorrect startxref pointer(1)", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:06.475651Z", "level": "WARNING", "name": "pypdf._reader", "message": "parsing for Object Streams", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:06.532185Z", "level": "INFO", "name": "backend.infrastructure.text_extractors", "message": "Successfully extracted text using PyPDFExtractor", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:06.533981Z", "level": "INFO", "name": "backend.agents.pdf_processing_agent", "message": "Extracted 1597 characters", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2", "agent_name": "PDFAgent", "operation": "extract_text", "latency_ms": 60}
+{"timestamp": "2026-04-08T02:54:06.560272Z", "level": "INFO", "name": "google_genai.models", "message": "AFC is enabled with max remote calls: 10.", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:12.398135Z", "level": "INFO", "name": "httpx", "message": "HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent \"HTTP/1.1 200 OK\"", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:12.407530Z", "level": "INFO", "name": "backend.infrastructure.contract_analyzer", "message": "Contract analysis extraction complete", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2", "agent_name": "LLMContractAnalyzer", "operation": "analyze_contract", "latency_ms": 5859, "tokens": 0}
+{"timestamp": "2026-04-08T02:54:12.525752Z", "level": "INFO", "name": "backend.agents.pdf_processing_agent", "message": "Analysis complete: confidence=1.0", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2", "agent_name": "PDFAgent", "operation": "analyze_contract", "latency_ms": 5982}
+{"timestamp": "2026-04-08T02:54:12.535116Z", "level": "INFO", "name": "backend.infrastructure.contract_repository", "message": "=== STORING CONTRACT ===", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:12.536825Z", "level": "INFO", "name": "backend.infrastructure.contract_repository", "message": "Contract ID: UPLOADED_C8FEFF2B_20260408", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:12.538525Z", "level": "INFO", "name": "backend.infrastructure.contract_repository", "message": "Contract Type: SOW", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:12.539739Z", "level": "INFO", "name": "backend.infrastructure.contract_repository", "message": "Summary: This Statement of Work (SOW) outlines a Digital Transformation Initiative where ConsultCorp (Company...", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:12.541065Z", "level": "INFO", "name": "backend.infrastructure.contract_repository", "message": "Is Contract: True", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:12.542549Z", "level": "INFO", "name": "backend.infrastructure.contract_repository", "message": "Confidence: 1.0", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:12.914851Z", "level": "INFO", "name": "httpx", "message": "HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:batchEmbedContents \"HTTP/1.1 200 OK\"", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:12.920821Z", "level": "INFO", "name": "backend.infrastructure.contract_repository", "message": "Generated embedding with 1536 dimensions", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:12.922395Z", "level": "INFO", "name": "backend.infrastructure.contract_repository", "message": "Executing Neo4j query with params: ['file_id', 'tenant_id', 'summary', 'contract_type', 'contract_scope', 'full_text', 'effective_date', 'end_date', 'total_amount', 'embedding']", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:13.193106Z", "level": "INFO", "name": "backend.infrastructure.contract_repository", "message": "Contract node created successfully: UPLOADED_C8FEFF2B_20260408", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:13.194463Z", "level": "INFO", "name": "backend.infrastructure.contract_repository", "message": "Creating 2 party relationships", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:13.476539Z", "level": "INFO", "name": "backend.infrastructure.contract_repository", "message": "Created party relationship: ClientCo", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.084802Z", "level": "INFO", "name": "backend.infrastructure.contract_repository", "message": "Created party relationship: ConsultCorp", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.086325Z", "level": "INFO", "name": "backend.infrastructure.contract_repository", "message": "=== CONTRACT STORED SUCCESSFULLY: UPLOADED_C8FEFF2B_20260408 ===", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.087904Z", "level": "INFO", "name": "backend.agents.pdf_processing_agent", "message": "Contract stored with ID: UPLOADED_C8FEFF2B_20260408", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2", "agent_name": "PDFAgent", "operation": "store_contract", "latency_ms": 1553}
+{"timestamp": "2026-04-08T02:54:14.097316Z", "level": "WARNING", "name": "backend.application.services.document_processing_service", "message": "Enhanced embedding processing failed: 'DocumentProcessingService' object has no attribute '_process_enhanced_embeddings'", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.098802Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "\u2705 AGENT COMPLETED: PDF Processing Agent", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.100194Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Output: Contract stored with ID: UPLOADED_C8FEFF2B_20260408", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.101519Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Processing Time: 7657ms", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.102788Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "\ud83c\udfc1 MULTI-AGENT WORKFLOW COMPLETED", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.104166Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Total Processing Time: 7663ms", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.105381Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Agents Executed: 1", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.106673Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "================================================================================", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.107747Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "\ud83d\udcca EXECUTIVE WORKFLOW SUMMARY - CONTRACT INTELLIGENCE ANALYSIS", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.109152Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "================================================================================", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.110277Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "1. \u2705 PDF Processing Agent", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.111718Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Role: Extract text and analyze contract structure from PDF", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.113631Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Input: PDF file: Clean_SOW.pdf", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.115060Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Output: Contract stored with ID: UPLOADED_C8FEFF2B_20260408", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.116398Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Time: 7657ms", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.118057Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.119502Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "\ud83d\udd04 AGENT DATA FLOW:", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.120830Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "================================================================================", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.122964Z", "level": "INFO", "name": "backend.application.services.document_processing_service", "message": "Cleaned up temporary file: /tmp/e2c42ebb2a97434dbdfbcc360ad16fa8_Clean_SOW.pdf", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.124513Z", "level": "INFO", "name": "backend.application.services.document_processing_service", "message": "PDF processing completed for: Clean_SOW.pdf", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.125964Z", "level": "INFO", "name": "backend.api.document_upload", "message": "Document processing completed successfully: {'status': 'success', 'filename': 'Clean_SOW.pdf', 'final_result': 'Contract stored successfully', 'contract_id': 'UPLOADED_C8FEFF2B_20260408', 'error': None}", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.127479Z", "level": "INFO", "name": "backend.api.document_upload", "message": "PDF processing completed for Clean_SOW.pdf: success", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.272706Z", "level": "INFO", "name": "backend.infrastructure.audit_logger", "message": "Audit logged: document_upload - UPLOADED_C8FEFF2B_20260408 - success", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.274858Z", "level": "INFO", "name": "backend.api.document_upload", "message": "=== UPLOAD END: Clean_SOW.pdf ===", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.491659Z", "level": "INFO", "name": "backend.infrastructure.audit_logger", "message": "Audit logged: document_upload - Clean_SOW.pdf - success", "correlation_id": "fc1ab384-8b15-46a2-a7a0-679796653ae2"}
+{"timestamp": "2026-04-08T02:54:14.524412Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "a68758f5-83d9-499f-8666-30198800c27f"}
+{"timestamp": "2026-04-08T02:54:14.549813Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "154616a4-6ed6-4a4d-b343-b2a8f7b5dc98"}
+{"timestamp": "2026-04-08T02:54:14.581192Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "d5a95f9b-e813-41f0-ba60-ccd7de5dae4d"}
+{"timestamp": "2026-04-08T02:54:14.617947Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "5f3a5fc9-f9f6-4c35-ba49-c803d96f4493"}
+{"timestamp": "2026-04-08T02:54:14.644044Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "59fdc2aa-f951-4fb6-a429-f9981fd7341d"}
+{"timestamp": "2026-04-08T02:54:14.673005Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "3057ed9e-fa78-4137-8654-ef26c75dc312"}
+{"timestamp": "2026-04-08T02:54:14.697833Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "ffe6227a-50df-4236-9441-e07789c8ae5b"}
+{"timestamp": "2026-04-08T02:54:14.719405Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "f32b9b6e-9f66-4644-82ec-5f18cca59c0c"}
+{"timestamp": "2026-04-08T02:54:14.739423Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "12dfdaed-903a-4233-8035-ea541d0b55da"}
+{"timestamp": "2026-04-08T02:54:14.760493Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "8a89e9b3-dfff-41d5-a742-e03d4ab538a8"}
+{"timestamp": "2026-04-08T02:54:14.783234Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "6aed5ea0-ea5a-4cb8-b1ac-708358161e55"}
+{"timestamp": "2026-04-08T02:54:14.807543Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "d399e982-ffc3-42b3-82c2-8c1137d7a899"}
+{"timestamp": "2026-04-08T02:54:14.840901Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "33b84546-a7b5-414d-ab65-4beda10dc69a"}
+{"timestamp": "2026-04-08T02:54:14.851395Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "a5a93056-5a22-4d5d-ade3-6811e39a8b33"}
+{"timestamp": "2026-04-08T02:54:14.856482Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "c3d7b3e7-a6f8-4a0a-8c72-15032a3e4f06"}
+{"timestamp": "2026-04-08T02:54:14.864283Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "792c895a-863c-4c53-bf59-a1a8ff57e765"}
+{"timestamp": "2026-04-08T02:54:14.875880Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "a96e88d5-e7c8-4a4e-ab3a-96d5118c5b92"}
+{"timestamp": "2026-04-08T02:54:14.884811Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "2ad5eb3f-5552-4a03-9a42-c81c106a0d0a"}
+{"timestamp": "2026-04-08T02:54:14.892043Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "ecafc078-5fa1-4cc3-bb1c-adbcb9f39bd6"}
+{"timestamp": "2026-04-08T02:54:14.912510Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "690ed451-8303-48d8-966b-7053237c9d6c"}
+{"timestamp": "2026-04-08T02:54:14.929787Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "e8c3e8df-3fe2-43d5-8ce6-69a7a8c4cf14"}
+{"timestamp": "2026-04-08T02:54:14.934595Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "4f35a38b-3d97-4d7d-95c9-61fa52a64cdb"}
+{"timestamp": "2026-04-08T02:54:16.531602Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "e3adc01b-a9a3-46a7-baa7-d5023d615874"}
+{"timestamp": "2026-04-08T02:54:46.248136Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: POST /api/intelligence/contracts/UPLOADED_C8FEFF2B_20260408/analyze", "correlation_id": "6ee9ea6b-ac71-4e1f-9ce5-409be328e06f"}
+{"timestamp": "2026-04-08T02:54:46.251908Z", "level": "INFO", "name": "backend.api.contract_intelligence", "message": "Starting intelligence analysis for contract: UPLOADED_C8FEFF2B_20260408", "correlation_id": "6ee9ea6b-ac71-4e1f-9ce5-409be328e06f"}
+{"timestamp": "2026-04-08T02:54:46.463716Z", "level": "INFO", "name": "backend.application.services.contract_intelligence_service", "message": "Contract UPLOADED_C8FEFF2B_20260408: full_text length = 1597", "correlation_id": "6ee9ea6b-ac71-4e1f-9ce5-409be328e06f"}
+{"timestamp": "2026-04-08T02:54:46.465554Z", "level": "INFO", "name": "backend.application.services.contract_intelligence_service", "message": "Starting contract intelligence analysis with model: gemini-2.5-flash", "correlation_id": "6ee9ea6b-ac71-4e1f-9ce5-409be328e06f"}
+{"timestamp": "2026-04-08T02:54:46.518812Z", "level": "INFO", "name": "backend.agents.contract_intelligence_agents", "message": "\ud83e\udde0 STEP 1: Starting Planning Agent Analysis"}
+{"timestamp": "2026-04-08T02:54:46.520429Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "\ud83e\udd16 AGENT STARTED: Autonomous Planning Agent"}
+{"timestamp": "2026-04-08T02:54:46.521854Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Role: Analyze query and create optimal execution plan"}
+{"timestamp": "2026-04-08T02:54:46.523030Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Input: Contract analysis requirements"}
+{"timestamp": "2026-04-08T02:54:46.524370Z", "level": "INFO", "name": "backend.agents.contract_intelligence_agents", "message": "\ud83e\udde0 STEP 2: Creating execution plan"}
+{"timestamp": "2026-04-08T02:54:46.525619Z", "level": "INFO", "name": "backend.agents.planning.planning_agent", "message": "\ud83e\udde0 Planning Agent: Analyzing query: Perform comprehensive contract analysis including clause extraction, policy compliance, risk assessment, and redline generation"}
+{"timestamp": "2026-04-08T02:54:46.527071Z", "level": "INFO", "name": "backend.agents.planning.planning_agent", "message": "\ud83e\udde0 Planning Agent: Created PlanningStrategy.COMPLIANCE_FOCUSED plan with 6 steps"}
+{"timestamp": "2026-04-08T02:54:46.528795Z", "level": "INFO", "name": "backend.agents.contract_intelligence_agents", "message": "\ud83e\udde0 STEP 3: Plan created with 6 steps"}
+{"timestamp": "2026-04-08T02:54:46.530272Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "\u2705 AGENT COMPLETED: Autonomous Planning Agent"}
+{"timestamp": "2026-04-08T02:54:46.531717Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Output: Created PlanningStrategy.COMPLEX plan: Extract Clauses \u2192 Check Policies \u2192 Assess Risk \u2192 Cuad Mitigation \u2192 Validate Results \u2192 Generate Redlines (Est: 180s)"}
+{"timestamp": "2026-04-08T02:54:46.533076Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Processing Time: 9ms"}
+{"timestamp": "2026-04-08T02:54:46.534342Z", "level": "INFO", "name": "backend.agents.contract_intelligence_agents", "message": "\ud83e\udde0 STEP 4: Starting plan execution"}
+{"timestamp": "2026-04-08T02:54:46.536255Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 1: Starting plan execution complex_20260408_025446 with 6 steps"}
+{"timestamp": "2026-04-08T02:54:46.538234Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 2: Contract text length: 1597 characters"}
+{"timestamp": "2026-04-08T02:54:46.539711Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 3: Starting step execution loop"}
+{"timestamp": "2026-04-08T02:54:46.541316Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.1: Processing step step_1 (StepType.EXTRACT_CLAUSES)"}
+{"timestamp": "2026-04-08T02:54:46.542631Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.1a: Dependencies satisfied for step_1"}
+{"timestamp": "2026-04-08T02:54:46.543938Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.1b: Executing step step_1"}
+{"timestamp": "2026-04-08T02:54:46.545510Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\udd27 STEP EXEC 1: Starting step step_1 with retry mechanism"}
+{"timestamp": "2026-04-08T02:54:46.546856Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "\ud83e\udd16 AGENT STARTED: Planned Extract Clauses Step"}
+{"timestamp": "2026-04-08T02:54:46.548416Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Role: Deep clause extraction with validation"}
+{"timestamp": "2026-04-08T02:54:46.549983Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Input: Contract text (1,597 characters)"}
+{"timestamp": "2026-04-08T02:54:46.551367Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\udd27 STEP EXEC 2: Executing StepType.EXTRACT_CLAUSES for step_1"}
+{"timestamp": "2026-04-08T02:54:46.553531Z", "level": "INFO", "name": "backend.agents.intelligence_tools", "message": "Extracted 2 clauses"}
+{"timestamp": "2026-04-08T02:54:46.555102Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\udd27 STEP EXEC 3: Step step_1 execution completed successfully"}
+{"timestamp": "2026-04-08T02:54:46.556571Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "\u2705 AGENT COMPLETED: Planned Extract Clauses Step"}
+{"timestamp": "2026-04-08T02:54:46.558010Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Output: Generated 2 items"}
+{"timestamp": "2026-04-08T02:54:46.559383Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Processing Time: 9ms"}
+{"timestamp": "2026-04-08T02:54:46.560778Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.1c: Step step_1 completed, success: True"}
+{"timestamp": "2026-04-08T02:54:46.562164Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.1d: Context updated for step_1"}
+{"timestamp": "2026-04-08T02:54:46.563539Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.2: Processing step step_2a (StepType.CHECK_POLICIES)"}
+{"timestamp": "2026-04-08T02:54:46.565263Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.2a: Dependencies satisfied for step_2a"}
+{"timestamp": "2026-04-08T02:54:46.566564Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.2b: Executing step step_2a"}
+{"timestamp": "2026-04-08T02:54:46.568143Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\udd27 STEP EXEC 1: Starting step step_2a with retry mechanism"}
+{"timestamp": "2026-04-08T02:54:46.570398Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "\ud83e\udd16 AGENT STARTED: Planned Check Policies Step"}
+{"timestamp": "2026-04-08T02:54:46.571782Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Role: Policy compliance check"}
+{"timestamp": "2026-04-08T02:54:46.573098Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Input: 2 extracted clauses"}
+{"timestamp": "2026-04-08T02:54:46.574388Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\udd27 STEP EXEC 2: Executing StepType.CHECK_POLICIES for step_2a"}
+{"timestamp": "2026-04-08T02:54:46.575713Z", "level": "INFO", "name": "backend.agents.intelligence_tools", "message": "Found 1 policy violations"}
+{"timestamp": "2026-04-08T02:54:46.577025Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\udd27 STEP EXEC 3: Step step_2a execution completed successfully"}
+{"timestamp": "2026-04-08T02:54:46.578343Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "\u2705 AGENT COMPLETED: Planned Check Policies Step"}
+{"timestamp": "2026-04-08T02:54:46.579776Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Output: Generated 1 items"}
+{"timestamp": "2026-04-08T02:54:46.581390Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Processing Time: 8ms"}
+{"timestamp": "2026-04-08T02:54:46.583068Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.2c: Step step_2a completed, success: True"}
+{"timestamp": "2026-04-08T02:54:46.584307Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.2d: Context updated for step_2a"}
+{"timestamp": "2026-04-08T02:54:46.585689Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.3: Processing step step_2b (StepType.ASSESS_RISK)"}
+{"timestamp": "2026-04-08T02:54:46.587537Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.3a: Dependencies satisfied for step_2b"}
+{"timestamp": "2026-04-08T02:54:46.589104Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.3b: Executing step step_2b"}
+{"timestamp": "2026-04-08T02:54:46.590692Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\udd27 STEP EXEC 1: Starting step step_2b with retry mechanism"}
+{"timestamp": "2026-04-08T02:54:46.591914Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "\ud83e\udd16 AGENT STARTED: Planned Assess Risk Step"}
+{"timestamp": "2026-04-08T02:54:46.593296Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Role: Initial risk assessment"}
+{"timestamp": "2026-04-08T02:54:46.594621Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Input: 2 clauses + 1 violations"}
+{"timestamp": "2026-04-08T02:54:46.595948Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\udd27 STEP EXEC 2: Executing StepType.ASSESS_RISK for step_2b"}
+{"timestamp": "2026-04-08T02:54:46.597913Z", "level": "INFO", "name": "backend.agents.intelligence_tools", "message": "Risk assessment: MEDIUM (45.0/100)"}
+{"timestamp": "2026-04-08T02:54:46.600262Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\udd27 STEP EXEC 3: Step step_2b execution completed successfully"}
+{"timestamp": "2026-04-08T02:54:46.602063Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "\u2705 AGENT COMPLETED: Planned Assess Risk Step"}
+{"timestamp": "2026-04-08T02:54:46.603638Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Output: Risk Score: 45.0/100 (MEDIUM)"}
+{"timestamp": "2026-04-08T02:54:46.605120Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Processing Time: 10ms"}
+{"timestamp": "2026-04-08T02:54:46.606877Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.3c: Step step_2b completed, success: True"}
+{"timestamp": "2026-04-08T02:54:46.608135Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.3d: Context updated for step_2b"}
+{"timestamp": "2026-04-08T02:54:46.609572Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.4: Processing step step_3 (StepType.CUAD_MITIGATION)"}
+{"timestamp": "2026-04-08T02:54:46.610664Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.4a: Dependencies satisfied for step_3"}
+{"timestamp": "2026-04-08T02:54:46.612072Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.4b: Executing step step_3"}
+{"timestamp": "2026-04-08T02:54:46.613723Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\udd27 STEP EXEC 1: Starting step step_3 with retry mechanism"}
+{"timestamp": "2026-04-08T02:54:46.615508Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "\ud83e\udd16 AGENT STARTED: Planned Cuad Mitigation Step"}
+{"timestamp": "2026-04-08T02:54:46.616950Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Role: CUAD deviation and jurisdiction analysis"}
+{"timestamp": "2026-04-08T02:54:46.618396Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Input: Analysis context"}
+{"timestamp": "2026-04-08T02:54:46.620024Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\udd27 STEP EXEC 2: Executing StepType.CUAD_MITIGATION for step_3"}
+{"timestamp": "2026-04-08T02:54:46.639613Z", "level": "WARNING", "name": "backend.agents.optimized_cuad_tools", "message": "Precedent matching failed for clause: EnhancedPrecedentMatcherTool._find_real_precedents() missing 1 required positional argument: 'tenant_id'"}
+{"timestamp": "2026-04-08T02:54:46.640877Z", "level": "WARNING", "name": "backend.agents.optimized_cuad_tools", "message": "Precedent matching failed for clause: EnhancedPrecedentMatcherTool._find_real_precedents() missing 1 required positional argument: 'tenant_id'"}
+{"timestamp": "2026-04-08T02:54:46.811052Z", "level": "INFO", "name": "backend.agents.feedback_learning_system", "message": "Loaded 0 patterns for clause type: Payment Terms"}
+{"timestamp": "2026-04-08T02:54:46.926123Z", "level": "INFO", "name": "backend.agents.feedback_learning_system", "message": "Loaded 0 patterns for clause type: Liability"}
+{"timestamp": "2026-04-08T02:54:46.927634Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\udd27 STEP EXEC 3: Step step_3 execution completed successfully"}
+{"timestamp": "2026-04-08T02:54:46.928860Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "\u2705 AGENT COMPLETED: Planned Cuad Mitigation Step"}
+{"timestamp": "2026-04-08T02:54:46.930248Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Output: Analysis result with 5 fields"}
+{"timestamp": "2026-04-08T02:54:46.932512Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Processing Time: 313ms"}
+{"timestamp": "2026-04-08T02:54:46.934213Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.4c: Step step_3 completed, success: True"}
+{"timestamp": "2026-04-08T02:54:46.935798Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.4d: Context updated for step_3"}
+{"timestamp": "2026-04-08T02:54:46.938072Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.5: Processing step step_4 (StepType.VALIDATE_RESULTS)"}
+{"timestamp": "2026-04-08T02:54:46.939418Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.5a: Dependencies satisfied for step_4"}
+{"timestamp": "2026-04-08T02:54:46.940797Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.5b: Executing step step_4"}
+{"timestamp": "2026-04-08T02:54:46.942134Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\udd27 STEP EXEC 1: Starting step step_4 with retry mechanism"}
+{"timestamp": "2026-04-08T02:54:46.943546Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "\ud83e\udd16 AGENT STARTED: Planned Validate Results Step"}
+{"timestamp": "2026-04-08T02:54:46.944629Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Role: Cross-validate results"}
+{"timestamp": "2026-04-08T02:54:46.945986Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Input: Cross-validation of analysis results"}
+{"timestamp": "2026-04-08T02:54:46.947355Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\udd27 STEP EXEC 2: Executing StepType.VALIDATE_RESULTS for step_4"}
+{"timestamp": "2026-04-08T02:54:46.949278Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\udd27 STEP EXEC 3: Step step_4 execution completed successfully"}
+{"timestamp": "2026-04-08T02:54:46.950807Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "\u2705 AGENT COMPLETED: Planned Validate Results Step"}
+{"timestamp": "2026-04-08T02:54:46.952304Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Output: Validation Score: 1.00"}
+{"timestamp": "2026-04-08T02:54:46.954305Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Processing Time: 7ms"}
+{"timestamp": "2026-04-08T02:54:46.955766Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.5c: Step step_4 completed, success: True"}
+{"timestamp": "2026-04-08T02:54:46.957173Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.5d: Context updated for step_4"}
+{"timestamp": "2026-04-08T02:54:46.958749Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.6: Processing step step_5 (StepType.GENERATE_REDLINES)"}
+{"timestamp": "2026-04-08T02:54:46.960031Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.6a: Dependencies satisfied for step_5"}
+{"timestamp": "2026-04-08T02:54:46.961670Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.6b: Executing step step_5"}
+{"timestamp": "2026-04-08T02:54:46.962896Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\udd27 STEP EXEC 1: Starting step step_5 with retry mechanism"}
+{"timestamp": "2026-04-08T02:54:46.965116Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "\ud83e\udd16 AGENT STARTED: Planned Generate Redlines Step"}
+{"timestamp": "2026-04-08T02:54:46.966880Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Role: Generate comprehensive redlines"}
+{"timestamp": "2026-04-08T02:54:46.968408Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Input: 1 policy violations"}
+{"timestamp": "2026-04-08T02:54:46.970427Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\udd27 STEP EXEC 2: Executing StepType.GENERATE_REDLINES for step_5"}
+{"timestamp": "2026-04-08T02:54:46.971945Z", "level": "INFO", "name": "backend.agents.intelligence_tools", "message": "Generated 1 redline recommendations"}
+{"timestamp": "2026-04-08T02:54:46.973270Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\udd27 STEP EXEC 3: Step step_5 execution completed successfully"}
+{"timestamp": "2026-04-08T02:54:46.974535Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "\u2705 AGENT COMPLETED: Planned Generate Redlines Step"}
+{"timestamp": "2026-04-08T02:54:46.975855Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Output: Generated 1 items"}
+{"timestamp": "2026-04-08T02:54:46.977473Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Processing Time: 9ms"}
+{"timestamp": "2026-04-08T02:54:46.978887Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.6c: Step step_5 completed, success: True"}
+{"timestamp": "2026-04-08T02:54:46.980359Z", "level": "INFO", "name": "backend.agents.planning.execution_engine", "message": "\ud83d\ude80 EXEC STEP 4.6d: Context updated for step_5"}
+{"timestamp": "2026-04-08T02:54:46.982108Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "\ud83c\udfc1 MULTI-AGENT WORKFLOW COMPLETED"}
+{"timestamp": "2026-04-08T02:54:46.983701Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Total Processing Time: 40542ms"}
+{"timestamp": "2026-04-08T02:54:46.985428Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Agents Executed: 8"}
+{"timestamp": "2026-04-08T02:54:46.987044Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "================================================================================"}
+{"timestamp": "2026-04-08T02:54:46.988226Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "\ud83d\udcca EXECUTIVE WORKFLOW SUMMARY - CONTRACT INTELLIGENCE ANALYSIS"}
+{"timestamp": "2026-04-08T02:54:46.989844Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "================================================================================"}
+{"timestamp": "2026-04-08T02:54:46.991250Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "1. \u2705 PDF Processing Agent"}
+{"timestamp": "2026-04-08T02:54:46.992549Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Role: Extract text and analyze contract structure from PDF"}
+{"timestamp": "2026-04-08T02:54:46.993969Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Input: PDF file: Clean_SOW.pdf"}
+{"timestamp": "2026-04-08T02:54:46.995154Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Output: Contract stored with ID: UPLOADED_C8FEFF2B_20260408"}
+{"timestamp": "2026-04-08T02:54:46.996555Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Time: 7657ms"}
+{"timestamp": "2026-04-08T02:54:46.998226Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": ""}
+{"timestamp": "2026-04-08T02:54:46.999779Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "2. \u2705 Autonomous Planning Agent"}
+{"timestamp": "2026-04-08T02:54:47.001171Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Role: Analyze query and create optimal execution plan"}
+{"timestamp": "2026-04-08T02:54:47.003179Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Input: Contract analysis requirements"}
+{"timestamp": "2026-04-08T02:54:47.004936Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Output: Created PlanningStrategy.COMPLEX plan: Extract Clauses \u2192 Check Policies \u2192 Assess Risk \u2192 Cuad Mitigation \u2192 Validate Results \u2192 Generate Redlines (Est: 180s)"}
+{"timestamp": "2026-04-08T02:54:47.006650Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Time: 9ms"}
+{"timestamp": "2026-04-08T02:54:47.008089Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": ""}
+{"timestamp": "2026-04-08T02:54:47.009550Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "3. \u2705 Planned Extract Clauses Step"}
+{"timestamp": "2026-04-08T02:54:47.010779Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Role: Deep clause extraction with validation"}
+{"timestamp": "2026-04-08T02:54:47.012005Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Input: Contract text (1,597 characters)"}
+{"timestamp": "2026-04-08T02:54:47.013426Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Output: Generated 2 items"}
+{"timestamp": "2026-04-08T02:54:47.015024Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Time: 9ms"}
+{"timestamp": "2026-04-08T02:54:47.016652Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": ""}
+{"timestamp": "2026-04-08T02:54:47.018095Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "4. \u2705 Planned Check Policies Step"}
+{"timestamp": "2026-04-08T02:54:47.019455Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Role: Policy compliance check"}
+{"timestamp": "2026-04-08T02:54:47.021042Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Input: 2 extracted clauses"}
+{"timestamp": "2026-04-08T02:54:47.022658Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Output: Generated 1 items"}
+{"timestamp": "2026-04-08T02:54:47.023960Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Time: 8ms"}
+{"timestamp": "2026-04-08T02:54:47.025365Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": ""}
+{"timestamp": "2026-04-08T02:54:47.026740Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "5. \u2705 Planned Assess Risk Step"}
+{"timestamp": "2026-04-08T02:54:47.028014Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Role: Initial risk assessment"}
+{"timestamp": "2026-04-08T02:54:47.029485Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Input: 2 clauses + 1 violations"}
+{"timestamp": "2026-04-08T02:54:47.030847Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Output: Risk Score: 45.0/100 (MEDIUM)"}
+{"timestamp": "2026-04-08T02:54:47.032326Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Time: 10ms"}
+{"timestamp": "2026-04-08T02:54:47.033786Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": ""}
+{"timestamp": "2026-04-08T02:54:47.035198Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "6. \u2705 Planned Cuad Mitigation Step"}
+{"timestamp": "2026-04-08T02:54:47.036754Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Role: CUAD deviation and jurisdiction analysis"}
+{"timestamp": "2026-04-08T02:54:47.038816Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Input: Analysis context"}
+{"timestamp": "2026-04-08T02:54:47.040111Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Output: Analysis result with 5 fields"}
+{"timestamp": "2026-04-08T02:54:47.041461Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Time: 313ms"}
+{"timestamp": "2026-04-08T02:54:47.042660Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": ""}
+{"timestamp": "2026-04-08T02:54:47.043685Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "7. \u2705 Planned Validate Results Step"}
+{"timestamp": "2026-04-08T02:54:47.044945Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Role: Cross-validate results"}
+{"timestamp": "2026-04-08T02:54:47.046035Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Input: Cross-validation of analysis results"}
+{"timestamp": "2026-04-08T02:54:47.047251Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Output: Validation Score: 1.00"}
+{"timestamp": "2026-04-08T02:54:47.050053Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Time: 7ms"}
+{"timestamp": "2026-04-08T02:54:47.051597Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": ""}
+{"timestamp": "2026-04-08T02:54:47.053145Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "8. \u2705 Planned Generate Redlines Step"}
+{"timestamp": "2026-04-08T02:54:47.054899Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Role: Generate comprehensive redlines"}
+{"timestamp": "2026-04-08T02:54:47.056404Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Input: 1 policy violations"}
+{"timestamp": "2026-04-08T02:54:47.057730Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Output: Generated 1 items"}
+{"timestamp": "2026-04-08T02:54:47.058991Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Time: 9ms"}
+{"timestamp": "2026-04-08T02:54:47.060138Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": ""}
+{"timestamp": "2026-04-08T02:54:47.061436Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "\ud83d\udd04 AGENT DATA FLOW:"}
+{"timestamp": "2026-04-08T02:54:47.062611Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   PDF Processing Agent \u2192 Autonomous Planning Agent"}
+{"timestamp": "2026-04-08T02:54:47.064314Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Data: Contract stored with ID: UPLOADED_C8FEFF2B_20260408 \u2192 Contract analysis requirements"}
+{"timestamp": "2026-04-08T02:54:47.066851Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Autonomous Planning Agent \u2192 Planned Extract Clauses Step"}
+{"timestamp": "2026-04-08T02:54:47.068751Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Data: Created PlanningStrategy.COMPLEX plan: Extract Clauses \u2192 Check Policies \u2192 Assess Risk \u2192 Cuad Mitigation \u2192 Validate Results \u2192 Generate Redlines (Est: 180s) \u2192 Contract text (1,597 characters)"}
+{"timestamp": "2026-04-08T02:54:47.072218Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Planned Extract Clauses Step \u2192 Planned Check Policies Step"}
+{"timestamp": "2026-04-08T02:54:47.073623Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Data: Generated 2 items \u2192 2 extracted clauses"}
+{"timestamp": "2026-04-08T02:54:47.074801Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Planned Check Policies Step \u2192 Planned Assess Risk Step"}
+{"timestamp": "2026-04-08T02:54:47.075885Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Data: Generated 1 items \u2192 2 clauses + 1 violations"}
+{"timestamp": "2026-04-08T02:54:47.077005Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Planned Assess Risk Step \u2192 Planned Cuad Mitigation Step"}
+{"timestamp": "2026-04-08T02:54:47.078220Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Data: Risk Score: 45.0/100 (MEDIUM) \u2192 Analysis context"}
+{"timestamp": "2026-04-08T02:54:47.079671Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Planned Cuad Mitigation Step \u2192 Planned Validate Results Step"}
+{"timestamp": "2026-04-08T02:54:47.081422Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Data: Analysis result with 5 fields \u2192 Cross-validation of analysis results"}
+{"timestamp": "2026-04-08T02:54:47.083347Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Planned Validate Results Step \u2192 Planned Generate Redlines Step"}
+{"timestamp": "2026-04-08T02:54:47.084765Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "   Data: Validation Score: 1.00 \u2192 1 policy violations"}
+{"timestamp": "2026-04-08T02:54:47.086818Z", "level": "INFO", "name": "backend.agents.agent_workflow_tracker", "message": "================================================================================"}
+{"timestamp": "2026-04-08T02:54:47.088791Z", "level": "INFO", "name": "backend.agents.contract_intelligence_agents", "message": "\ud83e\udde0 STEP 5: Plan execution completed: True"}
+{"timestamp": "2026-04-08T02:54:47.090159Z", "level": "INFO", "name": "backend.agents.contract_intelligence_agents", "message": "\ud83e\udde0 STEP 6: Providing feedback to planning agent"}
+{"timestamp": "2026-04-08T02:54:47.091543Z", "level": "INFO", "name": "backend.agents.contract_intelligence_agents", "message": "\ud83e\udde0 STEP 7: Planning agent analysis completed successfully"}
+{"timestamp": "2026-04-08T02:54:47.094320Z", "level": "INFO", "name": "backend.application.services.contract_intelligence_service", "message": "Contract intelligence analysis completed in 0.63s", "correlation_id": "6ee9ea6b-ac71-4e1f-9ce5-409be328e06f"}
+{"timestamp": "2026-04-08T02:54:47.465252Z", "level": "INFO", "name": "backend.application.services.contract_intelligence_service", "message": "Stored intelligence results for contract: UPLOADED_C8FEFF2B_20260408", "correlation_id": "6ee9ea6b-ac71-4e1f-9ce5-409be328e06f"}
+{"timestamp": "2026-04-08T02:54:47.467066Z", "level": "INFO", "name": "backend.api.contract_intelligence", "message": "Intelligence analysis completed for contract: UPLOADED_C8FEFF2B_20260408", "correlation_id": "6ee9ea6b-ac71-4e1f-9ce5-409be328e06f"}
+{"timestamp": "2026-04-08T02:54:47.475327Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "14358bad-d717-4898-b271-998714dec1d8"}
+{"timestamp": "2026-04-08T02:54:47.503044Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "ae31f262-649d-4835-8f23-42496e27704e"}
+{"timestamp": "2026-04-08T02:54:48.501084Z", "level": "INFO", "name": "backend.shared.middleware.tracing", "message": "Handling incoming request: GET /api/workflow/status", "correlation_id": "a94199b3-d22b-49f0-96a3-6344d39df270"}
+{"timestamp": "2026-04-08T02:55:24.954591Z", "level": "INFO", "name": "uvicorn.error", "message": "Shutting down"}
+{"timestamp": "2026-04-08T02:55:25.059885Z", "level": "INFO", "name": "uvicorn.error", "message": "Waiting for application shutdown."}
+{"timestamp": "2026-04-08T02:55:25.066934Z", "level": "INFO", "name": "uvicorn.error", "message": "Application shutdown complete."}
+{"timestamp": "2026-04-08T02:55:25.072807Z", "level": "INFO", "name": "uvicorn.error", "message": "Finished server process [10]"}
