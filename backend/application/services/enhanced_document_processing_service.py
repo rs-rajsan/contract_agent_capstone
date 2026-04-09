@@ -4,8 +4,8 @@ from backend.domain.value_objects import ProcessingResult, ProcessingStatus
 from backend.agents.agent_workflow_tracker import workflow_tracker
 from backend.embeddings.orchestrator import EmbeddingOrchestrator
 from backend.embeddings.validator import EmbeddingValidator
-from langchain_neo4j import Neo4jGraph
-from backend.shared.config.phase3_config import AppConfig
+from backend.application.services.document_processing_service import DEFAULT_MODEL, MODEL_ALIAS_MAP
+from backend.shared.utils.graph_utils import get_graph
 import os
 import logging
 
@@ -22,10 +22,13 @@ class EnhancedDocumentProcessingService:
         self.pdf_agent_factory = PDFAgentFactory()
         self.embedding_orchestrator = EmbeddingOrchestrator()
         self.embedding_validator = EmbeddingValidator()
-        self.graph = Neo4jGraph(
-            refresh_schema=False, 
-            driver_config={"notifications_min_severity": "OFF"}
-        )
+        self._graph = None
+    
+    @property
+    def graph(self):
+        if self._graph is None:
+            self._graph = get_graph()
+        return self._graph
     
     def process_pdf_with_embeddings(self, request: DocumentProcessingRequest) -> dict:
         """
@@ -40,8 +43,8 @@ class EnhancedDocumentProcessingService:
                 raise FileNotFoundError(f"File not found: {request.file_path}")
             
             # 2. Get appropriate LLM model
-            model_name = request.processing_options.get("model", AppConfig.DEFAULT_MODEL)
-            llm = self.agent_manager.get_llm_instance(model_name)
+            model_name = request.processing_options.get("model", DEFAULT_MODEL)
+            llm = self._get_llm_for_model(model_name)
             
             # 3. Create PDF processing agent
             pdf_agent = self.pdf_agent_factory.create_agent(llm)
@@ -59,6 +62,26 @@ class EnhancedDocumentProcessingService:
             logger.error(f"Enhanced PDF processing failed for {request.filename}: {e}")
             self._cleanup_file(request.file_path)
             raise
+    
+    def _get_llm_for_model(self, model_name: str):
+        """Get LLM instance — uses MODEL_ALIAS_MAP from environment (DRY, env-driven)"""
+        canonical = MODEL_ALIAS_MAP.get(model_name, model_name)
+
+        if model_name == "gpt-4o" or canonical == "gpt-4o":
+            from langchain_openai import ChatOpenAI
+            return ChatOpenAI(model=canonical, temperature=0)
+        elif canonical.startswith("gemini"):
+            from langchain_google_genai import ChatGoogleGenerativeAI
+            return ChatGoogleGenerativeAI(model=canonical, temperature=0)
+        elif model_name == "sonnet-3.5" or canonical.startswith("claude"):
+            from langchain_anthropic import ChatAnthropic
+            return ChatAnthropic(model=canonical, temperature=0)
+        elif model_name == "mistral-large" or canonical.startswith("mistral"):
+            from langchain_mistralai import ChatMistralAI
+            return ChatMistralAI(model=canonical)
+        else:
+            logger.warning(f"Unknown model '{model_name}', falling back to default '{DEFAULT_MODEL}'")
+            return self._get_llm_for_model(DEFAULT_MODEL)
     
     def _process_with_enhanced_embeddings(self, pdf_agent, request: DocumentProcessingRequest) -> dict:
         """Process document with enhanced embeddings"""

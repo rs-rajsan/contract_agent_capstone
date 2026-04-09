@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from langchain_core.tools import BaseTool
 from backend.shared.utils.gemini_embedding_service import embedding
 from langchain_neo4j import Neo4jGraph
+from backend.shared.utils.graph_utils import get_graph
 from pydantic import BaseModel, Field
 from enum import Enum
 
@@ -50,16 +51,6 @@ CONTRACT_TYPES = [
     "Licensing Addendum",
 ]
 
-import logging
-logger = logging.getLogger(__name__)
-
-try:
-    graph: Neo4jGraph = Neo4jGraph(
-        refresh_schema=False, driver_config={"notifications_min_severity": "OFF"}
-    )
-except Exception as e:
-    logger.error(f"Failed to initialize Neo4jGraph at startup: {e}")
-    graph = None
 # embedding imported from gemini_embedding_service (1536 dimensions)
 
 
@@ -246,6 +237,7 @@ def get_contracts(
             ]
         } AS output"""
     
+    graph = get_graph()
     output = graph.query(cypher_statement, params)
     return [convert_neo4j_date(el) for el in output]
 

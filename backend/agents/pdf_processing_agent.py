@@ -7,150 +7,135 @@ from backend.infrastructure.contract_analyzer import LLMContractAnalyzer
 from backend.infrastructure.contract_repository import Neo4jContractRepository
 import logging
 import json
-import time
 
 from backend.shared.utils.logger import get_logger
 logger = get_logger(__name__)
+
+# Node functions moved to module level for reusability in enhanced agents
+def extract_text_node(state: PDFProcessingState) -> PDFProcessingState:
+    """Extract text from PDF - Single Responsibility"""
+    text_extractor = TextExtractionService()
+    try:
+        text = text_extractor.extract_with_fallback(state["file_path"])
+        logger.info(f"Extracted {len(text)} characters")
+        return {**state, "extracted_text": text}
+    except Exception as e:
+        logger.error(f"Text extraction failed: {e}")
+        return {**state, "processing_result": ProcessingResult(
+            status=ProcessingStatus.ERROR,
+            error=f"Text extraction failed: {str(e)}"
+        )}
+
+def analyze_contract_node(state: PDFProcessingState, llm=None) -> PDFProcessingState:
+    """Analyze contract - Single Responsibility"""
+    if not state.get("extracted_text"):
+        return {**state, "processing_result": ProcessingResult(
+            status=ProcessingStatus.ERROR,
+            error="No text to analyze"
+        )}
+    
+    # We need the LLM from the factory context usually, 
+    # but for standalone nodes we can pass it in or infer it
+    from backend.infrastructure.contract_analyzer import LLMContractAnalyzer
+    contract_analyzer = LLMContractAnalyzer(llm)
+    
+    try:
+        analysis = contract_analyzer.analyze_contract(state["extracted_text"])
+        contract_data = ContractData(
+            is_contract=analysis["is_contract"],
+            confidence_score=analysis["confidence_score"],
+            contract_type=analysis["contract_type"],
+            summary=analysis["summary"],
+            parties=analysis["parties"],
+            effective_date=analysis.get("effective_date"),
+            end_date=analysis.get("end_date"),
+            total_amount=analysis.get("total_amount"),
+            governing_law=analysis.get("governing_law"),
+            key_terms=analysis.get("key_terms", []),
+            full_text=state["extracted_text"]
+        )
+        logger.info(f"Analysis complete: confidence={contract_data.confidence_score}")
+        return {**state, "contract_data": contract_data}
+    except Exception as e:
+        logger.error(f"Contract analysis failed: {e}")
+        return {**state, "processing_result": ProcessingResult(
+            status=ProcessingStatus.ERROR,
+            error=f"Analysis failed: {str(e)}"
+        )}
+
+def store_contract_node(state: PDFProcessingState) -> PDFProcessingState:
+    """Store contract - Single Responsibility"""
+    contract_repository = Neo4jContractRepository()
+    contract_data = state.get("contract_data")
+    if not contract_data:
+        return {**state, "processing_result": ProcessingResult(
+            status=ProcessingStatus.ERROR,
+            error="No contract data to store"
+        )}
+    
+    # Business logic validation
+    if not contract_data.is_contract:
+        return {**state, "processing_result": ProcessingResult(
+            status=ProcessingStatus.SKIPPED,
+            message="Document is not a contract"
+        )}
+    
+    if contract_data.confidence_score < 0.7:
+        return {**state, "processing_result": ProcessingResult(
+            status=ProcessingStatus.REVIEW_REQUIRED,
+            message=f"Low confidence score: {contract_data.confidence_score}"
+        )}
+    
+    try:
+        # Convert to dict for repository
+        data_dict = {
+            "is_contract": contract_data.is_contract,
+            "confidence_score": contract_data.confidence_score,
+            "contract_type": contract_data.contract_type,
+            "summary": contract_data.summary,
+            "parties": contract_data.parties,
+            "effective_date": contract_data.effective_date,
+            "end_date": contract_data.end_date,
+            "total_amount": contract_data.total_amount,
+            "governing_law": contract_data.governing_law,
+            "key_terms": contract_data.key_terms,
+            "full_text": contract_data.full_text
+        }
+        
+        contract_id = contract_repository.store_contract(data_dict)
+        logger.info(f"Contract stored with ID: {contract_id}")
+        
+        return {**state, "processing_result": ProcessingResult(
+            status=ProcessingStatus.SUCCESS,
+            contract_id=contract_id,
+            message=f"Contract stored successfully"
+        )}
+    except Exception as e:
+        logger.error(f"Storage failed: {e}")
+        return {**state, "processing_result": ProcessingResult(
+            status=ProcessingStatus.ERROR,
+            error=f"Storage failed: {str(e)}"
+        )}
+
+def should_continue(state: PDFProcessingState) -> str:
+    """Routing logic - Open/Closed Principle"""
+    if state.get("processing_result"):
+        return END
+    if not state.get("extracted_text"):
+        return "extract_text"
+    if not state.get("contract_data"):
+        return "analyze_contract"
+    return "store_contract"
 
 def get_pdf_processing_agent(llm):
     """
     Create PDF processing agent with proper state management
     """
     
-    # Initialize services (Dependency Injection)
-    text_extractor = TextExtractionService()
-    contract_analyzer = LLMContractAnalyzer(llm)
-    contract_repository = Neo4jContractRepository()
-    
-    def extract_text_node(state: PDFProcessingState) -> PDFProcessingState:
-        """Extract text from PDF - Single Responsibility"""
-        try:
-            start_time = time.perf_counter()
-            text = text_extractor.extract_with_fallback(state["file_path"])
-            latency = int((time.perf_counter() - start_time) * 1000)
-            logger.info(
-                f"Extracted {len(text)} characters", 
-                extra={"agent_name": "PDFAgent", "operation": "extract_text", "latency_ms": latency}
-            )
-            return {**state, "extracted_text": text}
-        except Exception as e:
-            logger.error(f"Text extraction failed: {e}")
-            return {**state, "processing_result": ProcessingResult(
-                status=ProcessingStatus.ERROR,
-                error=f"Text extraction failed: {str(e)}"
-            )}
-    
-    def analyze_contract_node(state: PDFProcessingState) -> PDFProcessingState:
-        """Analyze contract - Single Responsibility"""
-        if not state.get("extracted_text"):
-            return {**state, "processing_result": ProcessingResult(
-                status=ProcessingStatus.ERROR,
-                error="No text to analyze"
-            )}
-        
-        try:
-            start_timer = time.perf_counter()
-            analysis = contract_analyzer.analyze_contract(state["extracted_text"])
-            latency = int((time.perf_counter() - start_timer) * 1000)
-            
-            contract_data = ContractData(
-                is_contract=analysis["is_contract"],
-                confidence_score=analysis["confidence_score"],
-                contract_type=analysis["contract_type"],
-                summary=analysis["summary"],
-                parties=analysis["parties"],
-                effective_date=analysis.get("effective_date"),
-                end_date=analysis.get("end_date"),
-                total_amount=analysis.get("total_amount"),
-                governing_law=analysis.get("governing_law"),
-                key_terms=analysis.get("key_terms", []),
-                full_text=state["extracted_text"]
-            )
-            logger.info(
-                f"Analysis complete: confidence={contract_data.confidence_score}", 
-                extra={"agent_name": "PDFAgent", "operation": "analyze_contract", "latency_ms": latency}
-            )
-            return {**state, "contract_data": contract_data}
-        except Exception as e:
-            logger.error(f"Contract analysis failed: {e}")
-            return {**state, "processing_result": ProcessingResult(
-                status=ProcessingStatus.ERROR,
-                error=f"Analysis failed: {str(e)}"
-            )}
-    
-    def store_contract_node(state: PDFProcessingState) -> PDFProcessingState:
-        """Store contract - Single Responsibility"""
-        contract_data = state.get("contract_data")
-        if not contract_data:
-            return {**state, "processing_result": ProcessingResult(
-                status=ProcessingStatus.ERROR,
-                error="No contract data to store"
-            )}
-        
-        # Business logic validation
-        if not contract_data.is_contract:
-            return {**state, "processing_result": ProcessingResult(
-                status=ProcessingStatus.SKIPPED,
-                message="Document is not a contract"
-            )}
-        
-        if contract_data.confidence_score < 0.7:
-            return {**state, "processing_result": ProcessingResult(
-                status=ProcessingStatus.REVIEW_REQUIRED,
-                message=f"Low confidence score: {contract_data.confidence_score}"
-            )}
-        
-        try:
-            # Convert to dict for repository
-            data_dict = {
-                "is_contract": contract_data.is_contract,
-                "confidence_score": contract_data.confidence_score,
-                "contract_type": contract_data.contract_type,
-                "summary": contract_data.summary,
-                "parties": contract_data.parties,
-                "effective_date": contract_data.effective_date,
-                "end_date": contract_data.end_date,
-                "total_amount": contract_data.total_amount,
-                "governing_law": contract_data.governing_law,
-                "key_terms": contract_data.key_terms,
-                "full_text": contract_data.full_text
-            }
-            
-            start_time = time.perf_counter()
-            contract_id = contract_repository.store_contract(data_dict)
-            latency = int((time.perf_counter() - start_time) * 1000)
-            
-            logger.info(
-                f"Contract stored with ID: {contract_id}", 
-                extra={"agent_name": "PDFAgent", "operation": "store_contract", "latency_ms": latency}
-            )
-            
-            return {**state, "processing_result": ProcessingResult(
-                status=ProcessingStatus.SUCCESS,
-                contract_id=contract_id,
-                message=f"Contract stored successfully"
-            )}
-        except Exception as e:
-            logger.error(f"Storage failed: {e}")
-            return {**state, "processing_result": ProcessingResult(
-                status=ProcessingStatus.ERROR,
-                error=f"Storage failed: {str(e)}"
-            )}
-    
-    def should_continue(state: PDFProcessingState) -> str:
-        """Routing logic - Open/Closed Principle"""
-        if state.get("processing_result"):
-            return END
-        if not state.get("extracted_text"):
-            return "extract_text"
-        if not state.get("contract_data"):
-            return "analyze_contract"
-        return "store_contract"
-    
     # Build graph with proper state management
     builder = StateGraph(PDFProcessingState)
     builder.add_node("extract_text", extract_text_node)
-    builder.add_node("analyze_contract", analyze_contract_node)
+    builder.add_node("analyze_contract", lambda state: analyze_contract_node(state, llm))
     builder.add_node("store_contract", store_contract_node)
     
     builder.add_edge(START, "extract_text")

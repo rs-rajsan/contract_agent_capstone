@@ -6,6 +6,7 @@ from backend.infrastructure.contract_repository import Neo4jContractRepository
 from backend.agents.cuad_mitigation_tools import DeviationDetectorTool, JurisdictionAdapterTool, PrecedentMatcherTool
 
 from backend.shared.utils.logger import get_logger
+from backend.shared.utils.gemini_embedding_service import embedding
 logger = get_logger(__name__)
 
 class EnhancedDeviationDetectorTool(DeviationDetectorTool):
@@ -349,39 +350,39 @@ class EnhancedPrecedentMatcherTool(PrecedentMatcherTool):
             clause_type = clause.get("clause_type", "").lower()
             clause_content = clause.get("content", "")
             
-            # Query similar clauses from Neo4j - Multi-tenant enabled
-            query = """
-            MATCH (c:Contract {tenant_id: $tenant_id})-[:CONTAINS]->(cl:Clause)
-            WHERE toLower(cl.clause_type) CONTAINS $clause_type
-            AND c.intelligence_status = 'completed'
-            RETURN cl.clause_type as type,
-                   cl.content as content,
-                   cl.risk_level as risk_level,
-                   c.risk_score as contract_risk,
-                   c.file_id as contract_id,
-                   c.contract_type as contract_type
-            LIMIT 10
-            """
+            if not clause_content:
+                return []
+
+            # Get embedding for the input clause once
+            input_embedding = embedding.embed_query(clause_content)
             
-            results = self.repository.graph.query(query, {
-                "clause_type": clause_type,
-                "tenant_id": tenant_id
-            })
+            # Query similar clauses from Neo4j via repository
+            results = self.repository.find_clauses_by_type(clause_type, tenant_id, limit=20)
             
             precedents = []
             for result in results:
-                # Simple similarity check (in production, use vector embeddings)
-                similarity = self._calculate_text_similarity(clause_content, result.get("content", ""))
-                if similarity > 0.3:  # Threshold for relevance
+                result_content = result.get("content", "")
+                if not result_content:
+                    continue
+
+                # Calculate semantic similarity
+                try:
+                    result_embedding = embedding.embed_query(result_content)
+                    similarity = embedding.cosine_similarity(input_embedding, result_embedding)
+                except Exception:
+                    # Fallback to simple similarity if embedding fails
+                    similarity = self._calculate_text_similarity(clause_content, result_content)
+
+                if similarity > 0.4:  # Threshold for relevance
                     precedents.append({
                         "clause_type": result.get("type"),
-                        "content": result.get("content"),
+                        "content": result_content,
                         "risk_level": result.get("risk_level", "UNKNOWN"),
                         "contract_risk": result.get("contract_risk", 0),
                         "contract_id": result.get("contract_id"),
                         "contract_type": result.get("contract_type"),
                         "similarity_score": similarity,
-                        "approved": result.get("risk_level") in ["LOW", "MEDIUM"]  # Assume low/medium risk = approved
+                        "approved": result.get("risk_level") in ["LOW", "MEDIUM"]
                     })
             
             return sorted(precedents, key=lambda x: x["similarity_score"], reverse=True)
@@ -391,11 +392,10 @@ class EnhancedPrecedentMatcherTool(PrecedentMatcherTool):
             return []
     
     def _calculate_text_similarity(self, text1: str, text2: str) -> float:
-        """Simple text similarity calculation (placeholder for vector similarity)"""
+        """Fallback simple similarity calculation"""
         if not text1 or not text2:
             return 0.0
         
-        # Simple word overlap similarity
         words1 = set(text1.lower().split())
         words2 = set(text2.lower().split())
         

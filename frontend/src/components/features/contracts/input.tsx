@@ -1,22 +1,33 @@
 import React, { KeyboardEvent, useRef } from "react";
 import { Textarea } from "../../shared/ui/textarea";
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
+} from "../../shared/ui/select";
 import { Button } from "../../shared/ui/button";
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { MouseEvent } from 'react';
 import { SendHorizontal } from "lucide-react";
 import { Message, MessagePart, useChat } from "./provider";
-import { useModel } from "../../../contexts/ModelContext";
 
 export function ChatInput() {
     const history = useRef<string[]>([])
     const [submiting, setSubmiting] = React.useState(false);
     const { addMessage, addMessagePart, updateMessageGenerating, reset } = useChat();
-    const { selectedModel } = useModel();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    const DEFAULT_MODEL = import.meta.env.VITE_DEFAULT_MODEL || 'gemini-2.5-flash';
+    const AVAILABLE_MODELS_ENV = import.meta.env.VITE_AVAILABLE_MODELS || 'gemini-2.5-flash,gemini-1.5-pro,gpt-4o,sonnet-3.5';
+    const modelOptions = AVAILABLE_MODELS_ENV.split(',').map(m => m.trim());
 
     const handleSubmit = async (event: any) => {
         event.preventDefault();
         const formData = new FormData(event.target);
+        const model = formData.get("model") as string;
         const prompt = formData.get("prompt") as string;
 
         if (!prompt.trim()) {
@@ -44,14 +55,12 @@ export function ChatInput() {
         // Clear the form after submission
         event.target.reset();
 
-        const correlationId = crypto.randomUUID();
         await fetchEventSource('/api/run/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Correlation-ID': correlationId
             },
-            body: JSON.stringify({ model: selectedModel, prompt, history: JSON.stringify(history.current) }),
+            body: JSON.stringify({ model, prompt, history: JSON.stringify(history.current) }),
             onmessage(event) {
                 const data: MessagePart = JSON.parse(event.data);
 
@@ -69,7 +78,7 @@ export function ChatInput() {
             onclose() {
                 setSubmiting(false);
             },
-            onerror() {
+            onerror(err) {
                 setSubmiting(false);
                 // removed console error
                 addMessagePart(aiMessage.id, { type: "ai_message", content: "Error: Failed to generate the response." });
@@ -109,9 +118,18 @@ export function ChatInput() {
                     ref={textareaRef}
                 />
                 <div className="flex gap-2">
-                    <div className="flex-1 flex items-center px-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md text-xs text-slate-500">
-                        Using model: <span className="ml-1 font-semibold text-blue-600">{selectedModel}</span>
-                    </div>
+                    <Select name="model" defaultValue={DEFAULT_MODEL}>
+                        <SelectTrigger className=" flex-1 text-foreground">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                {modelOptions.map(model => (
+                                    <SelectItem key={model} value={model}>{model}</SelectItem>
+                                ))}
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
                     <Button variant="outline" className="flex-0" onClick={handleClear}>
                         Reset
                     </Button>

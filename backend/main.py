@@ -50,10 +50,17 @@ from backend.agents.supervisor.supervisor_agent import SupervisorFactory
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup - Initialize once
-    llm_manager = LLMManager()
-    app.state.llm_manager = llm_manager
-    # Create a persistent supervisor to track long-running workflows/agent status
-    app.state.supervisor = SupervisorFactory.create_supervisor(llm_manager)
+    try:
+        app.state.llm_manager = LLMManager()
+        # Create a persistent supervisor to track long-running workflows/agent status
+        app.state.supervisor = SupervisorFactory.create_supervisor(app.state.llm_manager)
+        logger.info("✅ LLMManager and Supervisor initialized successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize application state: {e}")
+        app.state.llm_manager = None
+        app.state.supervisor = None
+    
+    logger.info("FastAPI Backend Listening on http://0.0.0.0:8000")
     yield
     # Shutdown - cleanup if needed
 

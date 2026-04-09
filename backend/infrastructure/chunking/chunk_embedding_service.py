@@ -6,10 +6,7 @@ from dataclasses import dataclass
 from abc import ABC, abstractmethod
 
 from backend.shared.utils.gemini_embedding_service import GeminiEmbeddingService
-from backend.shared.utils.contract_search_tool import graph
-from backend.shared.utils.logger import get_logger
-
-logger = get_logger(__name__)
+from backend.shared.utils.graph_utils import get_graph
 
 
 @dataclass
@@ -41,8 +38,14 @@ class ChunkEmbeddingService:
     
     def __init__(self):
         self.embedding_service = GeminiEmbeddingService()
-        self.graph = graph
+        self._graph = None
         self._observers: List[EmbeddingObserver] = []
+    
+    @property
+    def graph(self):
+        if self._graph is None:
+            self._graph = get_graph()
+        return self._graph
     
     def add_observer(self, observer: EmbeddingObserver) -> None:
         """Add an observer for embedding events."""
@@ -59,7 +62,7 @@ class ChunkEmbeddingService:
             try:
                 await observer.on_embedding_generated(chunk_embedding)
             except Exception as e:
-                logger.error(f"Observer notification failed: {e}")
+                print(f"Observer notification failed: {e}")
     
     async def _notify_embedding_failed(self, chunk_id: str, error: Exception) -> None:
         """Notify observers of embedding generation failure."""
@@ -184,7 +187,7 @@ class ChunkEmbeddingService:
             return True
             
         except Exception as e:
-            logger.error(f"Failed to store chunk embeddings: {e}")
+            print(f"Failed to store chunk embeddings: {e}")
             return False
     
     async def search_similar_chunks(self, query_text: str, document_id: Optional[str] = None,
@@ -245,7 +248,7 @@ class ChunkEmbeddingService:
             return similar_chunks
                 
         except Exception as e:
-            logger.error(f"Failed to search similar chunks: {e}")
+            print(f"Failed to search similar chunks: {e}")
             return []
     
     async def get_chunk_embeddings_by_document(self, document_id: str) -> List[ChunkEmbedding]:
@@ -284,7 +287,7 @@ class ChunkEmbeddingService:
             return chunk_embeddings
                 
         except Exception as e:
-            logger.error(f"Failed to retrieve chunk embeddings: {e}")
+            print(f"Failed to retrieve chunk embeddings: {e}")
             return []
 
 
@@ -293,12 +296,12 @@ class ChunkEmbeddingLogger(EmbeddingObserver):
     
     async def on_embedding_generated(self, chunk_embedding: ChunkEmbedding) -> None:
         """Log successful embedding generation."""
-        logger.debug(f"Generated embedding for chunk {chunk_embedding.chunk_id} "
-                     f"(size: {len(chunk_embedding.chunk_content)} chars)")
+        print(f"Generated embedding for chunk {chunk_embedding.chunk_id} "
+              f"(size: {len(chunk_embedding.chunk_content)} chars)")
     
     async def on_embedding_failed(self, chunk_id: str, error: Exception) -> None:
         """Log embedding generation failure."""
-        logger.error(f"Failed to generate embedding for chunk {chunk_id}: {error}")
+        print(f"Failed to generate embedding for chunk {chunk_id}: {error}")
 
 
 class ChunkEmbeddingMetrics(EmbeddingObserver):

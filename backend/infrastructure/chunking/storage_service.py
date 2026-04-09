@@ -1,7 +1,7 @@
 """Enhanced storage service for chunked documents with embedding integration."""
 
 from typing import List, Dict, Any, Optional
-from backend.shared.utils.contract_search_tool import graph
+from backend.shared.utils.graph_utils import get_graph
 from backend.infrastructure.chunking.chunk_embedding_service import ChunkEmbeddingService
 import logging
 
@@ -13,8 +13,14 @@ class ChunkingStorageService:
     """Enhanced service for storing and retrieving chunked documents with embeddings."""
     
     def __init__(self):
-        self.graph = graph
+        self._graph = None
         self.chunk_embedding_service = ChunkEmbeddingService()
+    
+    @property
+    def graph(self):
+        if self._graph is None:
+            self._graph = get_graph()
+        return self._graph
     
     async def store_chunks(self, document_id: str, chunks: List[Dict[str, Any]], 
                          metadata: Dict[str, Any] = None) -> Dict[str, Any]:

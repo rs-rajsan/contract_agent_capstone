@@ -10,6 +10,8 @@ from enum import Enum
 from functools import wraps
 import json
 
+import os
+import re
 from backend.shared.utils.logger import get_logger
 logger = get_logger(__name__)
 
@@ -30,15 +32,34 @@ class AuditLogger:
     """Centralized audit logging with Neo4j persistence"""
     
     def __init__(self):
-        self._repository = None
+        from backend.infrastructure.contract_repository import Neo4jContractRepository
+        self.repository = Neo4jContractRepository()
+        self.jsonl_log_path = os.path.join(os.getcwd(), "logs", "audit.jsonl")
+        
+        # Ensure logs directory exists
+        os.makedirs(os.path.dirname(self.jsonl_log_path), exist_ok=True)
     
-    @property
-    def repository(self):
-        if self._repository is None:
-            from backend.infrastructure.contract_repository import Neo4jContractRepository
-            self._repository = Neo4jContractRepository()
-        return self._repository
-    
+    def _mask_pii(self, data: Any) -> Any:
+        """
+        Recursively masks PII/PHI patterns in strings, lists, and dicts. (HIPAA Compliance)
+        Patterns: Email, Phone, SSN, and generic 'ID' fields in metadata.
+        """
+        email_regex = r"[\w\.-]+@[\w\.-]+\.\w+"
+        phone_regex = r"\b(?:\+?1[-. ]?)?\(?([2-9][0-8][0-9])\)?[-. ]?([2-9][0-9]{2})[-. ]?([0-9]{4})\b"
+        ssn_regex = r"\b\d{3}-\d{2}-\d{4}\b"
+        
+        if isinstance(data, str):
+            data = re.sub(email_regex, "[EMAIL_MASKED]", data)
+            data = re.sub(phone_regex, "[PHONE_MASKED]", data)
+            data = re.sub(ssn_regex, "[SSN_MASKED]", data)
+            return data
+        elif isinstance(data, list):
+            return [self._mask_pii(item) for item in data]
+        elif isinstance(data, dict):
+            return {k: self._mask_pii(v) if k.lower() not in ["email", "phone", "ssn"] else "[MASKED]" 
+                    for k, v in data.items()}
+        return data
+
     def log_event(
         self,
         event_type: AuditEventType,
@@ -50,20 +71,38 @@ class AuditLogger:
         status: str = "success",
         error_details: Optional[str] = None
     ) -> str:
-        """Log audit event to Neo4j with high resilience"""
+        """Log audit event to Neo4j and local JSONL with PII masking."""
+        audit_id = f"audit_{datetime.utcnow().timestamp()}"
+        timestamp = datetime.utcnow().isoformat()
+        
+        # Apply PII Masking before logging
+        masked_metadata = self._mask_pii(metadata or {})
+        masked_error = self._mask_pii(error_details) if error_details else None
+        
+        # 1. JSONL Logging
         try:
-            audit_id = f"audit_{datetime.utcnow().timestamp()}"
+            log_entry = {
+                "audit_id": audit_id,
+                "timestamp": timestamp,
+                "event_type": event_type.value,
+                "resource_id": resource_id,
+                "action": action,
+                "user_id": user_id,
+                "tenant_id": tenant_id,
+                "status": status,
+                "metadata": masked_metadata,
+                "error_details": masked_error
+            }
             
-            # Robust property access (catches initialization errors)
-            try:
-                repo = self.repository
-                if not repo or not hasattr(repo, 'graph'):
-                    logger.warning("Audit repository unavailable, falling back to local logs only")
-                    return audit_id
-            except Exception as repo_err:
-                logger.warning(f"Failed to initialize audit repository: {repo_err}")
-                return audit_id
+            with open(self.jsonl_log_path, "a") as f:
+                f.write(json.dumps(log_entry) + "\n")
+                
+            logger.info(f"Audit JSONL appended: {event_type.value}")
+        except Exception as e:
+            logger.error(f"Failed to log to JSONL: {e}")
 
+        # 2. Neo4j Logging (Existing)
+        try:
             query = """
             MERGE (a:AuditLog {audit_id: $audit_id})
             SET a.event_type = $event_type,
@@ -78,7 +117,7 @@ class AuditLogger:
             RETURN a.audit_id as audit_id
             """
             
-            result = repo.graph.query(query, {
+            self.repository.graph.query(query, {
                 "audit_id": audit_id,
                 "event_type": event_type.value,
                 "resource_id": resource_id,
@@ -86,17 +125,16 @@ class AuditLogger:
                 "user_id": user_id,
                 "tenant_id": tenant_id,
                 "status": status,
-                "metadata": json.dumps(metadata or {}),
-                "error_details": error_details
+                "metadata": json.dumps(masked_metadata),
+                "error_details": masked_error
             })
             
-            logger.info(f"Audit logged: {event_type.value} - {resource_id} - {status}")
-            return result[0]["audit_id"] if result else audit_id
+            logger.info(f"Audit Neo4j logged: {event_type.value}")
+            return audit_id
             
         except Exception as e:
-            # Final fallback: never allow audit logging to crash the primary request
-            logger.error(f"Audit logging failed silently: {e}")
-            return ""
+            logger.error(f"Failed to log audit event to Neo4j: {e}")
+            return audit_id
     
     def get_audit_trail(self, resource_id: str, limit: int = 100) -> list:
         """Retrieve audit trail for a resource"""

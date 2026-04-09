@@ -1,4 +1,6 @@
 from langgraph.graph import StateGraph, END
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.base import BaseCheckpointSaver
 from langchain_core.messages import HumanMessage, AIMessage
 from backend.agents.intelligence_state import IntelligenceState
 from backend.agents.intelligence_tools import (
@@ -9,377 +11,93 @@ from backend.agents.agent_workflow_tracker import workflow_tracker
 from backend.agents.planning.planning_agent import PlanningAgentFactory
 from backend.agents.planning.execution_engine import PlanExecutionEngine
 import json
-import logging
+from datetime import datetime
+from typing import Dict, Any, List, Optional
 
-from backend.shared.utils.logger import get_logger, hallucination_flag_var
+from backend.shared.utils.logger import get_logger
+from backend.shared.compliance_service import compliance_service
+from backend.infrastructure.text_extractors import TextExtractionService
+from backend.infrastructure.mcp_client import mcp_client
+from backend.infrastructure.audit_logger import AuditLogger, AuditEventType
 logger = get_logger(__name__)
+
+from backend.agents.agents_registry import AgentRegistry
 
 class IntelligenceOrchestrator:
     """Proper multi-agent orchestrator following SOLID principles"""
     
-    def __init__(self, llm):
+    def __init__(self, llm, saver: Optional[BaseCheckpointSaver] = None):
         self.llm = llm
+        self.saver = saver
+        self.registry = AgentRegistry()
         self.workflow = self._build_workflow()
         self.planning_agent = PlanningAgentFactory.create_planning_agent()
         self.execution_engine = PlanExecutionEngine()
+        self.audit_logger = AuditLogger()
     
     def _build_workflow(self) -> StateGraph:
-        """Build workflow with proper state management"""
-        
+        """Build standardized agentic workflow with compliance and HITL."""
         workflow = StateGraph(IntelligenceState)
         
-        # Add nodes with descriptive names (no conflicts)
-        workflow.add_node("clause_extraction", self._extract_clauses)
-        workflow.add_node("pattern_analysis", self._pattern_analysis)  # NEW: Pattern integration
-        workflow.add_node("policy_checking", self._check_policies)
-        workflow.add_node("risk_calculation", self._calculate_risks)
+        # Register nodes using the decoupled AgentRegistry
+        workflow.add_node("upload", self.registry.get_agent("upload").execute)
+        workflow.add_node("planning", self.registry.get_agent("planning").execute)
+        workflow.add_node("parser", self.registry.get_agent("parser").execute)
+        workflow.add_node("splitter", lambda state: AgentRegistry.get_agent("splitter").execute(state))
+        workflow.add_node("policy_checking", lambda state: AgentRegistry.get_agent("policy_checking").execute(state))
+        workflow.add_node("risk_assessment", lambda state: AgentRegistry.get_agent("risk_assessment").execute(state))
+        workflow.add_node("mcp_retrieval", lambda state: AgentRegistry.get_agent("mcp_retrieval").execute(state))
+        workflow.add_node("redline_generation", lambda state: AgentRegistry.get_agent("redline_generation").execute(state))
+        workflow.add_node("governance", lambda state: AgentRegistry.get_agent("governance").execute(state))
+        workflow.add_node("human_review", lambda state: AgentRegistry.get_agent("human_review").execute(state))
+        workflow.add_node("output", lambda state: AgentRegistry.get_agent("output").execute(state))
         
-        # NEW: CUAD mitigation step (Phase 1)
-        workflow.add_node("cuad_mitigation", self._cuad_mitigation)
+        # Define edges — full 10-node sequence
+        workflow.set_entry_point("upload")
+        workflow.add_edge("upload", "planning")
+        workflow.add_edge("planning", "parser")
+        workflow.add_edge("parser", "splitter")
+        workflow.add_edge("splitter", "policy_checking")
+        workflow.add_edge("policy_checking", "risk_assessment")
+        workflow.add_edge("risk_assessment", "mcp_retrieval")
+        workflow.add_edge("mcp_retrieval", "redline_generation")
+        workflow.add_edge("redline_generation", "governance")
         
-        workflow.add_node("redline_generation", self._generate_redlines)
-        
-        # Define workflow with pattern and CUAD steps
-        workflow.set_entry_point("clause_extraction")
-        workflow.add_edge("clause_extraction", "pattern_analysis")  # NEW: Pattern step
-        workflow.add_edge("pattern_analysis", "policy_checking")
-        workflow.add_edge("policy_checking", "risk_calculation")
-        workflow.add_edge("risk_calculation", "cuad_mitigation")
-        workflow.add_edge("cuad_mitigation", "redline_generation")
-        workflow.add_edge("redline_generation", END)
-        
-        return workflow.compile()
-    
-    def _extract_clauses(self, state: IntelligenceState) -> IntelligenceState:
-        """Extract clauses - Single Responsibility"""
-        text_len = len(state["contract_text"])
-        execution = workflow_tracker.start_agent(
-            "Clause Extraction Agent", 
-            "Extract key contract clauses (Payment, Liability, IP, etc.)",
-            f"Contract text ({text_len:,} characters)"
+        # Add conditional edge for refinement loop
+        workflow.add_conditional_edges(
+            "governance",
+            self._governance_router,
+            {
+                "refine": "redline_generation",
+                "proceed": "human_review"
+            }
         )
         
-        try:
-            tool = ClauseDetectorTool()
-            clauses_json = tool._run(state["contract_text"])
-            clauses_list = json.loads(clauses_json)
-            
-            workflow_tracker.complete_agent(execution, f"Extracted {len(clauses_list)} clauses")
-            
-            return {**state, 
-                "extracted_clauses": clauses_list,
-                "current_step": "clause_extraction"
-            }
-        except Exception as e:
-            workflow_tracker.error_agent(execution, f"Clause extraction failed: {e}")
-            return {**state,
-                "extracted_clauses": [],
-                "processing_result": {"status": "error", "error": f"Clause extraction failed: {e}"}
-            }
-    
-    def _pattern_analysis(self, state: IntelligenceState) -> IntelligenceState:
-        """Pattern-based analysis using ReACT or Chain-of-Thought"""
-        from backend.agents.patterns.pattern_selector import PatternSelector
-        from backend.agents.patterns.react_agent import ReACTAgent
-        from backend.agents.patterns.chain_of_thought_agent import ChainOfThoughtAgent
-        import asyncio
+        workflow.add_edge("human_review", "output")
+        workflow.add_edge("output", END)
         
-        # Select pattern based on complexity
-        pattern = PatternSelector.select_pattern({
-            'contract_text': state['contract_text'],
-            'clauses': state['extracted_clauses'],
-            'violations': state.get('policy_violations', [])
-        })
-        
-        if pattern == "react":
-            agent = ReACTAgent(max_iterations=3)
-            result = asyncio.run(agent.execute({
-                'contract_text': state['contract_text'],
-                'clauses': state['extracted_clauses'],
-                'contract_id': state.get('contract_id', 'unknown')
-            }))
-            
-            return {**state,
-                'pattern_analysis': result,
-                'pattern_used': 'ReACT',
-                'current_step': 'pattern_analysis'
-            }
-        
-        elif pattern == "chain_of_thought":
-            agent = ChainOfThoughtAgent()
-            result = asyncio.run(agent.execute({
-                'clauses': state['extracted_clauses'],
-                'task_type': 'risk_assessment',
-                'contract_id': state.get('contract_id', 'unknown')
-            }))
-            
-            return {**state,
-                'pattern_analysis': result,
-                'pattern_used': 'Chain-of-Thought',
-                'current_step': 'pattern_analysis'
-            }
-        
-        # Standard workflow - no pattern
-        logger.info("Using standard workflow, skipping pattern analysis")
-        return {**state, 
-            'pattern_used': 'Standard',
-            'current_step': 'pattern_analysis'
-        }
-    
-    def _check_policies(self, state: IntelligenceState) -> IntelligenceState:
-        """Check policy compliance - Single Responsibility"""
-        clause_count = len(state["extracted_clauses"])
-        execution = workflow_tracker.start_agent(
-            "Policy Compliance Agent",
-            "Check clauses against company policies (Payment, Liability, IP, etc.)",
-            f"{clause_count} extracted clauses"
-        )
-        
-        try:
-            tool = PolicyCheckerTool()
-            clauses_json = json.dumps(state["extracted_clauses"])
-            violations_json = tool._run(clauses_json)
-            violations_list = json.loads(violations_json)
-            
-            critical_count = len([v for v in violations_list if v.get("severity") == "CRITICAL"])
-            workflow_tracker.complete_agent(execution, f"Found {len(violations_list)} violations ({critical_count} critical)")
-            
-            return {**state,
-                "policy_violations": violations_list,
-                "current_step": "policy_checking"
-            }
-        except Exception as e:
-            workflow_tracker.error_agent(execution, f"Policy checking failed: {e}")
-            return {**state, "policy_violations": []}
-    
-    def _calculate_risks(self, state: IntelligenceState) -> IntelligenceState:
-        """Calculate risks - Single Responsibility"""
-        violation_count = len(state["policy_violations"])
-        execution = workflow_tracker.start_agent(
-            "Risk Assessment Agent",
-            "Calculate overall contract risk score and recommendations",
-            f"{len(state['extracted_clauses'])} clauses + {violation_count} violations"
-        )
-        
-        try:
-            tool = RiskCalculatorTool()
-            clauses_json = json.dumps(state["extracted_clauses"])
-            violations_json = json.dumps(state["policy_violations"])
-            risk_json = tool._run(clauses_json, violations_json)
-            risk_dict = json.loads(risk_json)
-            
-            risk_score = risk_dict.get("overall_risk_score", 0)
-            risk_level = risk_dict.get("risk_level", "UNKNOWN")
-            workflow_tracker.complete_agent(execution, f"Risk Score: {risk_score}/100 ({risk_level})")
-            
-            return {**state,
-                "risk_data": risk_dict,
-                "current_step": "risk_calculation"
-            }
-        except Exception as e:
-            workflow_tracker.error_agent(execution, f"Risk calculation failed: {e}")
-            return {**state, "risk_data": {"overall_risk_score": 50.0, "risk_level": "MEDIUM"}}
-    
-    def _generate_redlines(self, state: IntelligenceState) -> IntelligenceState:
-        """Generate redlines - Single Responsibility"""
-        violation_count = len(state["policy_violations"])
-        execution = workflow_tracker.start_agent(
-            "Redline Generation Agent",
-            "Generate contract redline suggestions for policy violations",
-            f"{violation_count} policy violations"
-        )
-        
-        try:
-            tool = RedlineGeneratorTool()
-            violations_json = json.dumps(state["policy_violations"])
-            redlines_json = tool._run(violations_json)
-            redlines_list = json.loads(redlines_json)
-            
-            critical_redlines = len([r for r in redlines_list if r.get("priority") == "CRITICAL"])
-            workflow_tracker.complete_agent(execution, f"Generated {len(redlines_list)} redlines ({critical_redlines} critical)")
-            
-            return {**state,
-                "redline_suggestions": redlines_list,
-                "is_complete": True,
-                "processing_result": {"status": "success", "message": "Intelligence analysis completed"}
-            }
-        except Exception as e:
-            workflow_tracker.error_agent(execution, f"Redline generation failed: {e}")
-            return {**state, "redline_suggestions": [], "is_complete": True}
-    
-    def _cuad_mitigation(self, state: IntelligenceState) -> IntelligenceState:
-        """Enhanced CUAD mitigation analysis - Phase 2 implementation"""
-        execution = workflow_tracker.start_agent(
-            "Enhanced CUAD Mitigation Agent",
-            "Advanced deviation detection, jurisdiction adaptation, and precedent analysis with ML",
-            f"{len(state['extracted_clauses'])} clauses + {len(state['policy_violations'])} violations"
-        )
-        
-        try:
-            # Use optimized tools for Phase 3
-            from backend.agents.optimized_cuad_tools import (
-                OptimizedDeviationDetectorTool, OptimizedJurisdictionAdapterTool, OptimizedPrecedentMatcherTool
-            )
-            from backend.agents.feedback_learning_system import AdaptiveAnalyzer
-            
-            clauses_json = json.dumps(state["extracted_clauses"])
-            
-            # 1. Optimized deviation detection with caching and monitoring
-            deviation_tool = OptimizedDeviationDetectorTool()
-            deviations_json = deviation_tool._run(clauses_json)
-            deviations = json.loads(deviations_json)
-            
-            # 2. Optimized jurisdiction adaptation with caching
-            jurisdiction_tool = OptimizedJurisdictionAdapterTool()
-            jurisdiction_json = jurisdiction_tool._run(state["contract_text"])
-            jurisdiction_info = json.loads(jurisdiction_json)
-            
-            # 3. Optimized precedent matching with parallel processing
-            precedent_tool = OptimizedPrecedentMatcherTool()
-            precedents_json = precedent_tool._run(clauses_json)
-            precedent_matches = json.loads(precedents_json)
-            
-            # 4. Apply learned patterns from legal team feedback
-            adaptive_analyzer = AdaptiveAnalyzer()
-            enhanced_clauses = []
-            for clause in state["extracted_clauses"]:
-                enhanced_analysis = adaptive_analyzer.enhance_analysis(clause, clause)
-                enhanced_clauses.append(enhanced_analysis)
-            
-            # Merge deviations with existing violations
-            enhanced_violations = state["policy_violations"] + deviations
-            
-            # Update risk data with enhanced CUAD insights
-            enhanced_risk_data = dict(state["risk_data"])
-            if deviations:
-                deviation_risk = len([d for d in deviations if d.get("severity") in ["HIGH", "CRITICAL"]])
-                enhanced_risk_data["cuad_deviation_risk"] = deviation_risk
-                enhanced_risk_data["jurisdiction_compliance"] = jurisdiction_info.get("jurisdiction", "unknown")
-                enhanced_risk_data["industry_risk_factors"] = jurisdiction_info.get("risk_factors", [])
-                
-                # Add precedent-based risk assessment
-                if precedent_matches:
-                    avg_approval_rate = sum(p.get("approval_rate", 0) for p in precedent_matches) / len(precedent_matches)
-                    enhanced_risk_data["precedent_approval_rate"] = avg_approval_rate
-            
-            # Validate results
-            from backend.validation.cuad_validator import validate_cuad_analysis
-            
-            validation_result = validate_cuad_analysis({
-                "clauses": state["extracted_clauses"],
-                "cuad_deviations": deviations,
-                "risk_assessment": enhanced_risk_data,
-                "policy_violations": enhanced_violations
-            })
-            
-            # Set hallucination flag for KPIs if confidence is low
-            if validation_result.confidence_score < 0.7:
-                hallucination_flag_var.set(True)
-                logger.warning(f"Potential hallucination detected: confidence_score={validation_result.confidence_score:.2f}")
-            else:
-                hallucination_flag_var.set(False)
+        return workflow.compile(checkpointer=self.saver)
 
-            workflow_tracker.complete_agent(
-                execution, 
-                f"Optimized analysis: {len(deviations)} deviations, jurisdiction: {jurisdiction_info.get('jurisdiction', 'unknown')} ({jurisdiction_info.get('industry', 'general')}), {len(precedent_matches)} precedent matches [validated: {validation_result.is_valid}, confidence: {validation_result.confidence_score:.2f}]"
-            )
-            
-            return {**state,
-                "extracted_clauses": enhanced_clauses,
-                "policy_violations": enhanced_violations,
-                "risk_data": enhanced_risk_data,
-                "cuad_deviations": deviations,
-                "jurisdiction_info": jurisdiction_info,
-                "precedent_matches": precedent_matches,
-                "validation_result": validation_result,
-                "current_step": "cuad_mitigation"
-            }
-            
-        except Exception as e:
-            workflow_tracker.error_agent(execution, f"Optimized CUAD mitigation failed: {e}")
-            # Fallback to Phase 2 tools, then Phase 1
-            logger.warning(f"Falling back from Phase 3 tools: {e}")
-            return self._cuad_mitigation_fallback_enhanced(state, execution)
-    
-    def _cuad_mitigation_fallback_enhanced(self, state: IntelligenceState, execution) -> IntelligenceState:
-        """Enhanced fallback: Phase 2 -> Phase 1 tools"""
-        try:
-            # Try Phase 2 tools first
-            from backend.agents.enhanced_cuad_tools import (
-                EnhancedDeviationDetectorTool, EnhancedJurisdictionAdapterTool, EnhancedPrecedentMatcherTool
-            )
-            
-            clauses_json = json.dumps(state["extracted_clauses"])
-            
-            deviation_tool = EnhancedDeviationDetectorTool()
-            deviations = json.loads(deviation_tool._run(clauses_json))
-            
-            jurisdiction_tool = EnhancedJurisdictionAdapterTool()
-            jurisdiction_info = json.loads(jurisdiction_tool._run(state["contract_text"]))
-            
-            precedent_tool = EnhancedPrecedentMatcherTool()
-            precedent_matches = json.loads(precedent_tool._run(clauses_json))
-            
-            enhanced_violations = state["policy_violations"] + deviations
-            enhanced_risk_data = dict(state["risk_data"])
-            
-            workflow_tracker.complete_agent(execution, f"Phase 2 fallback completed: {len(deviations)} deviations")
-            
-            return {**state,
-                "policy_violations": enhanced_violations,
-                "risk_data": enhanced_risk_data,
-                "cuad_deviations": deviations,
-                "jurisdiction_info": jurisdiction_info,
-                "precedent_matches": precedent_matches,
-                "current_step": "cuad_mitigation"
-            }
-            
-        except Exception as phase2_error:
-            logger.warning(f"Phase 2 fallback failed, trying Phase 1: {phase2_error}")
-            return self._cuad_mitigation_fallback(state, execution)
-    
-    def _cuad_mitigation_fallback(self, state: IntelligenceState, execution) -> IntelligenceState:
-        """Fallback to Phase 1 CUAD tools if Phase 2 fails"""
-        try:
-            from backend.agents.cuad_mitigation_tools import (
-                DeviationDetectorTool, JurisdictionAdapterTool, PrecedentMatcherTool
-            )
-            
-            clauses_json = json.dumps(state["extracted_clauses"])
-            
-            deviation_tool = DeviationDetectorTool()
-            deviations = json.loads(deviation_tool._run(clauses_json))
-            
-            jurisdiction_tool = JurisdictionAdapterTool()
-            jurisdiction_info = json.loads(jurisdiction_tool._run(state["contract_text"]))
-            
-            precedent_tool = PrecedentMatcherTool()
-            precedent_matches = json.loads(precedent_tool._run(clauses_json))
-            
-            enhanced_violations = state["policy_violations"] + deviations
-            enhanced_risk_data = dict(state["risk_data"])
-            
-            workflow_tracker.complete_agent(execution, f"Fallback completed: {len(deviations)} deviations")
-            
-            return {**state,
-                "policy_violations": enhanced_violations,
-                "risk_data": enhanced_risk_data,
-                "cuad_deviations": deviations,
-                "jurisdiction_info": jurisdiction_info,
-                "precedent_matches": precedent_matches,
-                "current_step": "cuad_mitigation"
-            }
-            
-        except Exception as fallback_error:
-            workflow_tracker.error_agent(execution, f"Fallback also failed: {fallback_error}")
-            return {**state,
-                "cuad_deviations": [],
-                "jurisdiction_info": {},
-                "precedent_matches": []
-            }
-    
-    def analyze_contract(self, contract_text: str, use_planning: bool = True) -> dict:
+    def _governance_router(self, state: IntelligenceState) -> str:
+        """Determines if the contract needs more redlining or can proceed to review."""
+        if state.get("refinement_needed"):
+            logger.info("🔁 REFINEMENT LOOP: Critical violations detected, returning to Redline Generation.")
+            return "refine"
+        return "proceed"
+
+    def analyze_contract(self, contract_text: str, query: str = "Analyze risk and compliance", use_planning: bool = True) -> dict:
         """Run analysis with optional autonomous planning"""
+        
+        # Initial State
+        initial_state = {
+            "contract_text": contract_text,
+            "metadata": {
+                "tenant_id": "demo_tenant_1",
+                "ingestion_timestamp": datetime.now().isoformat(),
+                "query": query,
+                "use_planning": use_planning
+            },
+        }
         try:
             if use_planning:
                 try:
@@ -467,21 +185,34 @@ class IntelligenceOrchestrator:
         # Start workflow tracking
         workflow_tracker.start_workflow()
         
-        # Initialize proper state with CUAD fields
+        # BUG-02 FIX: Initialize ALL fields defined in IntelligenceState to prevent KeyError at runtime
         initial_state = {
+            # Input
             "contract_text": contract_text,
+            "metadata": {},                    # Populated by _upload_node
+            # Analysis results
             "extracted_clauses": [],
             "policy_violations": [],
             "risk_data": {},
             "redline_suggestions": [],
+            # CUAD / specialized results
             "cuad_deviations": [],
             "jurisdiction_info": {},
             "precedent_matches": [],
+            # Pattern analysis
+            "pattern_used": "",
+            "pattern_analysis": {},
+            # Compliance
+            "compliance_status": {},           # Populated stage-by-stage
+            "mcp_context": {},                 # Populated by _mcp_retrieval_node
+            # Workflow metadata
             "messages": [],
             "current_step": "",
             "processing_result": None,
+            "human_review_required": False,    # Set by _human_review_node
             "is_complete": False
         }
+
         
         # Run workflow
         final_state = self.workflow.invoke(initial_state)

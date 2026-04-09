@@ -1,9 +1,8 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, BackgroundTasks, Query, Depends, Request
 from fastapi.responses import StreamingResponse
-from backend.application.services.document_processing_service import DocumentServiceFactory
+from backend.application.services.document_processing_service import DocumentServiceFactory, DEFAULT_MODEL
 from backend.domain.entities import DocumentProcessingRequest
 from backend.llm_manager import LLMManager
-import tempfile
 import os
 import uuid
 import json
@@ -11,8 +10,6 @@ import logging
 from typing import Optional
 
 from backend.shared.utils.logger import get_logger
-from backend.shared.config.phase3_config import AppConfig
-
 logger = get_logger(__name__)
 
 # Production contracts router
@@ -26,7 +23,7 @@ def get_llm_manager(request: Request):
 async def upload_contract(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    model: str = Query(default=AppConfig.DEFAULT_MODEL, description="LLM model to use for processing"),
+    model: str = Query(default=DEFAULT_MODEL, description="LLM model to use for processing"),
     llm_mgr: LLMManager = Depends(get_llm_manager)
 ):
     """Upload and process PDF contract - PRODUCTION ENDPOINT"""
@@ -45,8 +42,7 @@ async def upload_contract(
 
         # Save file temporarily
         temp_filename = f"{uuid.uuid4().hex}_{file.filename}"
-        temp_dir = tempfile.gettempdir()
-        temp_path = os.path.join(temp_dir, temp_filename)
+        temp_path = f"/tmp/{temp_filename}"
         
         with open(temp_path, "wb") as temp_file:
             temp_file.write(file_content)

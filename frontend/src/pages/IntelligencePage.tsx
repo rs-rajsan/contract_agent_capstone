@@ -15,7 +15,13 @@ interface UploadResult {
   model_used: string;
 }
 
-export const IntelligencePage: FC = () => {
+export const IntelligencePage: React.FC = () => {
+  const DEFAULT_MODEL = import.meta.env.VITE_DEFAULT_MODEL || 'gemini-2.5-flash';
+  const AVAILABLE_MODELS_ENV = import.meta.env.VITE_AVAILABLE_MODELS || 'gemini-2.5-flash,gemini-1.5-pro,gpt-4o,sonnet-3.5';
+  
+  const modelOptions = AVAILABLE_MODELS_ENV.split(',').map(m => m.trim());
+  
+  const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [isReportExpanded, setIsReportExpanded] = useState(false);
   const [workflowStatus, setWorkflowStatus] = useState<any>(null);
@@ -71,6 +77,20 @@ export const IntelligencePage: FC = () => {
           <div className="flex items-center gap-3">
             <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
             <h2 className="text-xl font-bold text-slate-800">Intelligence Analysis</h2>
+            <div className="flex items-center gap-3 ml-auto">
+              <label className="text-sm font-semibold text-slate-700">AI Model:</label>
+              <select 
+                value={selectedModel} 
+                onChange={(e) => setSelectedModel(e.target.value)}
+                className="bg-white border border-slate-300 rounded-md px-3 py-1 text-sm font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {modelOptions.map(model => (
+                  <option key={model} value={model}>
+                    {model.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <DocumentUpload
             variant="minimal"

@@ -97,21 +97,30 @@ def get_enhanced_pdf_processing_agent(llm):
             logger.error(f"Clause extraction failed: {e}")
             return state
     
+    # Import base nodes directly for reusability
+    from backend.agents.pdf_processing_agent import (
+        extract_text_node, 
+        analyze_contract_node, 
+        store_contract_node
+    )
+    
     # Extend base agent with new nodes
     from langgraph.graph import StateGraph, END
     
     builder = StateGraph(PDFProcessingState)
     
     # Add base nodes
-    builder.add_node("extract_text", base_agent.get_node("extract_text"))
-    builder.add_node("analyze_contract", base_agent.get_node("analyze_contract"))
-    builder.add_node("store_contract", base_agent.get_node("store_contract"))
+    builder.add_node("extract_text", extract_text_node)
+    builder.add_node("analyze_contract", lambda state: analyze_contract_node(state, llm))
+    builder.add_node("store_contract", store_contract_node)
     
     # Add enhanced nodes
     builder.add_node("extract_sections", extract_sections_node)
     builder.add_node("extract_clauses", extract_clauses_node)
     
     # Build enhanced flow
+    from langgraph.graph import START
+    builder.add_edge(START, "extract_text")
     builder.add_edge("extract_text", "analyze_contract")
     builder.add_edge("analyze_contract", "store_contract")
     builder.add_edge("store_contract", "extract_sections")

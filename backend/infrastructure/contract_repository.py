@@ -1,7 +1,8 @@
 from backend.domain.entities import IContractRepository
-from backend.shared.utils.contract_search_tool import graph, embedding
+from backend.shared.utils.graph_utils import get_graph
+from backend.shared.utils.contract_search_tool import embedding
 from backend.shared.utils.utils import parse_date_to_iso
-from typing import Dict, Any
+from typing import Dict, Any, List
 import uuid
 from datetime import datetime
 import logging
@@ -13,7 +14,7 @@ class Neo4jContractRepository(IContractRepository):
     """Repository implementation using existing Neo4j infrastructure - DRY principle"""
     
     def __init__(self):
-        self.graph = graph  # Reuse existing connection
+        self._graph = None
         self.embedding_service = embedding  # Reuse existing embedding service
         
     def check_connection(self) -> bool:
@@ -24,6 +25,12 @@ class Neo4jContractRepository(IContractRepository):
         except Exception as e:
             logger.error(f"Neo4j connection check failed: {e}")
             return False
+    
+    @property
+    def graph(self):
+        if self._graph is None:
+            self._graph = get_graph()
+        return self._graph
     
     def get_contract_by_id(self, contract_id: str, tenant_id: str = "demo_tenant_1") -> Dict[str, Any]:
         """Get contract data by ID - Enforces multi-tenant isolation"""
@@ -175,6 +182,31 @@ class Neo4jContractRepository(IContractRepository):
             self.graph.query(party_query, party_params)
             logger.info(f"Created party relationship: {party_data['name']}")
     
+    def find_clauses_by_type(self, clause_type: str, tenant_id: str, limit: int = 10) -> List[Dict[str, Any]]:
+        """Find clauses by type with tenant isolation - Centralized Data Access Layer"""
+        try:
+            query = """
+            MATCH (c:Contract {tenant_id: $tenant_id})-[:CONTAINS]->(cl:Clause)
+            WHERE toLower(cl.clause_type) CONTAINS toLower($clause_type)
+            AND c.intelligence_status = 'completed'
+            RETURN cl.clause_type as type,
+                   cl.content as content,
+                   cl.risk_level as risk_level,
+                   c.risk_score as contract_risk,
+                   c.file_id as contract_id,
+                   c.contract_type as contract_type
+            LIMIT $limit
+            """
+            
+            return self.graph.query(query, {
+                "clause_type": clause_type,
+                "tenant_id": tenant_id,
+                "limit": limit
+            })
+        except Exception as e:
+            logger.error(f"Failed to find clauses by type: {e}")
+            return []
+
     def _create_governing_law_relationship(self, contract_id: str, governing_law: str):
         """Create governing law relationship"""
         

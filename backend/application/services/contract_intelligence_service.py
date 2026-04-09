@@ -1,6 +1,7 @@
 from backend.agents.contract_intelligence_agents import ContractIntelligenceAgentFactory
 from backend.domain.entities import ContractIntelligence, ContractClause, PolicyViolation, RiskAssessment, RedlineRecommendation
 from backend.infrastructure.contract_repository import Neo4jContractRepository
+from backend.application.services.document_processing_service import DEFAULT_MODEL
 from backend.llm_manager import LLMManager
 import json
 import logging

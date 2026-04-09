@@ -1,222 +1,240 @@
-import { useState, useCallback, FC } from 'react';
-import { Loader } from '../../shared/ui/loader';
+import React, { useState, useCallback } from 'react';
 import { Button } from '../../shared/ui/button';
-import { useModel } from '../../../contexts/ModelContext';
-import { useWorkflowStatus } from '../../../hooks/useWorkflowStatus';
-import { Upload, CheckCircle2, Clock } from 'lucide-react';
-import { cn } from '../../../lib/utils';
+import { Card } from '../../shared/ui/card';
+import { Loader } from '../../shared/ui/loader';
 
 interface DocumentUploadProps {
   onUploadComplete?: (result: UploadResult) => void;
+  modelSelection?: string;
   onWorkflowUpdate?: (status: any) => void;
   onUploadStart?: () => void;
-  variant?: 'hero' | 'minimal';
 }
 
 interface UploadResult {
   filename: string;
   status: string;
   contract_id?: string;
-  details?: string;
-  error?: string;
-  error_details?: string;
-  final_result?: string;
+  details: string;
   model_used: string;
 }
 
-export const DocumentUpload: FC<DocumentUploadProps> = ({
+export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   onUploadComplete,
-  onUploadStart,
-  variant = 'hero'
+  modelSelection = import.meta.env.VITE_DEFAULT_MODEL || "gemini-2.5-flash",
+  onWorkflowUpdate,
+  onUploadStart
 }) => {
-  const { selectedModel } = useModel();
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
-  const [correlationId, setCorrelationId] = useState<string | null>(null);
-
-  // Agent Pulse: Real-time status tracking
-  const { status } = useWorkflowStatus(isUploading, correlationId, 1000);
 
   const handleFiles = useCallback(async (files: FileList) => {
     const file = files[0];
     if (!file) return;
 
+    // Validate file type
     if (!file.name.toLowerCase().endsWith('.pdf')) {
       alert('Please select a PDF file');
       return;
     }
 
-    const cId = crypto.randomUUID();
-    setCorrelationId(cId);
+    // Validate file size (50MB)
+    if (file.size > 50 * 1024 * 1024) {
+      alert('File too large. Maximum size is 50MB');
+      return;
+    }
+
     setIsUploading(true);
     setUploadResult(null);
     onUploadStart?.();
 
+    // Start polling for workflow status
+    const pollWorkflow = setInterval(async () => {
+      try {
+        const workflowResponse = await fetch('/api/workflow/status');
+        if (workflowResponse.ok) {
+          const workflowData = await workflowResponse.json();
+          onWorkflowUpdate?.(workflowData);
+        }
+      } catch (e) {
+        // Ignore workflow polling errors
+      }
+    }, 500);
+
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('model', selectedModel);
-      formData.append('workflow_id', cId);
+      formData.append('model', modelSelection);
 
       const response = await fetch('/api/documents/upload', {
         method: 'POST',
-        headers: {
-          'X-Correlation-ID': cId
-        },
         body: formData
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(errorText || `Upload failed: ${response.status}`);
+        // removed console error
+        throw new Error(`Upload failed: ${response.status} - ${errorText}`);
       }
 
-      const result: UploadResult = await response.json();
+      const responseText = await response.text();
+      // removed console log
+
+      let result: UploadResult;
+      try {
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        // removed console error
+        throw new Error(`Invalid response format: ${responseText.substring(0, 100)}`);
+      }
       setUploadResult(result);
 
       if (onUploadComplete) {
         onUploadComplete(result);
       }
+
+      // Final workflow status update
+      setTimeout(async () => {
+        try {
+          const workflowResponse = await fetch('/api/workflow/status');
+          if (workflowResponse.ok) {
+            const workflowData = await workflowResponse.json();
+            onWorkflowUpdate?.(workflowData);
+          }
+        } catch (e) {
+          // Ignore final workflow polling error
+        }
+      }, 1000);
+
     } catch (error) {
+      // removed console error
       setUploadResult({
         filename: file.name,
         status: 'error',
-        error_details: error instanceof Error ? error.message : 'Upload failed',
-        model_used: selectedModel
+        details: error instanceof Error ? error.message : 'Upload failed',
+        model_used: modelSelection
       });
     } finally {
+      clearInterval(pollWorkflow);
       setIsUploading(false);
     }
-  }, [selectedModel, onUploadComplete, onUploadStart]);
+  }, [modelSelection, onUploadComplete]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setDragActive(e.type === "dragenter" || e.type === "dragover");
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
   }, []);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    if (e.dataTransfer.files?.[0]) handleFiles(e.dataTransfer.files);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFiles(e.dataTransfer.files);
+    }
   }, [handleFiles]);
 
-  if (variant === 'minimal') {
-    return (
-      <div className="flex items-center gap-6 animate-in fade-in duration-500">
-        <div className="relative">
-          <input
-            id="minimal-file-input"
-            type="file"
-            accept=".pdf"
-            onChange={(e) => e.target.files?.[0] && handleFiles(e.target.files)}
-            className="hidden"
-            disabled={isUploading}
-          />
-          <Button 
-            onClick={() => document.getElementById('minimal-file-input')?.click()}
-            disabled={isUploading}
-            className={cn(
-              "flex items-center gap-2 font-bold transition-all",
-              isUploading ? "bg-slate-200 text-slate-500" : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
-            )}
+  const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFiles(e.target.files);
+    }
+  }, [handleFiles]);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'success': return 'text-green-600';
+      case 'error': return 'text-red-600';
+      case 'review_required': return 'text-yellow-600';
+      case 'skipped': return 'text-gray-600';
+      default: return 'text-blue-600';
+    }
+  };
+
+  const getStatusMessage = (result: UploadResult) => {
+    switch (result.status) {
+      case 'success':
+        return `✅ Contract created successfully! ID: ${result.contract_id}`;
+      case 'error':
+        return `❌ Processing failed: ${result.details}`;
+      case 'review_required':
+        return `⚠️ Manual review required: ${result.details}`;
+      case 'skipped':
+        return `ℹ️ Document skipped: ${result.details}`;
+      default:
+        return `📄 Processing completed: ${result.details}`;
+    }
+  };
+
+  return (
+    <div className="w-full max-w-md mx-auto">
+      <Card className="p-6">
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Upload PDF Contract</h3>
+
+          {/* Upload Area */}
+          <div
+            className={`
+              border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
+              ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'}
+              ${isUploading ? 'pointer-events-none opacity-50' : ''}
+            `}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+            onClick={() => document.getElementById('file-input')?.click()}
           >
             {isUploading ? (
-              <Loader className="w-4 h-4 animate-spin text-slate-500" />
+              <div className="space-y-2">
+                <Loader className="mx-auto" />
+                <p className="text-sm text-gray-600">Processing PDF...</p>
+              </div>
             ) : (
-              <Upload className="w-4 h-4" />
-            )}
-            {isUploading ? "Ingesting..." : "Upload Contract"}
-          </Button>
-        </div>
-
-        {/* Horizontal Status Row */}
-        {isUploading && (
-          <div className="flex items-center gap-6 px-4 py-1.5 border-l border-slate-200 dark:border-slate-800 animate-in slide-in-from-left-4 duration-500">
-            {status?.agent_executions && status.agent_executions.length > 0 ? (
-              status.agent_executions.map((exec, i) => (
-                <div key={i} className="flex items-center gap-2 whitespace-nowrap">
-                  {exec.status === 'completed' ? (
-                    <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  ) : (
-                    <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
-                  )}
-                  <span className={cn(
-                    "text-[11px] font-bold uppercase tracking-wider",
-                    exec.status === 'completed' ? "text-slate-500" : "text-blue-600"
-                  )}>
-                    {exec.agent_name.replace('Agent', '').trim()}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <div className="flex items-center gap-2 italic text-slate-400 text-[11px] font-medium animate-pulse">
-                <Clock className="w-3 h-3" />
-                Initializing agents...
+              <div className="space-y-2">
+                <div className="text-4xl">📄</div>
+                <p className="text-sm font-medium">
+                  Drop PDF here or click to browse
+                </p>
+                <p className="text-xs text-gray-500">
+                  Maximum file size: 50MB
+                </p>
               </div>
             )}
           </div>
-        )}
 
-        {/* Minimal Result Badge */}
-        {!isUploading && uploadResult && (
-          <div className={cn(
-            "flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.1em] border animate-in zoom-in duration-300",
-            uploadResult.status === 'success' ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200"
-          )}>
-            {uploadResult.status === 'success' ? "Ready" : "Error"}
-          </div>
-        )}
-      </div>
-    );
-  }
+          <input
+            id="file-input"
+            type="file"
+            accept=".pdf"
+            onChange={handleFileInput}
+            className="hidden"
+            disabled={isUploading}
+          />
 
-  // Fallback to Hero Variant
-  return (
-    <div className="w-full relative overflow-hidden rounded-3xl group min-h-[400px]">
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 transition-all duration-700" />
-      <div 
-        className={cn(
-          "relative z-10 p-1 lg:p-1.5 h-full min-h-[400px] border-2 border-dashed rounded-[1.4rem] transition-all flex flex-col items-center justify-center py-12 px-6",
-          dragActive ? 'border-white/50 bg-white/10' : 'border-white/20 hover:border-white/40 hover:bg-white/5',
-          isUploading ? 'pointer-events-none' : 'cursor-pointer'
-        )}
-        onDragOver={handleDrag}
-        onDrop={handleDrop}
-        onClick={() => !isUploading && document.getElementById('file-input')?.click()}
-      >
-        <input
-          id="file-input"
-          type="file"
-          accept=".pdf"
-          onChange={(e) => e.target.files?.[0] && handleFiles(e.target.files)}
-          className="hidden"
-        />
-        {isUploading ? (
-          <div className="text-center space-y-6">
-            <Loader className="mx-auto text-blue-400 w-12 h-12" />
-            <h3 className="text-2xl font-bold text-white tracking-tight">Agent Pipeline Active</h3>
-            <div className="w-full space-y-3">
-              {status?.agent_executions?.map((exec, i) => (
-                <div key={i} className="flex items-center justify-center gap-4 text-white/80">
-                  <div className={`w-1.5 h-1.5 rounded-full ${exec.status === 'completed' ? 'bg-green-500' : 'bg-blue-400 animate-pulse'}`} />
-                  <span className="text-sm font-medium">{exec.agent_name}</span>
-                </div>
-              ))}
-            </div>
+          {/* Model Selection Display */}
+          <div className="text-sm text-gray-600">
+            Using model: <span className="font-medium">{modelSelection}</span>
           </div>
-        ) : (
-          <div className="space-y-6 text-center">
-            <div className="w-20 h-20 bg-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center mx-auto border border-white/20">
-              <span className="text-4xl">📄</span>
+
+          {/* Upload Result */}
+          {uploadResult && (
+            <div className={`p-3 rounded-lg border ${getStatusColor(uploadResult.status)}`}>
+              <p className="text-sm font-medium">
+                {uploadResult.filename}
+              </p>
+              <p className="text-xs mt-1">
+                {getStatusMessage(uploadResult)}
+              </p>
             </div>
-            <h3 className="text-2xl font-bold text-white tracking-tight">Drag & drop contracts or <span className="text-blue-400">browse</span></h3>
-            <p className="text-white/40 text-[11px] uppercase font-bold tracking-widest">PDF Documents (Max 50MB)</p>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </Card>
     </div>
   );
 };

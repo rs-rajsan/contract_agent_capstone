@@ -9,8 +9,17 @@ services:
       - NEO4J_DATABASE=${NEO4J_DATABASE-legalcontracts}
       - OPENAI_API_KEY=${OPENAI_API_KEY-}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY-}
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY-}
       - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006/v1/traces
       - REDIS_URL=redis://redis:6379
+      - BACKEND_DEFAULT_MODEL=${BACKEND_DEFAULT_MODEL-gemini-2.5-flash}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL-gemini-embedding-001}
+      - GEMINI_MODEL_DEFAULT=${GEMINI_MODEL_DEFAULT-gemini-2.5-flash}
+      - GEMINI_PRO_MODEL=${GEMINI_PRO_MODEL-gemini-1.5-pro}
+      - MODEL_ALIAS_MAP=${MODEL_ALIAS_MAP-}
+      - MCP_PORT=${MCP_PORT-8100}
     networks:
       - net
     x-develop:
@@ -29,6 +38,8 @@ services:
       context: ./frontend
     environment:
       - VITE_BACKEND_URL=${VITE_BACKEND_URL-http://backend:8000}
+      - VITE_DEFAULT_MODEL=${VITE_DEFAULT_MODEL-gemini-2.5-flash}
+      - VITE_AVAILABLE_MODELS=${VITE_AVAILABLE_MODELS-gemini-2.5-flash,gemini-1.5-pro,gpt-4o,sonnet-3.5}
     networks:
       - net
     x-develop:

@@ -3,7 +3,7 @@ Migration: Multi-Level Embeddings Schema
 Adds support for document, section, clause, and relationship embeddings
 """
 
-from langchain_neo4j import Neo4jGraph
+from backend.shared.utils.graph_utils import get_graph
 from typing import List, Dict, Any
 import os
 from dotenv import load_dotenv
@@ -12,10 +12,7 @@ load_dotenv()
 
 def get_neo4j_connection():
     """Get Neo4j connection"""
-    return Neo4jGraph(
-        refresh_schema=False, 
-        driver_config={"notifications_min_severity": "OFF"}
-    )
+    return get_graph()
 
 def upgrade_schema():
     """Upgrade database schema to support multi-level embeddings"""

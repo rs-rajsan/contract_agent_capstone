@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query, BackgroundTasks, Depends, Request
 from fastapi.responses import StreamingResponse
 from backend.application.services.contract_intelligence_service import ContractIntelligenceServiceFactory
+from backend.application.services.document_processing_service import DEFAULT_MODEL
 from backend.llm_manager import LLMManager
 from backend.infrastructure.contract_repository import Neo4jContractRepository
 import json
