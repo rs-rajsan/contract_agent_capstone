@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback, FC } from 'react';
 import { EnhancedSearchInterface, EnhancedSearchParams } from '../components/features/search/EnhancedSearchInterface';
 import { EnhancedSearchResults } from '../components/features/search/EnhancedSearchResults';
 import { enhancedSearchApi, EnhancedSearchResponse } from '../services/enhancedSearchApi';
@@ -9,7 +9,7 @@ interface SearchState {
   error: string | null;
 }
 
-export const SearchPage: React.FC = () => {
+export const SearchPage: FC = () => {
   const [searchState, setSearchState] = useState<SearchState>({
     results: null,
     isLoading: false,
@@ -37,7 +37,15 @@ export const SearchPage: React.FC = () => {
         results = [];
       }
 
-      setSearchState({ results, isLoading: false, error: null });
+      setSearchState({ 
+        results: {
+          success: true,
+          search_level: searchParams.searchLevel,
+          results: results
+        }, 
+        isLoading: false, 
+        error: null 
+      });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Search failed';
       setSearchState({ results: null, isLoading: false, error: errorMessage });

@@ -1,4 +1,4 @@
-import React from 'react';
+import { FC } from 'react';
 
 export type SearchLevel = 'document' | 'section' | 'clause' | 'relationship' | 'all';
 
@@ -8,7 +8,7 @@ interface SearchLevelSelectorProps {
   className?: string;
 }
 
-export const SearchLevelSelector: React.FC<SearchLevelSelectorProps> = ({
+export const SearchLevelSelector: FC<SearchLevelSelectorProps> = ({
   value,
   onChange,
   className = ''

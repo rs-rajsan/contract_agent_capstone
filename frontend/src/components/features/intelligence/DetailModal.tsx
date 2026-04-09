@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect, FC, ReactNode } from 'react';
 import { Button } from '../../shared/ui/button';
 import { X } from 'lucide-react';
 
@@ -6,10 +6,10 @@ interface DetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
-export const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, title, children }) => {
+export const DetailModal: FC<DetailModalProps> = ({ isOpen, onClose, title, children }) => {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();

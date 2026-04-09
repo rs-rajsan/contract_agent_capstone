@@ -21,5 +21,5 @@ ENV PYTHONPATH=/app
 
 EXPOSE 8000
 
-# Run the application from the backend directory
-CMD ["uv", "run", "fastapi", "dev", "backend/main.py", "--host", "0.0.0.0", "--port", "8000"]
+# Run the application from the backend directory using production-ready 'run' (disables reloader)
+CMD ["uv", "run", "fastapi", "run", "backend/main.py", "--host", "0.0.0.0", "--port", "8000"]

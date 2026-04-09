@@ -33,29 +33,46 @@ try:
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
     
     tracer_provider = TracerProvider()
     tracer_provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint=phoenix_endpoint)))
+    
+    # Instrument LangChain
     LangChainInstrumentor().instrument(tracer_provider=tracer_provider)
+    
+    # Initialize app temporarily to instrument it
 except Exception as e:
     logger.warning(f"Failed to initialize OpenTelemetry tracing: {e}")
+
+from backend.agents.supervisor.supervisor_agent import SupervisorFactory
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup - Initialize once
     try:
         app.state.llm_manager = LLMManager()
-        logger.info("LLMManager initialized successfully")
+        # Create a persistent supervisor to track long-running workflows/agent status
+        app.state.supervisor = SupervisorFactory.create_supervisor(app.state.llm_manager)
+        logger.info("✅ LLMManager and Supervisor initialized successfully")
     except Exception as e:
-        logger.error(f"Failed to initialize LLMManager: {e}")
-        # Initialize with dummy or None to prevent attribute errors but allow boot
-        app.state.llm_manager = None 
+        logger.error(f"❌ Failed to initialize application state: {e}")
+        app.state.llm_manager = None
+        app.state.supervisor = None
     
     logger.info("FastAPI Backend Listening on http://0.0.0.0:8000")
     yield
     # Shutdown - cleanup if needed
 
 app = FastAPI(lifespan=lifespan)
+
+# Instrument FastAPI after app creation
+try:
+    if 'tracer_provider' in locals():
+        FastAPIInstrumentor.instrument_app(app, tracer_provider=tracer_provider)
+        logger.info("✅ FastAPI successfully instrumented with OpenTelemetry")
+except Exception as e:
+    logger.warning(f"Failed to instrument FastAPI: {e}")
 
 # Dependency injection
 def get_llm_manager(request: Request):
@@ -64,10 +81,18 @@ def get_llm_manager(request: Request):
 
 app.add_middleware(TracingMiddleware)
 
+# Configure CORS
+try:
+    cors_origins_str = os.getenv("CORS_ALLOWED_ORIGINS", '["*"]')
+    allow_origins = json.loads(cors_origins_str)
+except Exception as e:
+    logger.warning(f"Failed to parse CORS_ALLOWED_ORIGINS, defaulting to ['*']: {e}")
+    allow_origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=["*"],  # Allow all origins
+    allow_origins=allow_origins,
     allow_methods=["*"],  # Allow all methods
     allow_headers=["*"],  # Allow all headers
 )

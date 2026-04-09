@@ -52,11 +52,10 @@ search_service = EnhancedSearchService()
 async def enhanced_contract_search(request: EnhancedSearchRequest):
     """Enhanced contract search with multi-level embedding support"""
     try:
-        print("\n=== ENHANCED SEARCH DEBUG ===", flush=True)
-        print(f"Search Level: {request.search_level}", flush=True)
-        print(f"Query: {request.query}", flush=True)
-        print(f"Contract Type: {request.contract_type}", flush=True)
-        print(f"Active: {request.active}", flush=True)
+        logger.debug(f"Search Level: {request.search_level}")
+        logger.debug(f"Query: {request.query}")
+        logger.debug(f"Contract Type: {request.contract_type}")
+        logger.debug(f"Active: {request.active}")
         
         # Convert request to search params
         search_params = SearchParams(
@@ -76,20 +75,12 @@ async def enhanced_contract_search(request: EnhancedSearchRequest):
         # Execute search using service
         result = search_service.search(search_params)
         
-        print(f"Raw Search Result:", flush=True)
-        print(f"  Total Count: {result.total_count}", flush=True)
-        print(f"  Items Length: {len(result.items)}", flush=True)
-        print(f"  First Item: {result.items[0] if result.items else 'None'}", flush=True)
-        print(f"  Metadata: {result.search_metadata}", flush=True)
+        logger.debug(f"Raw Search Result: Total={result.total_count}, Items={len(result.items)}")
         
         # Map to API response
         response = SearchResponseMapper.to_api_response(result, request.search_level.value)
         
-        print(f"Final API Response:", flush=True)
-        print(f"  Success: {response['success']}", flush=True)
-        print(f"  Contracts Found: {response['contracts_found']}", flush=True)
-        print(f"  Results Length: {len(response['results'])}", flush=True)
-        print(f"=== END DEBUG ===\n", flush=True)
+        logger.info(f"Enhanced search completed: level={request.search_level}, results={len(response['results'])}")
         
         return response
         

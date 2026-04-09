@@ -10,11 +10,13 @@ class ValidationResult:
     warnings: List[str]
     metadata: Dict[str, Any]
 
+from backend.shared.config.phase3_config import AppConfig
+
 class EmbeddingValidator:
     """Validates embedding quality and consistency"""
     
     def __init__(self):
-        self.expected_dimension = 1536  # Google gemini-embedding-001 dimension
+        self.expected_dimension = AppConfig.EMBEDDING_DIMENSION
         self.min_similarity_threshold = 0.1
         self.max_similarity_threshold = 0.99
     

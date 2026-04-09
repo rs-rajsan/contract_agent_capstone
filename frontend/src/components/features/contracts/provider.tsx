@@ -1,10 +1,10 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, ReactNode } from "react";
 
 export type MessagePartType = "user_message" | "ai_message" | "tool_call" | "tool_message" | "history" | "end";
 
 export type MessagePart = {
     type: MessagePartType;
-    content: string;
+    content: any;
 };
 
 export type Message = {
@@ -15,7 +15,7 @@ export type Message = {
 };
 
 type ChatProviderProps = {
-    children: React.ReactNode;
+    children: ReactNode;
 };
 
 type ChatProviderState = {

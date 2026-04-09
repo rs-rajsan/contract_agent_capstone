@@ -58,7 +58,7 @@ This repository includes a standalone **MCP Server** that exposes our contract i
 - **AI Framework**: LangChain + LangGraph for agent workflows and orchestration.
 - **Database**: Neo4j Aura with vector indexing for graph-based knowledge storage.
 - **Embeddings**: **Gemini 1536-dimensional** high-precision vectors (`gemini-embedding-001`).
-- **LLM Providers**: Optimized for Google Gemini 1.5 Pro/Flash, supporting OpenAI and Claude.
+- **LLM Providers**: Optimized for Google Gemini 2.5 Pro/Flash, supporting OpenAI and Claude.
 - **Backend/Frontend**: FastAPI (Async Python) and React + TypeScript with Vite.
 - **Caching (Optional)**: Redis support for high-throughput production RAG (can be enabled via `.env`).
 

@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Request
+from datetime import datetime
+
 from typing import Dict, List, Any, Optional
 import logging
 from backend.shared.monitoring.performance_monitor import monitor
@@ -238,3 +240,34 @@ async def get_system_info():
     except Exception as e:
         logger.error(f"System info failed: {e}")
         raise HTTPException(status_code=500, detail=f"System info failed: {str(e)}")
+
+@router.get("/system/health")
+async def system_health_check(request: Request):
+    """
+    Comprehensive system health check for all architectural components.
+    Performs LLM pings, Embedding checks, and Database connectivity tests.
+    Logs each component's status to app_load_test.jsonl.
+    """
+    from backend.application.services.system_health_manager import SystemHealthManager
+    import json
+    import os
+    
+    health_manager = SystemHealthManager(llm_manager=request.app.state.llm_manager)
+    results = await health_manager.run_full_diagnostic()
+    
+    # Unified Audit Logging: Forward results to the standard system logger
+    # The JsonFormatter will automatically include correlation_id and metadata
+    for res in results:
+        logger.info(
+            f"Health check component '{res['agent_name']}' returned {res['status_code']}",
+            extra=res
+        )
+    
+    # Check if all components passed (status_code == 200)
+    all_ok = all(r["status_code"] == 200 for r in results)
+    
+    return {
+        "status": "healthy" if all_ok else "unhealthy",
+        "results": results,
+        "timestamp": datetime.utcnow().isoformat() + "Z"
+    }

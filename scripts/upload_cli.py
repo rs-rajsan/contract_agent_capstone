@@ -2,8 +2,11 @@
 import requests
 import sys
 import os
+from dotenv import load_dotenv
 
-def upload_pdf(file_path, api_url="http://localhost:8000"):
+load_dotenv()
+
+def upload_pdf(file_path, api_url=os.environ.get("VITE_BACKEND_URL", "http://localhost:8000")):
     if not os.path.exists(file_path):
         print(f"Error: File {file_path} not found")
         return False

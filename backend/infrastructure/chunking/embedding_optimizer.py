@@ -4,6 +4,9 @@ import asyncio
 from typing import List, Dict, Any, Tuple
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from backend.shared.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -329,7 +332,8 @@ class BatchProcessor:
         
         for chunk in batch:
             try:
-                embedding = await embedding_service.generate_embedding(chunk.content)
+                # Use async method correctly
+                embedding = await embedding_service.generate_embedding_async(chunk.content)
                 results.append((chunk, embedding))
                 
                 # Small delay to avoid rate limits
@@ -337,7 +341,7 @@ class BatchProcessor:
                 
             except Exception as e:
                 # Log error but continue processing
-                print(f"Failed to generate embedding for chunk: {e}")
+                logger.error(f"Failed to generate embedding for chunk: {e}")
                 results.append((chunk, []))
         
         return results

@@ -1,3 +1,4 @@
+import { FC, Children, isValidElement, cloneElement, ReactElement } from "react"
 import * as React from "react"
 // import * as TabsPrimitive from "@radix-ui/react-tabs"
 // Simple cn utility
@@ -11,7 +12,7 @@ interface TabsProps {
   children: React.ReactNode;
 }
 
-const Tabs: React.FC<TabsProps> = ({ defaultValue, value, onValueChange, className, children }) => {
+const Tabs: FC<TabsProps> = ({ defaultValue, value, onValueChange, className, children }) => {
   const [activeTab, setActiveTab] = React.useState(defaultValue || '');
   const currentValue = value !== undefined ? value : activeTab;
   
@@ -24,7 +25,7 @@ const Tabs: React.FC<TabsProps> = ({ defaultValue, value, onValueChange, classNa
     <div className={className} data-value={currentValue}>
       {React.Children.map(children, child => 
         React.isValidElement(child) 
-          ? React.cloneElement(child, { currentValue, onValueChange: handleValueChange })
+          ? React.cloneElement(child as React.ReactElement<any>, { currentValue, onValueChange: handleValueChange })
           : child
       )}
     </div>
@@ -38,11 +39,11 @@ interface TabsListProps {
   onValueChange?: (value: string) => void;
 }
 
-const TabsList: React.FC<TabsListProps> = ({ className, children, currentValue, onValueChange }) => (
+const TabsList: FC<TabsListProps> = ({ className, children, currentValue, onValueChange }) => (
   <div className={cn("inline-flex h-10 items-center justify-center rounded-md bg-slate-100 p-1 text-slate-500", className)}>
-    {React.Children.map(children, child => 
-      React.isValidElement(child) 
-        ? React.cloneElement(child, { currentValue, onValueChange })
+    {Children.map(children, child => 
+      isValidElement(child) 
+        ? cloneElement(child as ReactElement<any>, { currentValue, onValueChange })
         : child
     )}
   </div>
@@ -56,7 +57,7 @@ interface TabsTriggerProps {
   onValueChange?: (value: string) => void;
 }
 
-const TabsTrigger: React.FC<TabsTriggerProps> = ({ value: triggerValue, className, children, currentValue, onValueChange }) => {
+const TabsTrigger: FC<TabsTriggerProps> = ({ value: triggerValue, className, children, currentValue, onValueChange }) => {
   const isActive = currentValue === triggerValue;
   
   return (
@@ -80,7 +81,7 @@ interface TabsContentProps {
   currentValue?: string;
 }
 
-const TabsContent: React.FC<TabsContentProps> = ({ value: contentValue, className, children, currentValue }) => {
+const TabsContent: FC<TabsContentProps> = ({ value: contentValue, className, children, currentValue }) => {
   if (currentValue !== contentValue) return null;
   
   return (

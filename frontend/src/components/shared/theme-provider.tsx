@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useContext, useEffect } from "react"
 
 type Theme = "dark" | "light" | "system"
 
@@ -26,8 +26,7 @@ export function ThemeProvider({
     storageKey = "vite-ui-theme",
     ...props
 }: ThemeProviderProps) {
-    // Force light theme for legal professionals
-    const [theme, setTheme] = useState<Theme>("light")
+    // Force light theme for legal professionals - state removed as it is unused
 
     useEffect(() => {
         const root = window.document.documentElement

@@ -47,7 +47,7 @@ input_messages = [*previous_messages, prompt_message]
 ```python
 # Get the requested model agent
 agent = agent_manager.get_model_by_name("gemini-2.5-flash")
-# Returns: LangGraph agent with Gemini 2.0 Flash LLM
+# Returns: LangGraph agent with Gemini 2.5 Flash LLM
 ```
 
 ### 5. Agent Execution (LangGraph)

@@ -8,7 +8,9 @@ from backend.agents.intelligence_state import IntelligenceState
 from backend.agents.agent_workflow_tracker import workflow_tracker
 from backend.infrastructure.audit_logger import AuditEventType
 from backend.infrastructure.text_extractors import TextExtractionService
+from backend.shared.utils.logger import get_logger, hallucination_flag_var
 from backend.agents.intelligence_tools import ClauseDetectorTool, PolicyCheckerTool, RiskCalculatorTool, RedlineGeneratorTool
+from backend.validation.cuad_validator import validate_cuad_analysis
 from backend.infrastructure.mcp_client import mcp_client
 from backend.shared.compliance_service import compliance_service
 from backend.agents.planning.planning_agent import PlanningAgentFactory
@@ -180,7 +182,22 @@ class RiskAssessmentAgent(BaseNodeAgent):
             compliance_status = self._log_and_check_compliance(state, "risk_assessment")
             
             workflow_tracker.complete_agent(execution, f"Risk Score: {risk_dict.get('overall_risk_score', 0)}/100")
-            return {**state, "compliance_status": compliance_status}
+            
+            # Set hallucination flag for KPIs if confidence is low
+            validation_result = validate_cuad_analysis({
+                "clauses": state.get("extracted_clauses", []),
+                "cuad_deviations": deviations_list,
+                "risk_assessment": risk_dict,
+                "policy_violations": state.get("policy_violations", [])
+            })
+            
+            if validation_result.confidence_score < 0.7:
+                hallucination_flag_var.set(True)
+                get_logger(__name__).warning(f"Potential hallucination detected: confidence_score={validation_result.confidence_score:.2f}")
+            else:
+                hallucination_flag_var.set(False)
+
+            return {**state, "compliance_status": compliance_status, "validation_result": validation_result}
         except Exception as e:
             workflow_tracker.error_agent(execution, f"Risk calculation failed: {e}")
             return {**state, "risk_data": {"overall_risk_score": 50.0, "risk_level": "MEDIUM"}}

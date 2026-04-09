@@ -13,6 +13,7 @@ services:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY-}
       - MISTRAL_API_KEY=${MISTRAL_API_KEY-}
       - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006/v1/traces
+      - REDIS_URL=redis://redis:6379
       - BACKEND_DEFAULT_MODEL=${BACKEND_DEFAULT_MODEL-gemini-2.5-flash}
       - EMBEDDING_MODEL=${EMBEDDING_MODEL-gemini-embedding-001}
       - GEMINI_MODEL_DEFAULT=${GEMINI_MODEL_DEFAULT-gemini-2.5-flash}
@@ -23,10 +24,15 @@ services:
       - net
     x-develop:
       watch:
-        - action: rebuild
+        - action: sync
           path: ./backend
+          target: /app/backend
+        - action: rebuild
+          path: ./backend/pyproject.toml
     ports:
       - 8000:8000
+    volumes:
+      - ./logs:/app/logs
   ui:
     build:
       context: ./frontend
@@ -49,6 +55,15 @@ services:
       - 4317:4317
     networks:
       - net
+  redis:
+    image: redis:alpine
+    networks:
+      - net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
 networks:
   net:

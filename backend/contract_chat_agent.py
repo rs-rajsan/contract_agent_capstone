@@ -6,6 +6,10 @@ from langgraph.graph import START, MessagesState, StateGraph
 # Note: ToolNode import disabled to fix compatibility issues
 # This file may need updates for newer LangGraph versions
 from datetime import date
+import time
+from backend.shared.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 def get_agent(llm):
@@ -24,7 +28,23 @@ def get_agent(llm):
 
     # Node
     def assistant(state: MessagesState):
-        return {"messages": [llm_with_tools.invoke([sys_msg] + state["messages"])]}
+        start_time = time.perf_counter()
+        response = llm_with_tools.invoke([sys_msg] + state["messages"])
+        latency = int((time.perf_counter() - start_time) * 1000)
+        
+        # Expert Recommendation: Extract token usage metadata if available
+        tokens = response.response_metadata.get("token_usage", {}).get("total_tokens", 0) if hasattr(response, "response_metadata") else 0
+        
+        logger.info(
+            "Assistant node invocation complete", 
+            extra={
+                "agent_name": "ContractChatAgent",
+                "operation": "assistant_node",
+                "latency_ms": latency,
+                "tokens": tokens
+            }
+        )
+        return {"messages": [response]}
 
     # Simple tool execution function (replaces ToolNode)
     def execute_tools(state: MessagesState):
@@ -40,7 +60,20 @@ def get_agent(llm):
                 # Find and execute the tool
                 for tool in tools:
                     if tool.name == tool_call['name']:
+                        start_time = time.perf_counter()
                         result = tool.invoke(tool_call['args'])
+                        latency = int((time.perf_counter() - start_time) * 1000)
+                        
+                        logger.info(
+                            f"Tool execution complete: {tool.name}", 
+                            extra={
+                                "agent_name": "ContractChatAgent",
+                                "operation": "tool_execution",
+                                "tool_name": tool.name,
+                                "latency_ms": latency
+                            }
+                        )
+                        
                         # Create proper ToolMessage
                         tool_message = ToolMessage(
                             content=str(result),

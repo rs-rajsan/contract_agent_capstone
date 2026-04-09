@@ -16,6 +16,15 @@ class Neo4jContractRepository(IContractRepository):
     def __init__(self):
         self._graph = None
         self.embedding_service = embedding  # Reuse existing embedding service
+        
+    def check_connection(self) -> bool:
+        """Check if Neo4j connection is active"""
+        try:
+            self.graph.query("RETURN 1")
+            return True
+        except Exception as e:
+            logger.error(f"Neo4j connection check failed: {e}")
+            return False
     
     @property
     def graph(self):

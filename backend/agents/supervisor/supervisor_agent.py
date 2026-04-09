@@ -43,8 +43,8 @@ class SupervisorAgent:
         self.retry_manager = RetryManager()
         self.active_workflows: Dict[str, WorkflowContext] = {}
     
-    def coordinate_workflow(self, request: WorkflowRequest) -> WorkflowResult:
-        """Main coordination method"""
+    async def coordinate_workflow(self, request: WorkflowRequest) -> WorkflowResult:
+        """Main coordination method (Async)"""
         logger.info(f"🎯 Starting workflow: {request.workflow_id}")
         
         context = WorkflowContext(request.workflow_id)
@@ -55,7 +55,10 @@ class SupervisorAgent:
         
         for step in workflow_steps:
             try:
-                result = self._execute_step_with_protection(step, context)
+                # Update status for the "Pulse" UI
+                logger.info(f"🚀 Executing step: {step['agent_id']}")
+                
+                result = await self._execute_step_with_protection(step, context)
                 context.set_agent_result(step["agent_id"], result)
                 
                 quality_report = self.quality_manager.validate_agent_output(
@@ -78,8 +81,8 @@ class SupervisorAgent:
         logger.info(f"✅ Workflow completed: {request.workflow_id}")
         return result
     
-    def _execute_step_with_protection(self, step: Dict, context: WorkflowContext) -> AgentResult:
-        """Execute step with circuit breaker and retry protection"""
+    async def _execute_step_with_protection(self, step: Dict, context: WorkflowContext) -> AgentResult:
+        """Execute step with circuit breaker and retry protection (Async)"""
         agent = self.registry.get_agent(step["agent_id"])
         if not agent:
             raise Exception(f"Agent not found: {step['agent_id']}")
@@ -90,12 +93,13 @@ class SupervisorAgent:
             correlation_id=context.workflow_id
         )
         
-        # Execute with protection
-        return self.circuit_breakers.execute_with_breaker(
+        # Execute with protection (Assume agent.execute is async)
+        # Note: If agent.execute is sync, we should run_in_executor
+        return await self.circuit_breakers.execute_with_breaker(
             step["agent_id"],
             lambda: self.retry_manager.execute_with_retry(
                 step["agent_id"],
-                agent.execute,
+                agent.execute_async if hasattr(agent, 'execute_async') else agent.execute,
                 agent_context
             )
         )

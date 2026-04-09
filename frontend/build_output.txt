@@ -1,0 +1,28 @@
+﻿
+> frontend@0.0.0 build
+> tsc -b && vite build
+
+src/components/features/contracts/DocumentUpload.tsx(23,3): error TS6133: 'onWorkflowUpdate' is declared but its value is never read.
+src/components/features/contracts/message.tsx(31,62): error TS2339: Property 'map' does not exist on type 'never'.
+src/components/features/documentation/AgentsTab.tsx(116,23): error TS2322: Type '"default" | "destructive" | "secondary"' is not assignable to type '"default" | "outline" | "secondary" | undefined'.
+  Type '"destructive"' is not assignable to type '"default" | "outline" | "secondary" | undefined'.
+src/components/features/documentation/WorkflowsTab.tsx(84,30): error TS2339: Property 'isNew' does not exist on type '{ agent: string; description: string; tech: string; } | { agent: string; description: string; tech: string; isNew: boolean; isEnhanced?: undefined; } | { agent: string; description: string; tech: string; isEnhanced: boolean; isNew?: undefined; } | { ...; }'.
+  Property 'isNew' does not exist on type '{ agent: string; description: string; tech: string; }'.
+src/components/features/documentation/WorkflowsTab.tsx(85,30): error TS2339: Property 'isEnhanced' does not exist on type '{ agent: string; description: string; tech: string; } | { agent: string; description: string; tech: string; isNew: boolean; isEnhanced?: undefined; } | { agent: string; description: string; tech: string; isEnhanced: boolean; isNew?: undefined; } | { ...; }'.
+  Property 'isEnhanced' does not exist on type '{ agent: string; description: string; tech: string; }'.
+src/components/shared/ErrorBoundary.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
+src/components/shared/ErrorBoundary.tsx(23,21): error TS6133: 'error' is declared but its value is never read.
+src/components/shared/ErrorBoundary.tsx(23,35): error TS6133: 'errorInfo' is declared but its value is never read.
+src/components/shared/theme-provider.tsx(30,12): error TS6133: 'theme' is declared but its value is never read.
+src/components/shared/theme-provider.tsx(30,19): error TS6133: 'setTheme' is declared but its value is never read.
+src/components/shared/ui/tabs.tsx(27,41): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Object literal may only specify known properties, and 'currentValue' does not exist in type 'Partial<unknown> & Attributes'.
+src/components/shared/ui/tabs.tsx(45,39): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Object literal may only specify known properties, and 'currentValue' does not exist in type 'Partial<unknown> & Attributes'.
+src/pages/AgentsPage.tsx(116,23): error TS2322: Type '"default" | "destructive" | "secondary"' is not assignable to type '"default" | "outline" | "secondary" | undefined'.
+  Type '"destructive"' is not assignable to type '"default" | "outline" | "secondary" | undefined'.
+src/pages/SearchPage.tsx(40,24): error TS2739: Type 'any[]' is missing the following properties from type 'EnhancedSearchResponse': success, search_level, results
+src/pages/USPPage.tsx(4,50): error TS6133: 'AlertTriangle' is declared but its value is never read.
+src/services/enhancedSearchApi.ts(1,38): error TS2307: Cannot find module '../components/search/EnhancedSearchInterface' or its corresponding type declarations.

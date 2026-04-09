@@ -1,4 +1,3 @@
-import React from 'react';
 import { CheckCircle, Clock, XCircle, ArrowRight } from 'lucide-react';
 
 interface AgentExecution {
@@ -25,12 +24,10 @@ interface WorkflowStatus {
 
 interface AgentWorkflowTrackerProps {
   workflowStatus: WorkflowStatus | null;
-  isVisible: boolean;
 }
 
 export const AgentWorkflowTracker: React.FC<AgentWorkflowTrackerProps> = ({
-  workflowStatus,
-  isVisible
+  workflowStatus
 }) => {
   if (!workflowStatus || workflowStatus.agent_executions?.length === 0) return null;
 

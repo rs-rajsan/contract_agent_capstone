@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, FC } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface ClauseTypeFilterProps {
@@ -7,7 +7,7 @@ interface ClauseTypeFilterProps {
   className?: string;
 }
 
-export const ClauseTypeFilter: React.FC<ClauseTypeFilterProps> = ({
+export const ClauseTypeFilter: FC<ClauseTypeFilterProps> = ({
   selectedTypes,
   onChange,
   className = ''

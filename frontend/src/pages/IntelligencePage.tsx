@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import { useState, FC } from 'react';
 import { DocumentUpload } from '../components/features/contracts/DocumentUpload';
 import { ContractIntelligence } from '../components/features/intelligence/ContractIntelligence';
-import { AgentWorkflowTracker } from '../components/features/agents/AgentWorkflowTracker';
+import { RecentContractsTable } from '../components/features/intelligence/RecentContractsTable';
 import { Card } from '../components/shared/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/shared/ui/select';
 import { useContractHistory } from '../contexts/ContractHistoryContext';
+import { ChevronDown, ChevronUp, FileText } from 'lucide-react';
+import { cn } from '../lib/utils';
 
 interface UploadResult {
   filename: string;
   status: string;
   contract_id?: string;
-  details: string;
+  details?: string;
   model_used: string;
 }
 
@@ -22,17 +23,15 @@ export const IntelligencePage: React.FC = () => {
   
   const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
+  const [isReportExpanded, setIsReportExpanded] = useState(false);
   const [workflowStatus, setWorkflowStatus] = useState<any>(null);
-  const [showWorkflow, setShowWorkflow] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const { contracts, addContract, updateContract, selectedContractId, setSelectedContract } = useContractHistory();
+  const { contracts, addContract, updateContract, setSelectedContract } = useContractHistory();
 
   const handleUploadComplete = (result: UploadResult) => {
     setUploadResult(result);
-    setShowWorkflow(true);
-    setIsUploading(false);
-    
-    // Add to contract history
+    // Automatically expand when a new contract is analyzed/uploaded
+    setIsReportExpanded(true);
+
     if (result.contract_id) {
       addContract({
         contract_id: result.contract_id,
@@ -45,7 +44,8 @@ export const IntelligencePage: React.FC = () => {
   };
 
   const handleUploadStart = () => {
-    setIsUploading(true);
+    setUploadResult(null);
+    setIsReportExpanded(false);
   };
 
   const handleWorkflowUpdate = (status: any) => {
@@ -62,158 +62,113 @@ export const IntelligencePage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10 pb-12">
       {/* Header Section */}
-      <div className="text-center bg-white rounded-lg p-8 shadow-sm border border-slate-200">
-        <h1 className="text-3xl font-bold text-slate-800 mb-3">Contract Intelligence Platform</h1>
-        <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-          Upload legal contracts and leverage AI-powered analysis for comprehensive insights, 
-          risk assessment, and compliance review.
-        </p>
-      </div>
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-extrabold text-slate-800 tracking-tight">Contract Intelligence Hub</h1>
+          <p className="text-lg text-slate-500 font-medium opacity-80">
+            Analyze and manage your contracts with AI-driven insights.
+          </p>
+        </div>
 
-      {/* Model Selection */}
-      <div className="flex justify-center">
-        <div className="bg-white rounded-lg p-4 shadow-sm border border-slate-200">
+        {/* Repositioned Minimal Upload Hub */}
+        <div className="flex flex-col gap-4 pt-2">
           <div className="flex items-center gap-3">
-            <label className="text-sm font-semibold text-slate-700">AI Model:</label>
-            <Select value={selectedModel} onValueChange={setSelectedModel}>
-              <SelectTrigger className="w-56 border-slate-300">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
+            <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
+            <h2 className="text-xl font-bold text-slate-800">Intelligence Analysis</h2>
+            <div className="flex items-center gap-3 ml-auto">
+              <label className="text-sm font-semibold text-slate-700">AI Model:</label>
+              <select 
+                value={selectedModel} 
+                onChange={(e) => setSelectedModel(e.target.value)}
+                className="bg-white border border-slate-300 rounded-md px-3 py-1 text-sm font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
                 {modelOptions.map(model => (
-                  <SelectItem key={model} value={model}>
+                  <option key={model} value={model}>
                     {model.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                  </SelectItem>
+                  </option>
                 ))}
-              </SelectContent>
-            </Select>
+              </select>
+            </div>
           </div>
+          <DocumentUpload
+            variant="minimal"
+            onUploadComplete={handleUploadComplete}
+            onWorkflowUpdate={handleWorkflowUpdate}
+            onUploadStart={handleUploadStart}
+          />
         </div>
       </div>
 
+      <div className="w-full h-px bg-slate-200 dark:bg-slate-800" />
 
-
-      {/* Contract History */}
-      {contracts.length > 0 && (
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-slate-200 mb-8">
-          <h2 className="text-xl font-semibold text-slate-800 mb-4">Recent Contracts</h2>
-          <div className="space-y-2">
-            {contracts.slice(0, 5).map((contract) => (
-              <div 
-                key={contract.contract_id} 
-                className="flex items-center justify-between p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100"
-                onClick={() => {
-                  setSelectedContract(contract.contract_id);
-                  setUploadResult({
-                    filename: contract.filename,
-                    status: 'success',
-                    contract_id: contract.contract_id,
-                    details: 'Contract loaded from history',
-                    model_used: contract.model_used
-                  });
-                }}
-              >
-                <div>
-                  <p className="font-medium text-slate-800">{contract.filename}</p>
-                  <p className="text-sm text-slate-500">
-                    {new Date(contract.upload_date).toLocaleDateString()} • {contract.model_used}
-                    {contract.analysis_completed && contract.risk_level && (
-                      <span className={`ml-2 px-2 py-1 rounded text-xs ${
-                        contract.risk_level === 'HIGH' || contract.risk_level === 'CRITICAL' 
-                          ? 'bg-red-100 text-red-700'
-                          : contract.risk_level === 'MEDIUM'
-                          ? 'bg-yellow-100 text-yellow-700' 
-                          : 'bg-green-100 text-green-700'
-                      }`}>
-                        {contract.risk_level} Risk
-                      </span>
-                    )}
-                  </p>
-                </div>
-                <div className="text-sm text-slate-400">Click to analyze</div>
+      {/* Collapsible Analysis Results Section */}
+      {uploadResult?.contract_id && (
+        <Card className="bg-white border-slate-200 shadow-xl rounded-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Section Header - Interactive Toggle */}
+          <div 
+            onClick={() => setIsReportExpanded(!isReportExpanded)}
+            className="p-6 border-b border-slate-100 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                <FileText className="w-5 h-5" />
               </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        {/* Upload Section */}
-        <Card className="bg-white border-slate-200 shadow-sm">
-          <div className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <h2 className="text-xl font-semibold text-slate-800">Document Upload</h2>
-            </div>
-            <p className="text-slate-600 text-sm mb-6">
-              Upload PDF contracts for AI-powered analysis and extraction of key legal terms.
-            </p>
-            <DocumentUpload 
-              onUploadComplete={handleUploadComplete}
-              modelSelection={selectedModel}
-              onWorkflowUpdate={handleWorkflowUpdate}
-              onUploadStart={handleUploadStart}
-            />
-            
-            {/* PDF Processing Workflow */}
-            {(workflowStatus?.agent_executions?.length > 0 || isUploading || uploadResult) && (
-              <div className="mt-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="text-sm font-semibold text-blue-800 mb-2">🤖 PDF Processing Agent</h4>
-                  <div className="text-xs text-blue-600">
-                    {isUploading ? '⏳ Processing PDF...' : '✅ PDF processed successfully'}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </Card>
-
-        {/* Analysis Section */}
-        <Card className="bg-white border-slate-200 shadow-sm">
-          <div className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <h2 className="text-xl font-semibold text-slate-800">Intelligence Analysis</h2>
-            </div>
-            <p className="text-slate-600 text-sm mb-6">
-              Comprehensive AI analysis including risk assessment, clause extraction, and compliance review.
-            </p>
-            {uploadResult?.contract_id ? (
-              <>
-                {/* Intelligence Analysis Workflow */}
-                {workflowStatus && workflowStatus.agent_executions?.length > 0 && (
-                  <div className="mb-4">
-                    <AgentWorkflowTracker 
-                      workflowStatus={{
-                        ...workflowStatus,
-                        agent_executions: workflowStatus.agent_executions.filter((e: any) => e.agent_name !== 'PDF Processing Agent')
-                      }}
-                      isVisible={true}
-                    />
-                  </div>
-                )}
-                <ContractIntelligence 
-                  contractId={uploadResult.contract_id}
-                  model={selectedModel}
-                  onWorkflowUpdate={handleWorkflowUpdate}
-                  onAnalysisComplete={handleAnalysisComplete}
-                />
-              </>
-            ) : (
-              <div className="text-center py-12 border-2 border-dashed border-slate-300 rounded-lg">
-                <div className="text-slate-400 text-4xl mb-3">📄</div>
-                <p className="text-slate-500 font-medium">Upload a contract to begin analysis</p>
-                <p className="text-slate-400 text-sm mt-1">
-                  AI will extract clauses, assess risks, and provide recommendations
+              <div>
+                <h2 className="text-xl font-bold text-slate-800">Detailed Analysis Report</h2>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mt-0.5">
+                  {uploadResult.filename}
                 </p>
               </div>
-            )}
+            </div>
+            
+            <div className="flex items-center gap-3 bg-slate-100 px-4 py-2 rounded-xl group-hover:bg-slate-200 transition-all">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                {isReportExpanded ? 'Collapse' : 'Expand Report'}
+              </span>
+              {isReportExpanded ? (
+                <ChevronUp className="w-4 h-4 text-slate-500" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-slate-500" />
+              )}
+            </div>
+          </div>
+
+          {/* Animated Collapsible Container */}
+          <div className={cn(
+            "transition-all duration-500 ease-in-out overflow-hidden bg-slate-50/50",
+            isReportExpanded ? "max-h-[3000px] opacity-100" : "max-h-0 opacity-0"
+          )}>
+            <div className="p-8">
+              <ContractIntelligence
+                contractId={uploadResult.contract_id}
+                onWorkflowUpdate={handleWorkflowUpdate}
+                onAnalysisComplete={handleAnalysisComplete}
+              />
+            </div>
           </div>
         </Card>
+      )}
+
+      {/* Recent Contracts Table Section */}
+      <div className="space-y-4">
+        <RecentContractsTable 
+          contracts={contracts} 
+          onSelect={(id) => {
+            const contract = contracts.find(c => c.contract_id === id);
+            if (contract) {
+              setSelectedContract(id);
+              handleUploadComplete({
+                filename: contract.filename,
+                status: 'success',
+                contract_id: contract.contract_id,
+                details: 'Contract loaded from history',
+                model_used: contract.model_used
+              });
+            }
+          }} 
+        />
       </div>
     </div>
   );
