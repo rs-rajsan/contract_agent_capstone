@@ -31,9 +31,16 @@ class Location(BaseModel):
     country: Optional[str] = Field(None, description="Use two-letter ISO standard")
     state: Optional[str]
 
-graph: Neo4jGraph = Neo4jGraph(
-    refresh_schema=False, driver_config={"notifications_min_severity": "OFF"}
-)
+import logging
+logger = logging.getLogger(__name__)
+
+try:
+    graph: Neo4jGraph = Neo4jGraph(
+        refresh_schema=False, driver_config={"notifications_min_severity": "OFF"}
+    )
+except Exception as e:
+    logger.error(f"Failed to initialize Neo4jGraph in enhanced search tool: {e}")
+    graph = None
 # embedding imported from gemini_embedding_service (1536 dimensions)
 
 def get_contracts_multi_level(

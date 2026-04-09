@@ -10,22 +10,26 @@ export interface WorkflowStatus {
   }>;
 }
 
-export const useWorkflowStatus = (isEnabled: boolean = false, intervalMs: number = 500) => {
+export const useWorkflowStatus = (isEnabled: boolean = false, correlationId: string | null = null, intervalMs: number = 1000) => {
   const [status, setStatus] = useState<WorkflowStatus | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchStatus = useCallback(async () => {
+    if (!correlationId) return;
+    
     try {
-      const response = await fetch('/api/workflow/status');
+      const response = await fetch(`/api/supervisor/workflow/${correlationId}/status`);
       if (response.ok) {
         const data = await response.json();
-        setStatus(data);
+        if (data.success && data.status) {
+          setStatus(data.status);
+        }
       }
     } catch (e) {
       setError(e instanceof Error ? e : new Error('Failed to fetch workflow status'));
     }
-  }, []);
+  }, [correlationId]);
 
   useEffect(() => {
     if (isEnabled) {

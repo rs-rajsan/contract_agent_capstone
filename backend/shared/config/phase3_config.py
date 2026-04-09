@@ -9,7 +9,7 @@ class AppConfig:
     
     # Model Configuration
     DEFAULT_MODEL = os.getenv("GEMINI_MODEL_DEFAULT", "gemini-2.5-flash")
-    PRO_MODEL = os.getenv("GEMINI_PRO_MODEL", "gemini-1.5-pro")
+    PRO_MODEL = os.getenv("GEMINI_PRO_MODEL", "gemini-2.5-pro")
     
     OPENAI_MODEL = os.getenv("OPENAI_MODEL_DEFAULT", "gpt-4o")
     ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL_DEFAULT", "claude-3-5-sonnet-latest")

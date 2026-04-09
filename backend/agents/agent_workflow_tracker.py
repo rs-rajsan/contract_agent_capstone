@@ -5,7 +5,12 @@ from typing import Dict, List, Any
 from dataclasses import dataclass
 from enum import Enum
 
-from backend.shared.utils.logger import get_logger
+from backend.shared.utils.logger import (
+    get_logger, 
+    agent_name_var, 
+    operation_var, 
+    hallucination_flag_var
+)
 logger = get_logger(__name__)
 
 class AgentStatus(Enum):
@@ -48,6 +53,10 @@ class WorkflowTracker:
         )
         self.executions.append(execution)
         
+        # Set context variables for the logger
+        agent_name_var.set(agent_name)
+        operation_var.set(agent_role) # Using role as the operation summary
+        
         logger.info(f"🤖 AGENT STARTED: {agent_name}")
         logger.info(f"   Role: {agent_role}")
         logger.info(f"   Input: {input_summary}")
@@ -65,6 +74,10 @@ class WorkflowTracker:
         logger.info(f"   Output: {output_summary}")
         logger.info(f"   Processing Time: {execution.processing_time_ms}ms")
         
+        # Reset context for this agent (clearing name/operation for next step)
+        agent_name_var.set("")
+        operation_var.set("")
+        
     def error_agent(self, execution: AgentExecution, error_message: str):
         """Mark an agent execution as failed"""
         execution.end_time = datetime.now()
@@ -74,6 +87,10 @@ class WorkflowTracker:
         
         logger.error(f"❌ AGENT FAILED: {execution.agent_name}")
         logger.error(f"   Error: {error_message}")
+        
+        # Reset context
+        agent_name_var.set("")
+        operation_var.set("")
         
     def complete_workflow(self):
         """Complete the workflow tracking"""

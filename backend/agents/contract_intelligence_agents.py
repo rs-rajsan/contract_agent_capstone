@@ -11,7 +11,7 @@ from backend.agents.planning.execution_engine import PlanExecutionEngine
 import json
 import logging
 
-from backend.shared.utils.logger import get_logger
+from backend.shared.utils.logger import get_logger, hallucination_flag_var
 logger = get_logger(__name__)
 
 class IntelligenceOrchestrator:
@@ -272,6 +272,13 @@ class IntelligenceOrchestrator:
                 "policy_violations": enhanced_violations
             })
             
+            # Set hallucination flag for KPIs if confidence is low
+            if validation_result.confidence_score < 0.7:
+                hallucination_flag_var.set(True)
+                logger.warning(f"Potential hallucination detected: confidence_score={validation_result.confidence_score:.2f}")
+            else:
+                hallucination_flag_var.set(False)
+
             workflow_tracker.complete_agent(
                 execution, 
                 f"Optimized analysis: {len(deviations)} deviations, jurisdiction: {jurisdiction_info.get('jurisdiction', 'unknown')} ({jurisdiction_info.get('industry', 'general')}), {len(precedent_matches)} precedent matches [validated: {validation_result.is_valid}, confidence: {validation_result.confidence_score:.2f}]"

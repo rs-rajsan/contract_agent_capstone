@@ -1,10 +1,11 @@
 import { useState, FC } from 'react';
 import { DocumentUpload } from '../components/features/contracts/DocumentUpload';
 import { ContractIntelligence } from '../components/features/intelligence/ContractIntelligence';
-import { AgentWorkflowTracker } from '../components/features/agents/AgentWorkflowTracker';
 import { RecentContractsTable } from '../components/features/intelligence/RecentContractsTable';
 import { Card } from '../components/shared/ui/card';
 import { useContractHistory } from '../contexts/ContractHistoryContext';
+import { ChevronDown, ChevronUp, FileText } from 'lucide-react';
+import { cn } from '../lib/utils';
 
 interface UploadResult {
   filename: string;
@@ -16,13 +17,15 @@ interface UploadResult {
 
 export const IntelligencePage: FC = () => {
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
+  const [isReportExpanded, setIsReportExpanded] = useState(false);
   const [workflowStatus, setWorkflowStatus] = useState<any>(null);
   const { contracts, addContract, updateContract, setSelectedContract } = useContractHistory();
 
   const handleUploadComplete = (result: UploadResult) => {
     setUploadResult(result);
+    // Automatically expand when a new contract is analyzed/uploaded
+    setIsReportExpanded(true);
 
-    // Add to contract history
     if (result.contract_id) {
       addContract({
         contract_id: result.contract_id,
@@ -35,6 +38,8 @@ export const IntelligencePage: FC = () => {
   };
 
   const handleUploadStart = () => {
+    setUploadResult(null);
+    setIsReportExpanded(false);
   };
 
   const handleWorkflowUpdate = (status: any) => {
@@ -50,61 +55,78 @@ export const IntelligencePage: FC = () => {
     });
   };
 
-
   return (
     <div className="space-y-10 pb-12">
       {/* Header Section */}
-      <div className="space-y-2">
-        <h1 className="text-4xl font-extrabold text-slate-800 tracking-tight">Contract Intelligence Hub</h1>
-        <p className="text-lg text-slate-500 font-medium">
-          Analyze and manage your contracts with AI-driven insights.
-        </p>
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-extrabold text-slate-800 tracking-tight">Contract Intelligence Hub</h1>
+          <p className="text-lg text-slate-500 font-medium opacity-80">
+            Analyze and manage your contracts with AI-driven insights.
+          </p>
+        </div>
+
+        {/* Repositioned Minimal Upload Hub */}
+        <div className="flex flex-col gap-4 pt-2">
+          <div className="flex items-center gap-3">
+            <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
+            <h2 className="text-xl font-bold text-slate-800">Intelligence Analysis</h2>
+          </div>
+          <DocumentUpload
+            variant="minimal"
+            onUploadComplete={handleUploadComplete}
+            onWorkflowUpdate={handleWorkflowUpdate}
+            onUploadStart={handleUploadStart}
+          />
+        </div>
       </div>
 
+      <div className="w-full h-px bg-slate-200 dark:bg-slate-800" />
 
-      {/* Featured Upload Section */}
-      <div className="w-full">
-        <DocumentUpload
-          onUploadComplete={handleUploadComplete}
-          onWorkflowUpdate={handleWorkflowUpdate}
-          onUploadStart={handleUploadStart}
-        />
-      </div>
-
-      {/* Analysis Results View (Conditional Overlay/Section) */}
+      {/* Collapsible Analysis Results Section */}
       {uploadResult?.contract_id && (
-        <Card className="bg-white border-slate-200 shadow-xl rounded-3xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="p-8">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                <h2 className="text-2xl font-bold text-slate-800">Intelligence Analysis</h2>
+        <Card className="bg-white border-slate-200 shadow-xl rounded-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Section Header - Interactive Toggle */}
+          <div 
+            onClick={() => setIsReportExpanded(!isReportExpanded)}
+            className="p-6 border-b border-slate-100 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                <FileText className="w-5 h-5" />
               </div>
-              <button 
-                onClick={() => setUploadResult(null)}
-                className="text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors"
-              >
-                ← Back to Overview
-              </button>
+              <div>
+                <h2 className="text-xl font-bold text-slate-800">Detailed Analysis Report</h2>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mt-0.5">
+                  {uploadResult.filename}
+                </p>
+              </div>
             </div>
+            
+            <div className="flex items-center gap-3 bg-slate-100 px-4 py-2 rounded-xl group-hover:bg-slate-200 transition-all">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                {isReportExpanded ? 'Collapse' : 'Expand Report'}
+              </span>
+              {isReportExpanded ? (
+                <ChevronUp className="w-4 h-4 text-slate-500" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-slate-500" />
+              )}
+            </div>
+          </div>
 
-            {/* Workflow Tracker */}
-            {workflowStatus && workflowStatus.agent_executions?.length > 0 && (
-              <div className="mb-8 border-b border-slate-100 pb-8">
-                <AgentWorkflowTracker
-                  workflowStatus={{
-                    ...workflowStatus,
-                    agent_executions: workflowStatus.agent_executions.filter((e: any) => e.agent_name !== 'PDF Processing Agent')
-                  }}
-                />
-              </div>
-            )}
-
-            <ContractIntelligence
-              contractId={uploadResult.contract_id}
-              onWorkflowUpdate={handleWorkflowUpdate}
-              onAnalysisComplete={handleAnalysisComplete}
-            />
+          {/* Animated Collapsible Container */}
+          <div className={cn(
+            "transition-all duration-500 ease-in-out overflow-hidden bg-slate-50/50",
+            isReportExpanded ? "max-h-[3000px] opacity-100" : "max-h-0 opacity-0"
+          )}>
+            <div className="p-8">
+              <ContractIntelligence
+                contractId={uploadResult.contract_id}
+                onWorkflowUpdate={handleWorkflowUpdate}
+                onAnalysisComplete={handleAnalysisComplete}
+              />
+            </div>
           </div>
         </Card>
       )}
@@ -117,7 +139,7 @@ export const IntelligencePage: FC = () => {
             const contract = contracts.find(c => c.contract_id === id);
             if (contract) {
               setSelectedContract(id);
-              setUploadResult({
+              handleUploadComplete({
                 filename: contract.filename,
                 status: 'success',
                 contract_id: contract.contract_id,

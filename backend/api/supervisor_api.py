@@ -6,21 +6,20 @@ import logging
 
 from backend.shared.utils.logger import get_logger
 logger = get_logger(__name__)
+
 router = APIRouter(prefix="/api/supervisor", tags=["supervisor"])
 
-def get_llm_manager(request: Request):
-    return request.app.state.llm_manager
+def get_supervisor(request: Request):
+    """Dependency to retrieve the persistent supervisor from app state"""
+    return request.app.state.supervisor
 
 @router.post("/workflow/execute")
 async def execute_workflow(
     workflow_data: Dict[str, Any],
-    llm_mgr: LLMManager = Depends(get_llm_manager)
+    supervisor = Depends(get_supervisor)
 ):
-    """Execute supervised workflow"""
+    """Execute supervised workflow using the persistent supervisor instance"""
     try:
-        # Create supervisor
-        supervisor = SupervisorFactory.create_supervisor(llm_mgr)
-        
         # Create workflow request
         request = WorkflowRequest(
             workflow_id=workflow_data.get("workflow_id", "default"),
@@ -46,12 +45,16 @@ async def execute_workflow(
 @router.get("/workflow/{workflow_id}/status")
 async def get_workflow_status(
     workflow_id: str,
-    llm_mgr: LLMManager = Depends(get_llm_manager)
+    supervisor = Depends(get_supervisor)
 ):
-    """Get workflow status"""
+    """Get real-time workflow status from the persistent supervisor state"""
     try:
-        supervisor = SupervisorFactory.create_supervisor(llm_mgr)
         status = supervisor.get_workflow_status(workflow_id)
+        if "error" in status:
+            raise HTTPException(status_code=404, detail=status["error"])
         return {"success": True, "status": status}
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"Failed to fetch status for {workflow_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))

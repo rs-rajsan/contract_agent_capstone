@@ -13,16 +13,22 @@ import { Menu, X } from 'lucide-react';
 import { Button } from './components/shared/ui/button';
 import { APP_CONFIG } from './utils/config';
 import { cn } from './lib/utils';
+import { DiagnosticScreen } from './components/shared/DiagnosticScreen';
 
 function App() {
   const { currentPage, navigate } = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [hasCheckedHealth, setHasCheckedHealth] = useState(false);
 
   // Close sidebar when navigating on mobile
   const handleNavigate = (page: any) => {
     navigate(page);
     setIsSidebarOpen(false);
   };
+
+  if (!hasCheckedHealth) {
+    return <DiagnosticScreen onComplete={() => setHasCheckedHealth(true)} />;
+  }
 
   const renderPage = () => {
     switch (currentPage) {

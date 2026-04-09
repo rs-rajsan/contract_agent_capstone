@@ -33,21 +33,39 @@ try:
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
     
     tracer_provider = TracerProvider()
     tracer_provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint=phoenix_endpoint)))
+    
+    # Instrument LangChain
     LangChainInstrumentor().instrument(tracer_provider=tracer_provider)
+    
+    # Initialize app temporarily to instrument it
 except Exception as e:
     logger.warning(f"Failed to initialize OpenTelemetry tracing: {e}")
+
+from backend.agents.supervisor.supervisor_agent import SupervisorFactory
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup - Initialize once
-    app.state.llm_manager = LLMManager()
+    llm_manager = LLMManager()
+    app.state.llm_manager = llm_manager
+    # Create a persistent supervisor to track long-running workflows/agent status
+    app.state.supervisor = SupervisorFactory.create_supervisor(llm_manager)
     yield
     # Shutdown - cleanup if needed
 
 app = FastAPI(lifespan=lifespan)
+
+# Instrument FastAPI after app creation
+try:
+    if 'tracer_provider' in locals():
+        FastAPIInstrumentor.instrument_app(app, tracer_provider=tracer_provider)
+        logger.info("✅ FastAPI successfully instrumented with OpenTelemetry")
+except Exception as e:
+    logger.warning(f"Failed to instrument FastAPI: {e}")
 
 # Dependency injection
 def get_llm_manager(request: Request):

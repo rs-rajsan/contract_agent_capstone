@@ -6,8 +6,12 @@ Centralized service using google.genai for 1536-dim embeddings
 from google import genai
 from google.genai import types
 import os
+from dotenv import load_dotenv
 from typing import List
 import logging
+
+# Ensure env vars are loaded before singleton initialization
+load_dotenv()
 
 from backend.shared.utils.logger import get_logger
 logger = get_logger(__name__)

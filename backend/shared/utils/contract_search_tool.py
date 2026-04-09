@@ -50,9 +50,16 @@ CONTRACT_TYPES = [
     "Licensing Addendum",
 ]
 
-graph: Neo4jGraph = Neo4jGraph(
-    refresh_schema=False, driver_config={"notifications_min_severity": "OFF"}
-)
+import logging
+logger = logging.getLogger(__name__)
+
+try:
+    graph: Neo4jGraph = Neo4jGraph(
+        refresh_schema=False, driver_config={"notifications_min_severity": "OFF"}
+    )
+except Exception as e:
+    logger.error(f"Failed to initialize Neo4jGraph at startup: {e}")
+    graph = None
 # embedding imported from gemini_embedding_service (1536 dimensions)
 
 

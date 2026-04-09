@@ -1,0 +1,55 @@
+graph TD
+    subgraph "Frontend (React)"
+        UI["User Interface"]
+        WS["Workflow Status Hook"]
+    end
+
+    subgraph "API Layer (FastAPI)"
+        S_API["Supervisor API"]
+        M_API["Monitoring & Health API"]
+    end
+
+    subgraph "Orchestration Layer"
+        Supervisor["Supervisor Agent"]
+        Registry["Agent Registry"]
+        Quality["Quality Manager"]
+        Context["Workflow Context (State)"]
+    end
+
+    subgraph "Worker Agents"
+        PDFAgent["PDF Processing Agent"]
+        ExtractAgent["Clause Extraction Agent"]
+        RiskAgent["Risk Assessment Agent"]
+        ChunkAgent["Intelligent Chunking Agent"]
+        PolicyAgent["Policy Enforcement Agent"]
+    end
+
+    subgraph "Intelligence Infrastructure"
+        LLM_Mgr["LLM Manager (Gemini/GPT/Claude/Mistral)"]
+        Embed_Svc["Gemini Embedding Service"]
+        Neo4j["Neo4j Graph Database"]
+        Log_JSONL["app_load_test.jsonl (Audit Log)"]
+    end
+
+    %% Flow Relationships
+    UI --> S_API
+    S_API --> Supervisor
+    Supervisor --> Registry
+    Supervisor --> Context
+    
+    %% Agent Execution
+    Supervisor -- "Coordinates" --> PDFAgent
+    Supervisor -- "Validates" --> Quality
+    PDFAgent --> ExtractAgent
+    ExtractAgent --> RiskAgent
+    
+    %% Shared Resources
+    PDFAgent & ExtractAgent & RiskAgent --> LLM_Mgr
+    ChunkAgent --> Embed_Svc
+    RiskAgent & PolicyAgent --> Neo4j
+    
+    %% Monitoring Loop
+    M_API --> LLM_Mgr
+    M_API --> Neo4j
+    M_API --> Log_JSONL
+    WS -- "Polls Status" --> S_API
