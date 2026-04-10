@@ -1,18 +1,9 @@
 import React, { useState, useCallback } from 'react';
-import { Button } from '../../shared/ui/button';
 import { Card } from '../../shared/ui/card';
 import { Loader } from '../../shared/ui/loader';
 import { Badge } from '../../shared/ui/badge';
 import { 
   Zap,
-  Clock, 
-  Brain, 
-  XCircle, 
-  FileText, 
-  AlertTriangle, 
-  Shield, 
-  Wifi, 
-  RefreshCw 
 } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 

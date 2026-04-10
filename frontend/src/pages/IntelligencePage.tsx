@@ -5,7 +5,7 @@ import { RecentContractsTable } from '../components/features/intelligence/Recent
 import { WorkflowStatus } from '../components/features/intelligence/AgentPulse';
 import { Card } from '../components/shared/ui/card';
 import { useContractHistory } from '../contexts/ContractHistoryContext';
-import { ChevronDown, ChevronUp, FileText, Zap, Sparkles, Clock } from 'lucide-react';
+import { ChevronDown, ChevronUp, FileText, Sparkles, Clock } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface UploadResult {
