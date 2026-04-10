@@ -16,6 +16,7 @@ from backend.api.routes.production import create_production_router
 from backend.shared.utils.route_utils import is_development, conditionally_include_router
 from backend.api.enhanced_contract_search import router as enhanced_search_router
 from backend.api.enhanced_document_upload import router as enhanced_upload_router
+from backend.api.analytics import router as analytics_router
 from backend.agents.agent_workflow_tracker import get_current_workflow_status
 from backend.shared.middleware.tracing import TracingMiddleware
 from backend.shared.utils.logger import get_logger, correlation_id_var
@@ -114,6 +115,7 @@ app.include_router(feedback_router)
 # Monitoring API (Phase 3)
 from backend.api.monitoring_api import router as monitoring_router
 app.include_router(monitoring_router)
+app.include_router(analytics_router, prefix="/api")
 
 # Audit API (Production)
 from backend.api.audit_api import router as audit_router

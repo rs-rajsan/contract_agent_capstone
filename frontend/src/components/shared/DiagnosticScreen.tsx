@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ShieldCheck, activity, AlertCircle, CheckCircle2, Loader2, Database, Network, Cpu, Server } from 'lucide-react';
+import { ShieldCheck, AlertCircle, CheckCircle2, Loader2, Database, Network, Cpu, Server } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 interface DiagnosticResult {

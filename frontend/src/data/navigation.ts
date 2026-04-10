@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 export interface NavItem {
-  id: 'intelligence' | 'chat' | 'search' | 'agents';
+  id: 'intelligence' | 'chat' | 'search' | 'agents' | 'analytics';
   label: string;
   icon: LucideIcon;
   color: string;
@@ -16,9 +16,16 @@ export interface NavItem {
 
 export const navItems: NavItem[] = [
   {
+    id: 'analytics',
+    label: 'Auditor',
+    icon: LineChart, // Temporarily using LineChart for analytics
+    color: 'purple',
+    description: 'System health and accountability'
+  },
+  {
     id: 'intelligence',
     label: 'Analysis',
-    icon: LineChart,
+    icon: MessageSquare, // Switching these to more logical icons
     color: 'blue',
     description: 'Document intelligence and extraction'
   },

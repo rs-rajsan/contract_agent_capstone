@@ -14,6 +14,7 @@ import { Button } from './components/shared/ui/button';
 import { APP_CONFIG } from './utils/config';
 import { cn } from './lib/utils';
 import { DiagnosticScreen } from './components/shared/DiagnosticScreen';
+import { AnalyticsPage } from './pages/AnalyticsPage';
 
 function App() {
   const { currentPage, navigate } = useRouter();
@@ -44,6 +45,8 @@ function App() {
             <SearchPage />
           </ErrorBoundary>
         );
+      case 'analytics':
+        return <AnalyticsPage />;
       default:
         return <IntelligencePage />;
     }
@@ -86,7 +89,9 @@ function App() {
             </header>
 
             <div className="container p-4 lg:p-6 animate-in fade-in duration-500">
-              {renderPage()}
+              <ErrorBoundary>
+                {renderPage()}
+              </ErrorBoundary>
             </div>
           </main>
         </div>
