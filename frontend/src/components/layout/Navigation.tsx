@@ -3,17 +3,13 @@ import { Button } from '../shared/ui/button';
 import { navItems } from '../../data/navigation';
 import { APP_CONFIG } from '../../utils/config';
 import { cn } from '../../lib/utils';
-import { useModel, AIModel } from '../../contexts/ModelContext';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../shared/ui/select';
-import { Sparkles } from 'lucide-react';
 
 interface NavigationProps {
-  currentPage: 'chat' | 'intelligence' | 'agents' | 'search';
-  onNavigate: (page: 'chat' | 'intelligence' | 'agents' | 'search') => void;
+  currentPage: 'chat' | 'intelligence' | 'agents' | 'search' | 'analytics';
+  onNavigate: (page: 'chat' | 'intelligence' | 'agents' | 'search' | 'analytics') => void;
 }
 
 export const Navigation: React.FC<NavigationProps> = ({ currentPage, onNavigate }) => {
-  const { selectedModel, setSelectedModel, availableModels } = useModel();
 
   return (
     <nav className="flex flex-col h-full bg-white dark:bg-slate-900 shadow-sm transition-all duration-300">
@@ -81,33 +77,6 @@ export const Navigation: React.FC<NavigationProps> = ({ currentPage, onNavigate 
             </Button>
           );
         })}
-      </div>
-
-      {/* AI Model Selection */}
-      <div className="px-4 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 px-1">
-            <Sparkles className="w-3 h-3 text-blue-500" />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              AI Processing Model
-            </span>
-          </div>
-          <Select 
-            value={selectedModel} 
-            onValueChange={(value) => setSelectedModel(value as AIModel)}
-          >
-            <SelectTrigger className="h-9 text-xs bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
-              <SelectValue placeholder="Select Model" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableModels.map((model) => (
-                <SelectItem key={model.id} value={model.id} className="text-xs">
-                  {model.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
       </div>
 
       {/* Sidebar Footer */}

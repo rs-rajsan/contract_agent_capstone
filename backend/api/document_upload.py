@@ -8,11 +8,9 @@ from backend.infrastructure.content_validator import ContentValidationService
 from backend.infrastructure.error_tracker import ErrorTracker, ErrorCategory, ErrorSeverity, error_tracking_context
 from backend.agents.chunking_agent import ChunkingAgent
 from backend.infrastructure.chunking.storage_service import ChunkStorageService
-import os
-import uuid
-import json
-import logging
 from typing import Optional
+
+from backend.agents.agent_workflow_tracker import workflow_tracker
 
 from backend.shared.utils.logger import get_logger
 logger = get_logger(__name__)
@@ -101,6 +99,14 @@ async def upload_pdf(
     
     logger.info(f"=== UPLOAD START: {file.filename if file else 'NO FILE'} ===")
     
+    # Initialize workflow tracking
+    workflow_tracker.start_workflow()
+    loading_step = workflow_tracker.start_agent(
+        "Loading File", 
+        "Transferring document to processing server",
+        file.filename if file else "unknown"
+    )
+    
     # Initialize services
     audit_logger = AuditLogger()
     validator = ContentValidationService()
@@ -127,6 +133,15 @@ async def upload_pdf(
             logger.info("Step 2: Reading file content")
             file_content = await file.read()
             logger.info(f"File size: {len(file_content)} bytes")
+            
+            workflow_tracker.complete_agent(loading_step, f"Loaded {len(file_content)} bytes")
+            
+            # Transition to Processing state
+            processing_step = workflow_tracker.start_agent(
+                "Processing",
+                "Performing OCR, Intelligent Chunking, and Knowledge Graph Storage",
+                file.filename
+            )
             
             # Validate file metadata
             validation_data = {
@@ -365,6 +380,9 @@ async def upload_pdf(
                 metadata={"filename": file.filename, "model": model}
             )
             
+            # Complete processing tracking
+            workflow_tracker.complete_agent(processing_step, f"Successfully processed {file.filename}")
+            
             return {
                 "message": "PDF processing completed",
                 "filename": file.filename,
@@ -392,6 +410,12 @@ async def upload_pdf(
                     logger.info(f"Cleaned up temp file: {temp_path}")
                 except Exception as cleanup_error:
                     logger.error(f"Failed to cleanup temp file: {cleanup_error}")
+            
+            # Ensure workflow is updated on error
+            if 'processing_step' in locals():
+                workflow_tracker.error_agent(processing_step, str(e))
+            elif 'loading_step' in locals():
+                workflow_tracker.error_agent(loading_step, str(e))
                     
             raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
         finally:

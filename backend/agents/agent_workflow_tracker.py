@@ -37,8 +37,12 @@ class WorkflowTracker:
         self.executions: List[AgentExecution] = []
         self.workflow_start_time = None
         
-    def start_workflow(self):
-        """Start tracking a new workflow"""
+    def start_workflow(self, force: bool = False):
+        """Start tracking a new workflow, or continue if already active"""
+        if self.workflow_start_time and not force:
+            logger.info("🔄 CONTINUING ACTIVE WORKFLOW")
+            return
+            
         self.workflow_start_time = datetime.now()
         self.executions = []
         logger.info("🚀 MULTI-AGENT CONTRACT ANALYSIS WORKFLOW STARTED")
@@ -70,7 +74,7 @@ class WorkflowTracker:
         execution.output_summary = output_summary
         execution.processing_time_ms = int((execution.end_time - execution.start_time).total_seconds() * 1000)
         
-        logger.info(f"✅ AGENT COMPLETED: {execution.agent_name}")
+        logger.info(f"✅ AGENT COMPLETED: {execution.agent_name}", extra={"latency_ms": execution.processing_time_ms})
         logger.info(f"   Output: {output_summary}")
         logger.info(f"   Processing Time: {execution.processing_time_ms}ms")
         
@@ -85,7 +89,7 @@ class WorkflowTracker:
         execution.error_message = error_message
         execution.processing_time_ms = int((execution.end_time - execution.start_time).total_seconds() * 1000)
         
-        logger.error(f"❌ AGENT FAILED: {execution.agent_name}")
+        logger.error(f"❌ AGENT FAILED: {execution.agent_name}", extra={"latency_ms": execution.processing_time_ms})
         logger.error(f"   Error: {error_message}")
         
         # Reset context
