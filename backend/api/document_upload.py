@@ -8,6 +8,9 @@ from backend.infrastructure.content_validator import ContentValidationService
 from backend.infrastructure.error_tracker import ErrorTracker, ErrorCategory, ErrorSeverity, error_tracking_context
 from backend.agents.chunking_agent import ChunkingAgent
 from backend.infrastructure.chunking.storage_service import ChunkStorageService
+import os
+import uuid
+import json
 from typing import Optional
 
 from backend.agents.agent_workflow_tracker import workflow_tracker

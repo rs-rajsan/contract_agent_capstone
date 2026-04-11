@@ -13,9 +13,10 @@ interface ContractClause {
 
 interface ClausesDetailProps {
   clauses: ContractClause[];
+  contractId?: string;
 }
 
-export const ClausesDetail: FC<ClausesDetailProps> = ({ clauses }) => {
+export const ClausesDetail: FC<ClausesDetailProps> = ({ clauses, contractId }) => {
   const getRiskColor = (level: string) => {
     switch (level.toUpperCase()) {
       case 'CRITICAL': return 'bg-red-500 text-white';
@@ -158,8 +159,21 @@ export const ClausesDetail: FC<ClausesDetailProps> = ({ clauses }) => {
 
   return (
     <div className="space-y-4">
-      <div className="text-sm text-slate-600 mb-4">
-        Found {clauses.length} key clauses in the contract document
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 text-sm text-slate-600">
+            <Clock className="h-4 w-4" />
+            <span>Analysis: {new Date().toLocaleDateString()}</span>
+          </div>
+          {contractId && (
+            <div className="text-sm text-slate-600 border-l border-slate-200 pl-4">
+              Contract ID: <span className="font-semibold text-slate-800">{contractId}</span>
+            </div>
+          )}
+        </div>
+        <div className="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+          {clauses.length} Key Clauses
+        </div>
       </div>
       
       {clauses.map((clause, index) => {

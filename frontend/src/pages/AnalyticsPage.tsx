@@ -1,5 +1,5 @@
 import { FC, useState, useEffect } from 'react';
-import { AlertTriangle, Activity, Shield, Users } from 'lucide-react';
+import { AlertTriangle, Activity, Shield } from 'lucide-react';
 import { analyticsApi, AnalyticsResponse, GovernanceResponse } from '../services/analyticsApi';
 import { AuditorView } from '../components/features/analytics/AuditorView';
 import { GovernanceView } from '../components/features/analytics/GovernanceView';
@@ -54,8 +54,8 @@ export const AnalyticsPage: FC = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12">
-      {/* Dynamic Header with Tab Switcher */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      {/* Dynamic Header */}
+      <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight font-display">
             {activeTab === 'auditor' ? "Auditor's Intelligence" : "Governance & Activity"}
@@ -67,28 +67,35 @@ export const AnalyticsPage: FC = () => {
           </p>
         </div>
 
-        <div className="flex bg-slate-900/80 backdrop-blur-md p-1 rounded-2xl border border-slate-800 self-start">
+        {/* Browser-Style Navigation Tabs (Isolated & Logic-Safe) */}
+        <div className="flex items-center gap-8 border-b border-slate-200 dark:border-slate-800">
           <button 
             onClick={() => setActiveTab('auditor')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+            className={`relative flex items-center gap-2 text-sm font-bold transition-all p-[2px] pb-3 ${
               activeTab === 'auditor' 
-                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' 
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'text-indigo-600 dark:text-indigo-400' 
+                : 'text-slate-400 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-400'
             }`}
           >
             <Shield size={16} />
             AI Auditor
+            {activeTab === 'auditor' && (
+              <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-indigo-600 dark:bg-indigo-400 rounded-t-full" />
+            )}
           </button>
           <button 
             onClick={() => setActiveTab('governance')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+            className={`relative flex items-center gap-2 text-sm font-bold transition-all p-[2px] pb-3 ${
               activeTab === 'governance' 
-                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' 
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'text-indigo-600 dark:text-indigo-400' 
+                : 'text-slate-400 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-400'
             }`}
           >
             <Activity size={16} />
             Governance
+            {activeTab === 'governance' && (
+              <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-indigo-600 dark:bg-indigo-400 rounded-t-full" />
+            )}
           </button>
         </div>
       </div>

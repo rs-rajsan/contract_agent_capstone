@@ -31,6 +31,7 @@ class IntelligenceState(TypedDict):
     messages: List[Any]
     current_step: str
     processing_result: ProcessingResult
+    validation_result: dict      # NEW: For Auditor Agent reflections
     human_review_required: bool  # NEW: For HITL
     refinement_needed: bool      # NEW: For governance refinement loops
     paused_at: str               # NEW: Timestamp of HITL interruption

@@ -47,14 +47,25 @@ class JsonFormatter(logging.Formatter):
         
         for key, var in context_mapping.items():
             val = var.get()
-            if val or isinstance(val, bool): # Include bool even if False
+            # Always include, using empty string as default for missing context
+            if isinstance(val, bool):
                 log_record[key] = val
+            else:
+                log_record[key] = val if val else ""
             
-        # 3. KPI & High-Priority Fields (Override from record if present)
-        kpi_fields = ["agent_name", "operation", "latency_ms", "component", "hallucination_detected"]
-        for field in kpi_fields:
+        # 3. KPI & High-Priority Fields (Ensure presence)
+        kpi_fields = {
+            "latency_ms": 0, 
+            "component": "backend-core",
+            "agent_name": log_record.get("agent_name", ""),
+            "operation": log_record.get("operation", "")
+        }
+        
+        for field, default in kpi_fields.items():
             if hasattr(record, field):
                 log_record[field] = getattr(record, field)
+            elif field not in log_record:
+                log_record[field] = default
 
         # 4. Payload Enrichment (Grouping non-standard fields)
         payload = {}

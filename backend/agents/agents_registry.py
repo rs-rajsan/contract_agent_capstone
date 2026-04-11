@@ -3,7 +3,7 @@ from backend.agents.base_agent import BaseNodeAgent
 from backend.agents.orchestrator_nodes import (
     UploadAgent, PlanningNodeAgent, ParserAgent, ClauseSplitterAgent,
     PolicyCheckingAgent, RiskAssessmentAgent, MCPRetrievalAgent,
-    RedlineAgent, GovernanceAgent, HumanReviewAgent, OutputAgent
+    RedlineAgent, GovernanceAgent, HumanReviewAgent, OutputAgent, AuditorNodeAgent
 )
 
 class AgentRegistry:
@@ -20,6 +20,7 @@ class AgentRegistry:
         "redline_generation": RedlineAgent,
         "governance": GovernanceAgent,
         "human_review": HumanReviewAgent,
+        "auditor": AuditorNodeAgent,
         "output": OutputAgent
     }
 
