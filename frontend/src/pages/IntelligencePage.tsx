@@ -96,13 +96,13 @@ export const IntelligencePage: FC = () => {
               <div className="p-2 bg-blue-600 rounded-xl text-white shadow-lg shadow-blue-500/20">
                 <Sparkles className="w-5 h-5" />
               </div>
-              <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-[0.2em]">Next-Gen Intelligence</span>
+              <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-[0.2em]">Autonomous Companion</span>
             </div>
             <h1 className="text-5xl font-black text-slate-800 dark:text-slate-100 tracking-tight leading-tight">
-              Contract <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">IntelligenceHub</span>
+              Aequitas <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Intelligence</span>
             </h1>
             <p className="text-lg text-slate-500 dark:text-slate-400 font-medium max-w-2xl leading-relaxed">
-              Transform your legal operations with parallel multi-agent orchestration.
+              Sustain legal excellence with Aequitas, your autonomous partner in parallel orchestration.
             </p>
           </div>
         </div>
