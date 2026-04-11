@@ -75,7 +75,7 @@ export const GovernanceView: React.FC<GovernanceViewProps> = ({ data }) => {
                   <kpi.icon className="w-5 h-5" />
                 </div>
                 <div className="text-right">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Audit</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">KPI</span>
                     <div className="flex items-center gap-1 text-[10px] text-green-500 font-bold mt-1">
                         <TrendingUp className="w-2.5 h-2.5" />
                         Live
@@ -165,22 +165,27 @@ export const GovernanceView: React.FC<GovernanceViewProps> = ({ data }) => {
 
       {/* Audit Trail Table */}
       <Card className="border-none shadow-xl shadow-slate-200/50 dark:shadow-none dark:bg-slate-900/50">
-        <div className="p-8 border-b border-slate-50 dark:border-slate-800/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 font-display">System Audit Trail</h3>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Live from audit.jsonl ledger</p>
+        <CardHeader className="border-b border-slate-50 dark:border-slate-800/50 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+             <div className="p-2 bg-indigo-500 rounded-lg text-white">
+                <Shield className="w-4 h-4" />
+             </div>
+             <div>
+                <CardTitle className="text-sm font-bold text-slate-900 dark:text-slate-100">System Audit Trail</CardTitle>
+                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mt-0.5">Live Ledger from audit.jsonl</p>
+             </div>
           </div>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
             <input 
               type="text" 
-              placeholder="Search trails..."
+              placeholder="Filter audit logs..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="bg-slate-950 border border-slate-700 rounded-xl py-2 pl-10 pr-4 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 w-full md:w-64"
+              className="bg-slate-50 dark:bg-slate-950 border-none rounded-xl py-2 pl-9 pr-4 text-xs text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 w-full md:w-64 transition-all"
             />
           </div>
-        </div>
+        </CardHeader>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>

@@ -9,6 +9,8 @@ from backend.shared.utils.logger import (
     get_logger, 
     agent_name_var, 
     operation_var, 
+    span_id_var,
+    session_id_var,
     hallucination_flag_var
 )
 logger = get_logger(__name__)
@@ -34,32 +36,48 @@ class WorkflowTracker:
     """Executive dashboard for multi-agent workflow visibility"""
     
     def __init__(self):
-        self.executions: List[AgentExecution] = []
-        self.workflow_start_time = None
+        # Partition executions by session_id for multi-tenancy
+        self.session_executions: Dict[str, List[AgentExecution]] = {}
+        self.session_start_times: Dict[str, datetime] = {}
         
+    def _get_current_session(self) -> str:
+        """Retrieve current session context (Source of Truth)"""
+        return session_id_var.get() or "system_default"
+
     def start_workflow(self, force: bool = False):
-        """Start tracking a new workflow, or continue if already active"""
-        if self.workflow_start_time and not force:
-            logger.info("🔄 CONTINUING ACTIVE WORKFLOW")
+        """Start tracking a new workflow for the current session"""
+        sid = self._get_current_session()
+        
+        if sid in self.session_start_times and not force:
+            logger.info(f"🔄 CONTINUING ACTIVE WORKFLOW [Session: {sid}]")
             return
             
-        self.workflow_start_time = datetime.now()
-        self.executions = []
-        logger.info("🚀 MULTI-AGENT CONTRACT ANALYSIS WORKFLOW STARTED")
+        self.session_start_times[sid] = datetime.now()
+        self.session_executions[sid] = []
+        logger.info(f"🚀 MULTI-AGENT WORKFLOW STARTED [Session: {sid}]")
         
     def start_agent(self, agent_name: str, agent_role: str, input_summary: str) -> AgentExecution:
         """Start tracking an agent execution"""
+        sid = self._get_current_session()
+        if sid not in self.session_executions:
+            self.session_executions[sid] = []
+            
         execution = AgentExecution(
             agent_name=agent_name,
             agent_role=agent_role,
             start_time=datetime.now(),
             input_summary=input_summary
         )
-        self.executions.append(execution)
+        self.session_executions[sid].append(execution)
         
         # Set context variables for the logger
         agent_name_var.set(agent_name)
         operation_var.set(agent_role) # Using role as the operation summary
+        
+        # Generate a short unique span_id for this step
+        import uuid
+        span_id = uuid.uuid4().hex[:8]
+        span_id_var.set(span_id)
         
         logger.info(f"🤖 AGENT STARTED: {agent_name}")
         logger.info(f"   Role: {agent_role}")
@@ -81,6 +99,7 @@ class WorkflowTracker:
         # Reset context for this agent (clearing name/operation for next step)
         agent_name_var.set("")
         operation_var.set("")
+        span_id_var.set("")
         
     def error_agent(self, execution: AgentExecution, error_message: str):
         """Mark an agent execution as failed"""
@@ -95,25 +114,30 @@ class WorkflowTracker:
         # Reset context
         agent_name_var.set("")
         operation_var.set("")
+        span_id_var.set("")
         
     def complete_workflow(self):
-        """Complete the workflow tracking"""
-        total_time = int((datetime.now() - self.workflow_start_time).total_seconds() * 1000)
+        """Complete the workflow tracking for current session"""
+        sid = self._get_current_session()
+        start_time = self.session_start_times.get(sid, datetime.now())
+        total_time = int((datetime.now() - start_time).total_seconds() * 1000)
         
-        logger.info("🏁 MULTI-AGENT WORKFLOW COMPLETED")
+        logger.info(f"🏁 MULTI-AGENT WORKFLOW COMPLETED [Session: {sid}]")
         logger.info(f"   Total Processing Time: {total_time}ms")
-        logger.info(f"   Agents Executed: {len(self.executions)}")
+        executions = self.session_executions.get(sid, [])
+        logger.info(f"   Agents Executed: {len(executions)}")
         
         # Print executive summary
-        self._print_executive_summary()
+        self._print_executive_summary(sid)
         
-    def _print_executive_summary(self):
-        """Print executive summary of agent workflow"""
+    def _print_executive_summary(self, sid: str):
+        """Print executive summary of agent workflow for specific session"""
+        executions = self.session_executions.get(sid, [])
         logger.info("=" * 80)
-        logger.info("📊 EXECUTIVE WORKFLOW SUMMARY - CONTRACT INTELLIGENCE ANALYSIS")
+        logger.info(f"📊 EXECUTIVE SUMMARY [Session: {sid}]")
         logger.info("=" * 80)
         
-        for i, execution in enumerate(self.executions, 1):
+        for i, execution in enumerate(executions, 1):
             status_emoji = "✅" if execution.status == AgentStatus.COMPLETED else "❌"
             
             logger.info(f"{i}. {status_emoji} {execution.agent_name}")
@@ -127,20 +151,53 @@ class WorkflowTracker:
         
         # Data flow summary
         logger.info("🔄 AGENT DATA FLOW:")
-        for i in range(len(self.executions) - 1):
-            current = self.executions[i]
-            next_agent = self.executions[i + 1]
+        for i in range(len(executions) - 1):
+            current = executions[i]
+            next_agent = executions[i + 1]
             logger.info(f"   {current.agent_name} → {next_agent.agent_name}")
             logger.info(f"   Data: {current.output_summary} → {next_agent.input_summary}")
         
         logger.info("=" * 80)
 
+    def get_pulse_label(self) -> str:
+        """Derive a human-readable pulse label from current session state"""
+        sid = self._get_current_session()
+        executions = self.session_executions.get(sid, [])
+        
+        if not executions:
+            return ""
+        
+        # Check for failures
+        if any(e.status == AgentStatus.ERROR for e in executions):
+            return "Pipeline Halted"
+            
+        # Find the currently processing agent (most recent first)
+        active = next((e for e in reversed(executions) if e.status == AgentStatus.PROCESSING), None)
+        if active:
+            if "PDF" in active.agent_name or "Ingestion" in active.agent_name:
+                return "Loading File..."
+            if "Embedding" in active.agent_name or "Architect" in active.agent_name:
+                return "Chunking & Graphing..."
+            if "Auditor" in active.agent_name:
+                return "Validating Graph Integrity..."
+            return f"{active.agent_name} Active..."
+            
+        # Check for completion
+        if executions and all(e.status == AgentStatus.COMPLETED for e in executions):
+            return "Intelligence Synced"
+            
+        return "Orchestrating Agents..."
+
     def get_workflow_status(self) -> Dict[str, Any]:
-        """Get current workflow status for API responses"""
+        """Get current session workflow status for API responses"""
+        sid = self._get_current_session()
+        executions = self.session_executions.get(sid, [])
+        
         return {
-            "total_agents": len(self.executions),
-            "completed_agents": len([e for e in self.executions if e.status == AgentStatus.COMPLETED]),
-            "failed_agents": len([e for e in self.executions if e.status == AgentStatus.ERROR]),
+            "pulse_label": self.get_pulse_label(),
+            "total_agents": len(executions),
+            "completed_agents": len([e for e in executions if e.status == AgentStatus.COMPLETED]),
+            "failed_agents": len([e for e in executions if e.status == AgentStatus.ERROR]),
             "agent_executions": [{
                 "agent_name": e.agent_name,
                 "agent_role": e.agent_role,
@@ -149,12 +206,12 @@ class WorkflowTracker:
                 "output_summary": e.output_summary,
                 "processing_time_ms": e.processing_time_ms,
                 "error_message": e.error_message
-            } for e in self.executions],
+            } for e in executions],
             "data_flow": [{
-                "from_agent": self.executions[i].agent_name,
-                "to_agent": self.executions[i + 1].agent_name,
-                "data_transferred": self.executions[i].output_summary
-            } for i in range(len(self.executions) - 1)]
+                "from_agent": executions[i].agent_name,
+                "to_agent": executions[i + 1].agent_name,
+                "data_transferred": executions[i].output_summary
+            } for i in range(len(executions) - 1)]
         }
 
 # Global tracker instance

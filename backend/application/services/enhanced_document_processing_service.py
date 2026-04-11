@@ -10,11 +10,16 @@ import os
 import logging
 
 from backend.shared.utils.logger import get_logger
+from backend.agents.auditor_agent import AuditorAgent
+
+from backend.infrastructure.contract_repository import Neo4jContractRepository
+
 logger = get_logger(__name__)
 
 class EnhancedDocumentProcessingService:
     """
     Enhanced document processing service with multi-level embeddings
+    and Agentic Self-Reflection.
     """
     
     def __init__(self, agent_manager):
@@ -22,17 +27,13 @@ class EnhancedDocumentProcessingService:
         self.pdf_agent_factory = PDFAgentFactory()
         self.embedding_orchestrator = EmbeddingOrchestrator()
         self.embedding_validator = EmbeddingValidator()
-        self._graph = None
-    
-    @property
-    def graph(self):
-        if self._graph is None:
-            self._graph = get_graph()
-        return self._graph
+        self.contract_repo = Neo4jContractRepository() # SOLID Repository
+        self.auditor = AuditorAgent() # Integrated Auditor Agent
     
     def process_pdf_with_embeddings(self, request: DocumentProcessingRequest) -> dict:
         """
         Process uploaded PDF with enhanced multi-level embeddings
+        and integrated self-reflection auditing.
         """
         
         try:
@@ -133,15 +134,39 @@ class EnhancedDocumentProcessingService:
                 request.filename
             )
             
+            # 5. Auditor Self-Reflection Step (New Agentic Pattern)
+            auditor_execution = workflow_tracker.start_agent(
+                "Self-Correction Auditor",
+                "Verify graph integrity and agentic consistency",
+                f"Contract ID: {processing_result.contract_id}"
+            )
+            
+            # Aggregate all results for auditing
+            combined_state = {
+                **final_state,
+                "embedding_success": embedding_success
+            }
+            
+            audit_results = self.auditor.audit_processing_results(
+                processing_result.contract_id, 
+                combined_state
+            )
+            
+            if audit_results["is_valid"]:
+                workflow_tracker.complete_agent(auditor_execution, audit_results["reflections"][0])
+            else:
+                workflow_tracker.error_agent(auditor_execution, f"Audit issues detected: {audit_results['issues'][0]}")
+            
             workflow_tracker.complete_workflow()
             
             # Return enhanced result
             return {
                 "status": processing_result.status.value,
                 "filename": request.filename,
-                "final_result": f"Processing {processing_result.status.value} with enhanced embeddings",
+                "final_result": f"Processing {processing_result.status.value} with enhanced embeddings (Audit: {'Pass' if audit_results['is_valid'] else 'Warning'})",
                 "contract_id": processing_result.contract_id,
                 "enhanced_embeddings": embedding_success,
+                "audit_confidence": audit_results["confidence_score"],
                 "error": processing_result.error
             }
             
@@ -196,8 +221,8 @@ class EnhancedDocumentProcessingService:
                 workflow_tracker.error_agent(embedding_execution, f"Validation failed: {validation_result.errors}")
                 return False
             
-            # Store embeddings in Neo4j
-            self._store_enhanced_embeddings(contract_id, processing_result)
+            # Store embeddings using Repository (SOLID SRP)
+            self.contract_repo.update_enhanced_embeddings(contract_id, processing_result)
             
             workflow_tracker.complete_agent(
                 embedding_execution, 
@@ -212,81 +237,6 @@ class EnhancedDocumentProcessingService:
             logger.error(f"Enhanced embedding processing failed for {contract_id}: {e}")
             return False
     
-    def _store_enhanced_embeddings(self, contract_id: str, processing_result):
-        """Store enhanced embeddings in Neo4j"""
-        
-        # Store document embeddings
-        for doc_embedding in processing_result.document_embeddings:
-            if doc_embedding.metadata.get("level") == "document":
-                self.graph.query("""
-                    MATCH (c:Contract {file_id: $file_id})
-                    SET c.document_embedding = $embedding,
-                        c.summary_embedding = $embedding
-                """, {
-                    "file_id": contract_id,
-                    "embedding": doc_embedding.embedding
-                })
-            
-            elif doc_embedding.metadata.get("level") == "section":
-                section_id = f"{contract_id}_section_{doc_embedding.metadata.get('section_index', 0)}"
-                self.graph.query("""
-                    MATCH (c:Contract {file_id: $file_id})
-                    MERGE (s:Section {id: $section_id})
-                    SET s.section_type = $section_type,
-                        s.content = $content,
-                        s.embedding = $embedding,
-                        s.order = $order
-                    MERGE (c)-[:HAS_SECTION]->(s)
-                """, {
-                    "file_id": contract_id,
-                    "section_id": section_id,
-                    "section_type": doc_embedding.metadata.get("section_type", "general"),
-                    "content": doc_embedding.content,
-                    "embedding": doc_embedding.embedding,
-                    "order": doc_embedding.metadata.get("section_index", 0)
-                })
-        
-        # Store clause embeddings
-        for clause_embedding in processing_result.clause_embeddings:
-            clause_id = f"{contract_id}_clause_{clause_embedding.metadata.get('start_position', 0)}"
-            self.graph.query("""
-                MATCH (c:Contract {file_id: $file_id})
-                MERGE (cl:Clause {id: $clause_id})
-                SET cl.clause_type = $clause_type,
-                    cl.content = $content,
-                    cl.embedding = $embedding,
-                    cl.confidence = $confidence,
-                    cl.start_position = $start_position,
-                    cl.end_position = $end_position
-                MERGE (c)-[:CONTAINS_CLAUSE]->(cl)
-            """, {
-                "file_id": contract_id,
-                "clause_id": clause_id,
-                "clause_type": clause_embedding.metadata.get("clause_type", "unknown"),
-                "content": clause_embedding.content,
-                "embedding": clause_embedding.embedding,
-                "confidence": clause_embedding.metadata.get("confidence", 0.0),
-                "start_position": clause_embedding.metadata.get("start_position", 0),
-                "end_position": clause_embedding.metadata.get("end_position", 0)
-            })
-        
-        # Store relationship embeddings
-        for rel_embedding in processing_result.relationship_embeddings:
-            if rel_embedding.metadata.get("relationship_type") == "PARTY_TO":
-                party_name = rel_embedding.metadata.get("party_name", "")
-                if party_name:
-                    self.graph.query("""
-                        MATCH (c:Contract {file_id: $file_id})
-                        MATCH (c)<-[r:PARTY_TO]-(p:Party {name: $party_name})
-                        SET r.embedding = $embedding,
-                            r.context = $context
-                    """, {
-                        "file_id": contract_id,
-                        "party_name": party_name,
-                        "embedding": rel_embedding.embedding,
-                        "context": rel_embedding.content
-                    })
-    
     def _cleanup_file(self, file_path: str):
         """Clean up temporary uploaded file"""
         try:
@@ -295,6 +245,7 @@ class EnhancedDocumentProcessingService:
                 logger.info(f"Cleaned up temporary file: {file_path}")
         except Exception as e:
             logger.warning(f"Failed to cleanup file {file_path}: {e}")
+            return False
 
 class EnhancedDocumentServiceFactory:
     """Factory for creating enhanced document processing services"""

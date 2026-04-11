@@ -3,6 +3,7 @@ import {
   MessageSquare, 
   Search, 
   Book,
+  Brain,
   type LucideIcon 
 } from 'lucide-react';
 
@@ -18,36 +19,36 @@ export const navItems: NavItem[] = [
   {
     id: 'analytics',
     label: 'Auditor',
-    icon: LineChart, // Temporarily using LineChart for analytics
+    icon: LineChart, 
     color: 'purple',
-    description: 'System health and accountability'
+    description: 'Autonomous accountability and system health'
   },
   {
     id: 'intelligence',
     label: 'Analysis',
-    icon: MessageSquare, // Switching these to more logical icons
+    icon: Brain, 
     color: 'blue',
-    description: 'Document intelligence and extraction'
+    description: 'The Aequitas intelligence engine'
   },
   {
     id: 'chat',
     label: 'Chat',
     icon: MessageSquare,
     color: 'green',
-    description: 'Interactive contract interrogation'
+    description: 'Direct dialogue with Aequitas'
   },
   {
     id: 'search',
     label: 'Search',
     icon: Search,
     color: 'teal',
-    description: 'Advanced semantic search'
+    description: 'Advanced semantic exploration'
   },
   {
     id: 'agents',
     label: 'Docs',
     icon: Book,
     color: 'purple',
-    description: 'System documentation and logs'
+    description: 'Knowledge base and system logs'
   }
 ];

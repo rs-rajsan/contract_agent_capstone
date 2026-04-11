@@ -68,5 +68,43 @@ export const initTracing = () => {
 
   provider.register();
   
-  console.log('🌐 OpenTelemetry Tracing initialized (Stable 1.x)');
+  // Trace-First: Global Fetch Interceptor (Security & Robustness)
+  const originalFetch = window.fetch;
+  window.fetch = async (resource: string | Request | URL, config?: RequestInit) => {
+    let url = "";
+    let finalHeaders: Headers;
+
+    if (resource instanceof Request) {
+      url = resource.url;
+      finalHeaders = new Headers(resource.headers);
+    } else {
+      url = String(resource);
+      config = config || {};
+      finalHeaders = new Headers(config.headers || {});
+    }
+    
+    // Security check: Only inject headers for our API domains
+    const isInternal = url.includes('/api/') || 
+                      url.startsWith(window.location.origin) || 
+                      url.startsWith('http://localhost:8000');
+
+    if (isInternal) {
+      finalHeaders.set('X-User-ID', getUserId());
+      finalHeaders.set('X-Session-ID', getSessionId());
+      finalHeaders.set('X-Org-ID', getOrgId());
+      finalHeaders.set('X-Contract-ID', getContractId());
+      
+      if (resource instanceof Request) {
+        // Clone Request with new headers to handle immutability
+        resource = new Request(resource, { headers: finalHeaders });
+      } else {
+        // Ensure config is an object before assignment to satisfy TypeScript
+        config = { ...config, headers: finalHeaders };
+      }
+    }
+
+    return originalFetch(resource, config);
+  };
+
+  // OpenTelemetry Tracing initialized (Stable 1.x)
 };

@@ -4,8 +4,8 @@
  */
 
 export const APP_CONFIG = {
-  TITLE: 'Contract Intelligence',
-  SUBTITLE: 'AI-Powered Legal Document Analysis',
+  TITLE: 'Aequitas',
+  SUBTITLE: 'Your Autonomous Legal Intelligence Companion',
   STORAGE_KEYS: {
     THEME: 'vite-ui-theme',
     AUTH_TOKEN: 'auth-token',

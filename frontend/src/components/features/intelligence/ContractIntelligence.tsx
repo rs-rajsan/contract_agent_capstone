@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
+import { useContractHistory } from '../../../contexts/ContractHistoryContext';
+import { useWorkflowTracer } from '../../../hooks/useWorkflowTracer';
+import { cn } from '../../../lib/utils';
 import { Button } from '../../shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Badge } from '../../shared/ui/badge';
-import { Clock, Brain, XCircle, FileText, AlertTriangle, Shield, Wifi, RefreshCw } from 'lucide-react';
-import { DetailModal } from './DetailModal';
+import { Clock, XCircle, FileText, AlertTriangle, Shield, Wifi, RefreshCw, Sparkles } from 'lucide-react';
 import { ClausesDetail } from './ClausesDetail';
 import { ViolationsDetail } from './ViolationsDetail';
 import { RiskDetail } from './RiskDetail';
-import { useModal } from '../../../lib/useModal';
 
 interface ContractClause {
   clause_type: string;
@@ -37,44 +38,73 @@ interface IntelligenceResults {
   violations: PolicyViolation[];
   risk_assessment: RiskAssessment;
   redlines: any[];
+  validation_result?: {
+    confidence_score: number;
+    reflections: string[];
+    integrity_checks?: Record<string, boolean>;
+  };
 }
 
 interface ContractIntelligenceProps {
-  contractId: string;
+  contractId: string | null;
+  filename?: string;
   model?: string;
-  onWorkflowUpdate?: (status: any) => void;
-  onAnalysisComplete?: (contractId: string, riskScore?: number, riskLevel?: string) => void;
+  onAnalysisComplete?: (contractId: string, riskScore?: number, riskLevel?: string, results?: any) => void;
+  onPulseUpdate?: (label: string | null) => void;
 }
 
 export const ContractIntelligence: React.FC<ContractIntelligenceProps> = ({ 
   contractId, 
+  filename,
   model = import.meta.env.VITE_DEFAULT_MODEL || 'gemini-2.5-flash',
-  onWorkflowUpdate,
-  onAnalysisComplete
+  onAnalysisComplete,
+  onPulseUpdate
 }) => {
+  const { contracts } = useContractHistory();
   const [results, setResults] = useState<IntelligenceResults | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [networkError, setNetworkError] = useState(false);
-  const { openModal, closeModal, isOpen } = useModal();
+  const [activeDetailTab, setActiveDetailTab] = useState<'risk' | 'violations' | 'clauses'>('risk');
+
+  // Unified Workflow Tracer (SOLID/DRY)
+  const { pulseLabel } = useWorkflowTracer({
+    isPolling: loading,
+    onError: (msg) => setError(msg)
+  });
+
+  // Bubble up pulse status to parent header
+  React.useEffect(() => {
+    if (loading && pulseLabel) {
+      onPulseUpdate?.(pulseLabel);
+    } else if (!loading) {
+      onPulseUpdate?.(null);
+    }
+  }, [pulseLabel, loading]);
+
+  // Automatic Analysis Orchestration (Agentic Flow)
+  React.useEffect(() => {
+    // Reset internal state for fresh context
+    setResults(null);
+    setError(null);
+    setNetworkError(false);
+    
+    if (contractId) {
+      // Persistence Check (Cache-First)
+      const existingContract = contracts.find(c => c.contract_id === contractId);
+      if (existingContract?.analysis_completed && existingContract.analysis_results) {
+        setResults(existingContract.analysis_results);
+        setLoading(false);
+      } else {
+        analyzeContract();
+      }
+    }
+  }, [contractId, model, contracts]);
 
   const analyzeContract = async () => {
     setLoading(true);
     setError(null);
     setNetworkError(false);
-    
-    // Start polling for workflow status
-    const pollWorkflow = setInterval(async () => {
-      try {
-        const workflowResponse = await fetch('/api/workflow/status');
-        if (workflowResponse.ok) {
-          const workflowData = await workflowResponse.json();
-          onWorkflowUpdate?.(workflowData);
-        }
-      } catch (e) {
-        // Ignore workflow polling errors
-      }
-    }, 500);
     
     try {
       const response = await fetch(`/api/intelligence/contracts/${contractId}/analyze?model=${model}`, {
@@ -100,22 +130,10 @@ export const ContractIntelligence: React.FC<ContractIntelligenceProps> = ({
       setResults(data.results);
       
       // Report analysis completion with full results
-      if (data.results?.risk_assessment) {
+      if (data.results?.risk_assessment && contractId) {
         onAnalysisComplete?.(contractId, data.results.risk_assessment.overall_risk_score, data.results.risk_assessment.risk_level, data.results);
       }
       
-      // Final workflow status update
-      setTimeout(async () => {
-        try {
-          const workflowResponse = await fetch('/api/workflow/status');
-          if (workflowResponse.ok) {
-            const workflowData = await workflowResponse.json();
-            onWorkflowUpdate?.(workflowData);
-          }
-        } catch (e) {
-          // Ignore final workflow polling error
-        }
-      }, 1000);
     } catch (err) {
       if (err instanceof TypeError && err.message.includes('fetch')) {
         setNetworkError(true);
@@ -124,7 +142,6 @@ export const ContractIntelligence: React.FC<ContractIntelligenceProps> = ({
         setError(err instanceof Error ? err.message : 'Analysis failed');
       }
     } finally {
-      clearInterval(pollWorkflow);
       setLoading(false);
     }
   };
@@ -191,21 +208,196 @@ export const ContractIntelligence: React.FC<ContractIntelligenceProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-slate-800">AI Analysis</h3>
-          <p className="text-sm text-slate-600">Contract {contractId}</p>
+    <div className="space-y-6 pt-0">
+      {/* Contextual Header (High Density) */}
+      {/* Contextual Header (Left Aligned) */}
+      <div className="flex flex-col gap-1 mb-2">
+        <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 uppercase tracking-[0.2em]">
+          Insights of {filename || 'New Contract'}
+        </h3>
+        <p className="text-[10px] text-slate-500 font-medium">Detailed intelligence metrics and agentic findings</p>
+      </div>
+      {/* Analysis Status Overlay (Pulse) */}
+      {loading && (
+        <div className="flex items-center gap-3 p-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl text-indigo-700 animate-in fade-in zoom-in-95">
+          <div className="relative">
+            <Clock className="h-5 w-5 animate-spin" />
+            <Sparkles className="h-3 w-3 absolute -top-1 -right-1 text-indigo-400 animate-pulse" />
+          </div>
+          <div className="flex flex-col">
+            <span className="font-bold text-xs">Deep Intelligence Analysis</span>
+            <span className="text-[10px] opacity-80">{pulseLabel || 'Orchestrating multi-agent pipeline...'}</span>
+          </div>
         </div>
-        <Button 
-          onClick={analyzeContract} 
-          disabled={loading}
-          className="flex items-center gap-2"
+      )}
+
+      {/* Primary Results Display (Risk, Violations, Clauses) */}
+      <div className="grid grid-cols-3 gap-4 px-1 py-1">
+        <Card 
+          className={cn(
+            "border-slate-200 cursor-pointer transition-all duration-300 relative",
+            activeDetailTab === 'risk' ? "ring-2 ring-blue-500 shadow-lg border-transparent" : "hover:border-blue-300 hover:shadow-md"
+          )}
+          onClick={() => setActiveDetailTab('risk')}
         >
-          <Brain className="h-4 w-4" />
-          {loading ? 'Analyzing...' : 'Analyze'}
-        </Button>
+          {activeDetailTab === 'risk' && <div className="absolute top-0 right-0 w-8 h-8 bg-blue-500 text-white rounded-tr-xl rounded-bl-xl flex items-center justify-center animate-in slide-in-from-top-full duration-300"><Clock className="w-4 h-4" /></div>}
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-slate-600 flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Risk Score
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-slate-800">
+              {results?.risk_assessment?.overall_risk_score || 0}/100
+            </div>
+            <Badge className={getRiskColor(results?.risk_assessment?.risk_level || 'UNKNOWN')}>
+              {results?.risk_assessment?.risk_level || (loading ? 'ANALYZING...' : 'INITIALIZED')}
+            </Badge>
+          </CardContent>
+        </Card>
+
+        <Card 
+          className={cn(
+            "border-slate-200 cursor-pointer transition-all duration-300 relative",
+            activeDetailTab === 'violations' ? "ring-2 ring-orange-500 shadow-lg border-transparent" : "hover:border-orange-300 hover:shadow-md"
+          )}
+          onClick={() => setActiveDetailTab('violations')}
+        >
+          {activeDetailTab === 'violations' && <div className="absolute top-0 right-0 w-8 h-8 bg-orange-500 text-white rounded-tr-xl rounded-bl-xl flex items-center justify-center animate-in slide-in-from-top-full duration-300"><AlertTriangle className="w-4 h-4" /></div>}
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-slate-600 flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              Violations
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${getViolationSeverityColor(results?.violations || [])}`}>
+              {results?.violations?.length || 0}
+            </div>
+            <p className="text-xs text-slate-500 mt-1 font-medium italic">Active findings</p>
+          </CardContent>
+        </Card>
+
+        <Card 
+          className={cn(
+            "border-slate-200 cursor-pointer transition-all duration-300 relative",
+            activeDetailTab === 'clauses' ? "ring-2 ring-green-500 shadow-lg border-transparent" : "hover:border-green-300 hover:shadow-md"
+          )}
+          onClick={() => setActiveDetailTab('clauses')}
+        >
+          {activeDetailTab === 'clauses' && <div className="absolute top-0 right-0 w-8 h-8 bg-green-500 text-white rounded-tr-xl rounded-bl-xl flex items-center justify-center animate-in slide-in-from-top-full duration-300"><FileText className="w-4 h-4" /></div>}
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-slate-600 flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Clauses
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-slate-800">
+              {results?.clauses?.length || 0}
+            </div>
+            <p className="text-xs text-slate-500 mt-1 font-medium italic">Entities identified</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="space-y-4 pt-2">
+        {/* Navigation Tabs (Underline Style) */}
+        <div className="flex items-center gap-8 border-b border-slate-200/60 dark:border-slate-800/60">
+          <button 
+            onClick={() => setActiveDetailTab('risk')}
+            className={cn(
+              "relative px-1 pb-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all",
+              activeDetailTab === 'risk' ? "text-blue-600 dark:text-blue-400" : "text-slate-400 hover:text-slate-600"
+            )}
+          >
+            Risk Detail
+            {activeDetailTab === 'risk' && (
+              <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-600 dark:bg-blue-400 rounded-t-full" />
+            )}
+          </button>
+          <button 
+            onClick={() => setActiveDetailTab('violations')}
+            className={cn(
+              "relative px-1 pb-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all",
+              activeDetailTab === 'violations' ? "text-orange-600 dark:text-orange-400" : "text-slate-400 hover:text-slate-600"
+            )}
+          >
+            Violations
+            {activeDetailTab === 'violations' && (
+              <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-orange-600 dark:bg-orange-400 rounded-t-full" />
+            )}
+          </button>
+          <button 
+            onClick={() => setActiveDetailTab('clauses')}
+            className={cn(
+              "relative px-1 pb-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all",
+              activeDetailTab === 'clauses' ? "text-green-600 dark:text-green-400" : "text-slate-400 hover:text-slate-600"
+            )}
+          >
+            Clauses
+            {activeDetailTab === 'clauses' && (
+              <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-green-600 dark:bg-green-400 rounded-t-full" />
+            )}
+          </button>
+        </div>
+
+        {/* Tab Content Area (Native Layout) */}
+        <div className="pt-4 min-h-[400px]">
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+            {activeDetailTab === 'risk' && (
+              <div>
+                <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-3">
+                  <div className="p-2 bg-blue-600 rounded-lg text-white"><Shield className="w-5 h-5" /></div>
+                  Comprehensive Risk Assessment
+                </h3>
+                {results?.risk_assessment ? (
+                  <RiskDetail riskAssessment={results.risk_assessment} contractId={contractId ?? undefined} />
+                ) : (
+                  <div className="text-center py-20 opacity-50">
+                    <Shield className="h-16 w-16 mx-auto mb-4 text-slate-300" />
+                    <p className="font-bold text-slate-400">Waiting for risk orchestration...</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeDetailTab === 'violations' && (
+              <div>
+                <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-3">
+                  <div className="p-2 bg-orange-600 rounded-lg text-white"><AlertTriangle className="w-5 h-5" /></div>
+                  Policy Violations Inventory
+                </h3>
+                {results?.violations && results.violations.length > 0 ? (
+                  <ViolationsDetail violations={results.violations} contractId={contractId ?? undefined} />
+                ) : (
+                  <div className="text-center py-20 opacity-50">
+                    <AlertTriangle className="h-16 w-16 mx-auto mb-4 text-slate-300" />
+                    <p className="font-bold text-slate-400">No violations detected currently.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeDetailTab === 'clauses' && (
+              <div>
+                <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-3">
+                  <div className="p-2 bg-green-600 rounded-lg text-white"><FileText className="w-5 h-5" /></div>
+                  Structural Clause Analysis
+                </h3>
+                {results?.clauses && results.clauses.length > 0 ? (
+                  <ClausesDetail clauses={results.clauses} contractId={contractId ?? undefined} />
+                ) : (
+                  <div className="text-center py-20 opacity-50">
+                    <FileText className="h-16 w-16 mx-auto mb-4 text-slate-300" />
+                    <p className="font-bold text-slate-400">No structural clauses extracted yet.</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Network Error State */}
@@ -229,11 +421,17 @@ export const ContractIntelligence: React.FC<ContractIntelligenceProps> = ({
 
       {/* Loading State */}
       {loading && (
-        <Card className="border-slate-200">
+        <Card className="border-blue-200 bg-blue-50/50 animate-pulse">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-2 text-blue-600">
-              <Clock className="h-4 w-4 animate-spin" />
-              <span>Multi-agent analysis in progress...</span>
+            <div className="flex items-center gap-3 text-blue-700">
+                <div className="relative">
+                    <Clock className="h-5 w-5 animate-spin" />
+                    <Sparkles className="h-3 w-3 absolute -top-1 -right-1 text-blue-400 animate-pulse" />
+                </div>
+              <div className="flex flex-col">
+                <span className="font-bold text-sm">Agent Pulse</span>
+                <span className="text-xs opacity-80">{pulseLabel || 'Initializing agentic pipeline...'}</span>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -260,70 +458,61 @@ export const ContractIntelligence: React.FC<ContractIntelligenceProps> = ({
         </Card>
       )}
 
-      {/* Results */}
+      {/* Advanced Insights (Appear only after analysis) */}
       {results && results.risk_assessment && (
-        <div className="space-y-4">
-          {/* Overview Cards - Clickable */}
-          <div className="grid grid-cols-3 gap-4">
-            <Card 
-              className="border-slate-200 cursor-pointer hover:shadow-md hover:border-blue-300 transition-all duration-200"
-              onClick={() => openModal('risk')}
-            >
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-slate-600 flex items-center gap-2">
-                  <Shield className="h-4 w-4" />
-                  Risk Score
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-slate-800">
-                  {results.risk_assessment?.overall_risk_score || 0}/100
+        <div className="space-y-6">
+          {/* Auditor Confidence & Reflections (Agentic Pattern) */}
+          {results.validation_result && (
+            <Card className="border-indigo-100 bg-gradient-to-r from-indigo-50/50 to-purple-50/50 shadow-sm overflow-hidden relative">
+              <div className="absolute top-0 right-0 p-4 opacity-10">
+                <Shield className="h-24 w-24 text-indigo-500 rotate-12" />
+              </div>
+              <CardContent className="pt-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-indigo-500 rounded-xl text-white shadow-lg shadow-indigo-200">
+                        <Shield className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-800 uppercase tracking-tight">Auditor Self-Reflection</h4>
+                      <p className="text-xs text-slate-500">Autonomous integrity check and pattern validation</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                        <span className="block text-[10px] font-bold text-slate-400 uppercase">Analysis Confidence</span>
+                        <span className={`text-xl font-black ${
+                            results.validation_result.confidence_score > 0.8 ? 'text-emerald-600' : 
+                            results.validation_result.confidence_score > 0.5 ? 'text-orange-600' : 'text-rose-600'
+                        }`}>
+                            {Math.round(results.validation_result.confidence_score * 100)}%
+                        </span>
+                    </div>
+                    <div className="h-10 w-[1px] bg-slate-200 hidden md:block" />
+                    <Badge className={`${
+                        results.validation_result.confidence_score > 0.8 ? 'bg-emerald-500' : 'bg-orange-500'
+                    } text-white border-none shadow-sm`}>
+                        {results.validation_result.confidence_score > 0.8 ? 'HIGH INTEGRITY' : 'VERIFICATION NEEDED'}
+                    </Badge>
+                  </div>
                 </div>
-                <Badge className={getRiskColor(results.risk_assessment?.risk_level || 'UNKNOWN')}>
-                  {results.risk_assessment?.risk_level || 'UNKNOWN'}
-                </Badge>
-                <p className="text-xs text-blue-600 mt-2 font-medium">Click for details →</p>
-              </CardContent>
-            </Card>
 
-            <Card 
-              className="border-slate-200 cursor-pointer hover:shadow-md hover:border-orange-300 transition-all duration-200"
-              onClick={() => openModal('violations')}
-            >
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-slate-600 flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4" />
-                  Violations
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className={`text-2xl font-bold ${getViolationSeverityColor(results.violations || [])}`}>
-                  {results.violations?.length || 0}
-                </div>
-                <p className="text-xs text-slate-500 mt-1">Policy violations found</p>
-                <p className="text-xs text-orange-600 mt-1 font-medium">Click for details →</p>
+                {results.validation_result.reflections && results.validation_result.reflections.length > 0 && (
+                   <div className="mt-4 pt-4 border-t border-slate-200/50">
+                     <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest block mb-2">Agentic Reflections</span>
+                     <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {results.validation_result.reflections.map((reflection, i) => (
+                           <li key={i} className="flex items-start gap-2 text-[11px] text-slate-600 leading-tight bg-white/40 p-2 rounded-lg border border-white/60">
+                              <div className="mt-1 h-1 w-1 rounded-full bg-indigo-400 flex-shrink-0" />
+                              {reflection}
+                           </li>
+                        ))}
+                     </ul>
+                   </div>
+                )}
               </CardContent>
             </Card>
-
-            <Card 
-              className="border-slate-200 cursor-pointer hover:shadow-md hover:border-green-300 transition-all duration-200"
-              onClick={() => openModal('clauses')}
-            >
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-slate-600 flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Clauses
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-slate-800">
-                  {results.clauses?.length || 0}
-                </div>
-                <p className="text-xs text-slate-500 mt-1">Key clauses extracted</p>
-                <p className="text-xs text-green-600 mt-1 font-medium">Click for details →</p>
-              </CardContent>
-            </Card>
-          </div>
+          )}
 
           {/* Critical Issues Preview */}
           {results.risk_assessment?.critical_issues?.length > 0 && (
@@ -342,7 +531,7 @@ export const ContractIntelligence: React.FC<ContractIntelligenceProps> = ({
                   variant="outline" 
                   size="sm" 
                   className="border-red-300 text-red-700 hover:bg-red-100"
-                  onClick={() => openModal('risk')}
+                  onClick={() => setActiveDetailTab('risk')}
                 >
                   Review Critical Issues
                 </Button>
@@ -352,51 +541,7 @@ export const ContractIntelligence: React.FC<ContractIntelligenceProps> = ({
         </div>
       )}
 
-      {/* Detail Modals with Contract ID */}
-      <DetailModal
-        isOpen={isOpen('clauses')}
-        onClose={closeModal}
-        title={`Contract Clauses Analysis (${results?.clauses?.length || 0} found)`}
-      >
-        {results?.clauses && results.clauses.length > 0 ? (
-          <ClausesDetail clauses={results.clauses} contractId={contractId} />
-        ) : (
-          <div className="text-center py-8">
-            <FileText className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-            <p className="text-slate-600">No clauses were extracted from this contract.</p>
-          </div>
-        )}
-      </DetailModal>
 
-      <DetailModal
-        isOpen={isOpen('violations')}
-        onClose={closeModal}
-        title={`Policy Violations Review (${results?.violations?.length || 0} found)`}
-      >
-        {results?.violations && results.violations.length > 0 ? (
-          <ViolationsDetail violations={results.violations} contractId={contractId} />
-        ) : (
-          <div className="text-center py-8">
-            <AlertTriangle className="h-12 w-12 text-green-400 mx-auto mb-4" />
-            <p className="text-slate-600">No policy violations detected in this contract.</p>
-          </div>
-        )}
-      </DetailModal>
-
-      <DetailModal
-        isOpen={isOpen('risk')}
-        onClose={closeModal}
-        title="Comprehensive Risk Assessment"
-      >
-        {results?.risk_assessment ? (
-          <RiskDetail riskAssessment={results.risk_assessment} contractId={contractId} />
-        ) : (
-          <div className="text-center py-8">
-            <Shield className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-            <p className="text-slate-600">Risk assessment data is not available.</p>
-          </div>
-        )}
-      </DetailModal>
     </div>
   );
 };

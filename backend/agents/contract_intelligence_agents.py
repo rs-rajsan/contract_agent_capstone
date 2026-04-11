@@ -50,9 +50,10 @@ class IntelligenceOrchestrator:
         workflow.add_node("redline_generation", lambda state: AgentRegistry.get_agent("redline_generation").execute(state))
         workflow.add_node("governance", lambda state: AgentRegistry.get_agent("governance").execute(state))
         workflow.add_node("human_review", lambda state: AgentRegistry.get_agent("human_review").execute(state))
+        workflow.add_node("auditor", lambda state: AgentRegistry.get_agent("auditor").execute(state))
         workflow.add_node("output", lambda state: AgentRegistry.get_agent("output").execute(state))
         
-        # Define edges — full 10-node sequence
+        # Define edges — full 11-node sequence
         workflow.set_entry_point("upload")
         workflow.add_edge("upload", "planning")
         workflow.add_edge("planning", "parser")
@@ -73,7 +74,8 @@ class IntelligenceOrchestrator:
             }
         )
         
-        workflow.add_edge("human_review", "output")
+        workflow.add_edge("human_review", "auditor")
+        workflow.add_edge("auditor", "output")
         workflow.add_edge("output", END)
         
         return workflow.compile(checkpointer=self.saver)
