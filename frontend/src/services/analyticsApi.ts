@@ -1,4 +1,3 @@
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
 export interface KPISummary {
   hallucination_rate: string;
@@ -6,6 +5,7 @@ export interface KPISummary {
   avg_latency_seconds: string;
   total_processed: number;
   system_health: string;
+  is_extrapolated?: boolean;
 }
 
 export interface AgentBreakdown {
@@ -37,27 +37,53 @@ export interface GovernanceResponse {
   hourly_trend: { hour: string; count: number }[];
   error_analysis: { op: string; errors: number }[];
   recent_trail: AuditTrailEntry[];
+  is_extrapolated?: boolean;
+}
+
+export interface CostingResponse {
+  summary: {
+    total_spend: number;
+    cost_per_contract: number;
+    total_tokens: number;
+    avg_latency_ms: number;
+    min_latency_ms: number;
+    max_latency_ms: number;
+    projected_30d_cost: number;
+    budget_limit: number;
+    budget_utilization: number;
+    is_extrapolated?: boolean;
+  };
+  trends: { date: string; cost: number }[];
+  models: { name: string; cost: number; percentage: number }[];
+  agents: { name: string; cost: number }[];
+  efficiency: {
+    input_tokens: number;
+    output_tokens: number;
+    ratio: number;
+  };
 }
 
 class AnalyticsApi {
-  async getKPIs(): Promise<AnalyticsResponse> {
-    const response = await fetch('/api/analytics/kpis');
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch analytics: ${response.statusText}`);
+  private async _fetch(url: string, range: string, start?: string, end?: string) {
+    let query = `range=${range}`;
+    if (range === 'custom' && start && end) {
+      query += `&start_date=${start}&end_date=${end}`;
     }
-
+    const response = await fetch(`${url}?${query}`);
+    if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
     return response.json();
   }
 
-  async getGovernanceData(): Promise<GovernanceResponse> {
-    const response = await fetch('/api/analytics/governance');
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch governance data: ${response.statusText}`);
-    }
+  async getKPIs(range: string = '30d', start?: string, end?: string): Promise<AnalyticsResponse> {
+    return this._fetch('/api/analytics/kpis', range, start, end);
+  }
 
-    return response.json();
+  async getGovernanceData(range: string = '30d', start?: string, end?: string): Promise<GovernanceResponse> {
+    return this._fetch('/api/analytics/governance', range, start, end);
+  }
+
+  async getCostingData(range: string = '30d', start?: string, end?: string): Promise<CostingResponse> {
+    return this._fetch('/api/analytics/costing', range, start, end);
   }
 }
 

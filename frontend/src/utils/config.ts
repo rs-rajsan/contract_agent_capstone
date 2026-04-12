@@ -17,5 +17,17 @@ export const APP_CONFIG = {
   },
   ANIMATIONS: {
     TRANSITION_SPEED: '300ms',
+  },
+  SYSTEM: {
+    HEARTBEAT_INTERVAL: 30000,
+    MONITORED_AGENTS: [
+      'Supervisor Agent',
+      'PDF Processing Agent',
+      'Clause Extraction Agent',
+      'Risk Assessment Agent',
+      'Intelligent Chunking Agent',
+      'Policy Enforcement Agent',
+      'Auditor Agent'
+    ]
   }
 };

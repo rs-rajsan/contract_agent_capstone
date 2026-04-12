@@ -3,7 +3,7 @@ import time
 from datetime import datetime
 from typing import List, Dict, Any
 
-from backend.shared.constants.status_codes import SystemStatusCodes, get_status_metadata
+from backend.shared.constants.error_cd_status_master import MasterStatusCodes, get_status_metadata
 from backend.shared.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -55,12 +55,19 @@ class SystemHealthManager:
 
         from backend.shared.config.phase3_config import AppConfig
         agent_map = {
-            "PDF Processing Agent": AppConfig.DEFAULT_MODEL,
-            "Clause Extraction Agent": AppConfig.DEFAULT_MODEL,
+            "Supervisor Agent": AppConfig.DEFAULT_MODEL,
+            "Upload Agent": AppConfig.DEFAULT_MODEL,
+            "Planning Agent": AppConfig.DEFAULT_MODEL,
+            "PDF Parser Agent": AppConfig.DEFAULT_MODEL,
+            "Clause Splitter Agent": AppConfig.DEFAULT_MODEL,
+            "Policy Checking Agent": AppConfig.PRO_MODEL,
             "Risk Assessment Agent": AppConfig.PRO_MODEL,
-            "Intelligent Chunking Agent": AppConfig.DEFAULT_MODEL,
-            "Policy Enforcement Agent": AppConfig.PRO_MODEL,
-            "Supervisor Agent": AppConfig.DEFAULT_MODEL
+            "MCP Retrieval Agent": AppConfig.DEFAULT_MODEL,
+            "Redline Generation Agent": AppConfig.PRO_MODEL,
+            "Governance Agent": AppConfig.DEFAULT_MODEL,
+            "Human Review Agent": AppConfig.DEFAULT_MODEL,
+            "Auditor Agent": AppConfig.PRO_MODEL,
+            "Output Agent": AppConfig.DEFAULT_MODEL
         }
 
         tasks = []
@@ -78,13 +85,13 @@ class SystemHealthManager:
             await llm.ainvoke("ping")
             
             latency = round((time.time() - start) * 1000, 2)
-            meta = get_status_metadata(SystemStatusCodes.OK)
+            meta = get_status_metadata(MasterStatusCodes.OK)
             
             return {
                 "timestamp": datetime.utcnow().isoformat() + "Z",
                 "agent_name": agent_name,
                 "component": "LLM",
-                "status_code": int(SystemStatusCodes.OK),
+                "status_code": int(MasterStatusCodes.OK),
                 "error_condition": meta["error_condition"],
                 "system_error": None,
                 "user_facing_message": meta["user_message"],
@@ -118,13 +125,13 @@ class SystemHealthManager:
             await embedding.generate_embedding_async("health check")
             
             latency = round((time.time() - start) * 1000, 2)
-            meta = get_status_metadata(SystemStatusCodes.OK)
+            meta = get_status_metadata(MasterStatusCodes.OK)
             
             return {
                 "timestamp": datetime.utcnow().isoformat() + "Z",
                 "agent_name": agent_name,
                 "component": "embeddings",
-                "status_code": int(SystemStatusCodes.OK),
+                "status_code": int(MasterStatusCodes.OK),
                 "error_condition": meta["error_condition"],
                 "system_error": None,
                 "user_facing_message": meta["user_message"],
@@ -156,12 +163,12 @@ class SystemHealthManager:
             repo = Neo4jContractRepository()
             if repo.check_connection():
                 latency = round((time.time() - start) * 1000, 2)
-                meta = get_status_metadata(SystemStatusCodes.OK)
+                meta = get_status_metadata(MasterStatusCodes.OK)
                 return {
                     "timestamp": datetime.utcnow().isoformat() + "Z",
                     "agent_name": agent_name,
                     "component": "database",
-                    "status_code": int(SystemStatusCodes.OK),
+                    "status_code": int(MasterStatusCodes.OK),
                     "error_condition": meta["error_condition"],
                     "system_error": None,
                     "user_facing_message": meta["user_message"],
@@ -172,7 +179,7 @@ class SystemHealthManager:
         except Exception as e:
             latency = round((time.time() - start) * 1000, 2)
             error_msg = str(e)
-            code = SystemStatusCodes.INTERNAL_ERROR
+            code = MasterStatusCodes.INTERNAL_ERROR
             meta = get_status_metadata(code)
             
             return {
@@ -186,19 +193,19 @@ class SystemHealthManager:
                 "latency_ms": latency
             }
 
-    def _map_llm_exception(self, error_msg: str) -> SystemStatusCodes:
+    def _map_llm_exception(self, error_msg: str) -> MasterStatusCodes:
         """Heuristic mapping of raw LLM exceptions to numeric status codes"""
         msg = error_msg.lower()
         if "401" in msg or "unauthorized" in msg:
-            return SystemStatusCodes.UNAUTHORIZED
+            return MasterStatusCodes.UNAUTHORIZED
         if "403" in msg or "permission" in msg:
-            return SystemStatusCodes.FORBIDDEN
+            return MasterStatusCodes.FORBIDDEN
         if "429" in msg or "quota" in msg or "rate limit" in msg:
-            return SystemStatusCodes.RATE_LIMIT
+            return MasterStatusCodes.RATE_LIMIT
         if "404" in msg or "not found" in msg:
-            return SystemStatusCodes.NOT_FOUND
+            return MasterStatusCodes.NOT_FOUND
         if "503" in msg or "overloaded" in msg or "busy" in msg:
-            return SystemStatusCodes.MODEL_BUSY
+            return MasterStatusCodes.MODEL_BUSY
         if "timeout" in msg:
-            return SystemStatusCodes.TIMEOUT
-        return SystemStatusCodes.INTERNAL_ERROR
+            return MasterStatusCodes.TIMEOUT
+        return MasterStatusCodes.INTERNAL_ERROR

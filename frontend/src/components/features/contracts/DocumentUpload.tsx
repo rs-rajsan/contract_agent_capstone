@@ -4,13 +4,15 @@ import { Loader } from '../../shared/ui/loader';
 import { Badge } from '../../shared/ui/badge';
 import { 
   AlertTriangle, 
-  Loader2 as LoaderIcon, 
-  Upload 
+  Upload,
+  Zap
 } from 'lucide-react';
 import { cn } from '../../../lib/utils';
+import { apiRequest } from '../../../services/apiClient';
 
 interface DocumentUploadProps {
   onUploadComplete?: (result: UploadResult) => void;
+  onWorkflowUpdate?: (data: any) => void;
   modelSelection?: string;
   onUploadStart?: () => void;
   variant?: 'default' | 'minimal' | 'compact';
@@ -27,6 +29,7 @@ interface UploadResult {
 
 export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   onUploadComplete,
+  onWorkflowUpdate,
   modelSelection = import.meta.env.VITE_DEFAULT_MODEL || "gemini-2.5-flash",
   onUploadStart,
   variant = 'default',
@@ -58,45 +61,55 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
     setUploadError(null);
     onUploadStart?.();
 
+    // Start polling for workflow status
+    const pollWorkflow = setInterval(async () => {
+      try {
+        const workflowData = await apiRequest<any>('/api/workflow/status');
+        onWorkflowUpdate?.(workflowData);
+      } catch (e) {
+        // Ignore workflow polling errors
+      }
+    }, 500);
+
     try {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('model', modelSelection);
 
-      const response = await fetch('/api/documents/upload', {
+      const result = await apiRequest<UploadResult>('/api/documents/upload', {
         method: 'POST',
         body: formData
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Upload failed: ${response.status} - ${errorText}`);
-      }
-
-      const responseText = await response.text();
-      let result: UploadResult;
-      try {
-        result = JSON.parse(responseText);
-      } catch (parseError) {
-        throw new Error(`Invalid response format: ${responseText.substring(0, 100)}`);
-      }
       setUploadResult(result);
 
       if (onUploadComplete) {
         onUploadComplete(result);
       }
 
-    } catch (error) {
+      // Final workflow status update
+      setTimeout(async () => {
+        try {
+          const workflowData = await apiRequest<any>('/api/workflow/status');
+          onWorkflowUpdate?.(workflowData);
+        } catch (e) {
+          // Ignore final workflow polling error
+        }
+        clearInterval(pollWorkflow);
+      }, 1000);
+
+    } catch (error: any) {
       setUploadResult({
         filename: file.name,
         status: 'error',
-        details: error instanceof Error ? error.message : 'Upload failed',
+        details: error instanceof Error ? error.message : error.data?.detail || 'Upload failed',
         model_used: modelSelection
       });
+      clearInterval(pollWorkflow);
     } finally {
       setIsUploading(false);
     }
-  }, [modelSelection, onUploadComplete, onUploadStart]);
+  }, [modelSelection, onUploadComplete, onUploadStart, onWorkflowUpdate]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();

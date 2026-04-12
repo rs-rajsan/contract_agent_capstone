@@ -5,7 +5,9 @@ import { cn } from '../../../lib/utils';
 import { Button } from '../../shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Badge } from '../../shared/ui/badge';
-import { Clock, XCircle, FileText, AlertTriangle, Shield, Wifi, RefreshCw, Sparkles } from 'lucide-react';
+import { Clock, Brain, XCircle, FileText, AlertTriangle, Shield, Wifi, RefreshCw, Sparkles } from 'lucide-react';
+import { DetailModal } from './DetailModal';
+import { apiRequest } from '../../../services/apiClient';
 import { ClausesDetail } from './ClausesDetail';
 import { ViolationsDetail } from './ViolationsDetail';
 import { RiskDetail } from './RiskDetail';
@@ -80,7 +82,7 @@ export const ContractIntelligence: React.FC<ContractIntelligenceProps> = ({
     } else if (!loading) {
       onPulseUpdate?.(null);
     }
-  }, [pulseLabel, loading]);
+  }, [pulseLabel, loading, onPulseUpdate]);
 
   // Automatic Analysis Orchestration (Agentic Flow)
   React.useEffect(() => {
@@ -107,21 +109,9 @@ export const ContractIntelligence: React.FC<ContractIntelligenceProps> = ({
     setNetworkError(false);
     
     try {
-      const response = await fetch(`/api/intelligence/contracts/${contractId}/analyze?model=${model}`, {
+      const data = await apiRequest<any>(`/api/intelligence/contracts/${contractId}/analyze?model=${model}`, {
         method: 'POST',
       });
-      
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('Contract not found. Please verify the contract ID.');
-        }
-        if (response.status >= 500) {
-          throw new Error('Server error. Please try again later.');
-        }
-        throw new Error(`Analysis failed: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
       
       if (!data.results) {
         throw new Error('No analysis results returned. The contract may be invalid or corrupted.');
@@ -134,7 +124,7 @@ export const ContractIntelligence: React.FC<ContractIntelligenceProps> = ({
         onAnalysisComplete?.(contractId, data.results.risk_assessment.overall_risk_score, data.results.risk_assessment.risk_level, data.results);
       }
       
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof TypeError && err.message.includes('fetch')) {
         setNetworkError(true);
         setError('Network connection failed. Please check your internet connection.');

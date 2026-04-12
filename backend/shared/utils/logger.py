@@ -1,26 +1,28 @@
 import logging
 import logging.handlers
 import json
-import contextvars
 import os
 from datetime import datetime
 from typing import Optional
 
-# ContextVars to store identifiers for the current async flow
-correlation_id_var: contextvars.ContextVar[str] = contextvars.ContextVar("correlation_id", default="")
-user_id_var: contextvars.ContextVar[str] = contextvars.ContextVar("user_id", default="")
-session_id_var: contextvars.ContextVar[str] = contextvars.ContextVar("session_id", default="")
-org_id_var: contextvars.ContextVar[str] = contextvars.ContextVar("org_id", default="")
-contract_id_var: contextvars.ContextVar[str] = contextvars.ContextVar("contract_id", default="")
-span_id_var: contextvars.ContextVar[str] = contextvars.ContextVar("span_id", default="")
-operation_var: contextvars.ContextVar[str] = contextvars.ContextVar("operation", default="")
-agent_name_var: contextvars.ContextVar[str] = contextvars.ContextVar("agent_name", default="")
-hallucination_flag_var: contextvars.ContextVar[bool] = contextvars.ContextVar("hallucination_flag", default=False)
+from backend.shared.utils.context_vars import (
+    correlation_id_var, 
+    user_id_var, 
+    session_id_var, 
+    org_id_var, 
+    contract_id_var,
+    span_id_var,
+    operation_var,
+    agent_name_var,
+    hallucination_flag_var,
+    username_var
+)
 
 class JsonFormatter(logging.Formatter):
     """
     A unified standard JSON formatter that automatically injects active context identifiers
     (correlation_id, user_id, session_id, etc.) and supports rich metadata.
+    Adheres to structured logging best practices and Sree's authentication tracking.
     """
     def format(self, record: logging.LogRecord) -> str:
         # 1. Base Core Fields
@@ -42,7 +44,8 @@ class JsonFormatter(logging.Formatter):
             "span_id": span_id_var,
             "operation": operation_var,
             "agent_name": agent_name_var,
-            "hallucination_detected": hallucination_flag_var
+            "hallucination_detected": hallucination_flag_var,
+            "username": username_var
         }
         
         for key, var in context_mapping.items():
@@ -79,7 +82,7 @@ class JsonFormatter(logging.Formatter):
             "timestamp", "service_name", "environment", "status", "message",
             "correlation_id", "user_id", "session_id", "org_id", "contract_id",
             "span_id", "operation", "agent_name", "hallucination_detected",
-            "latency_ms", "component", "error"
+            "latency_ms", "component", "error", "username"
         }
         
         # Capture anything else as payload
@@ -144,7 +147,7 @@ def setup_logging(level: int = logging.INFO):
     
     try:
         file_handler = logging.handlers.RotatingFileHandler(
-            log_file, maxBytes=10*1024*1024, backupCount=5
+            log_file, maxBytes=20*1024*1024, backupCount=10
         )
         file_handler.setFormatter(formatter)
         handlers.append(file_handler)

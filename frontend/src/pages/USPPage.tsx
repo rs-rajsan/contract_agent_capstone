@@ -118,73 +118,79 @@ export const USPPage: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-8">
-      <div className="text-center bg-white rounded-lg p-8 shadow-sm border border-slate-200">
-        <h1 className="text-3xl font-bold text-slate-800 mb-3">Business Benefits</h1>
-        <p className="text-lg text-slate-600 max-w-3xl mx-auto">
-          Discover what makes our Contract Intelligence Agent superior to competitors through 
-          advanced AI architecture, enterprise reliability, and comprehensive contract analysis.
+    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="text-center bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl rounded-2xl p-10 shadow-sm border border-slate-200 dark:border-slate-800">
+        <h1 className="text-4xl font-black text-slate-800 dark:text-slate-100 mb-4 uppercase tracking-tight">
+          Business <span className="text-blue-600 dark:text-blue-400">Benefits</span>
+        </h1>
+        <p className="text-sm font-bold text-slate-500 dark:text-slate-400 max-w-2xl mx-auto uppercase tracking-[0.15em]">
+          Discover the unique value proposition of our Contract Intelligence Agent through advanced AI architecture and enterprise reliability.
         </p>
       </div>
 
       {/* Unique Selling Points */}
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-slate-800">Core Differentiators</h2>
+      <div className="space-y-8">
+        <h2 className="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-[-0.01em] ml-1 flex items-center gap-3">
+            <span className="w-1.5 h-6 bg-blue-600 rounded-full" />
+            Core Differentiators
+        </h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {uniqueSellingPoints.map((usp) => (
             <Card 
               key={usp.id}
-              className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                expandedUSPs.has(usp.id) ? 'ring-2 ring-blue-500' : ''
+              className={`cursor-pointer transition-all duration-500 overflow-hidden bg-white/80 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 hover:shadow-2xl hover:scale-[1.01] ${
+                expandedUSPs.has(usp.id) ? 'ring-2 ring-blue-500/50' : ''
               }`}
               onClick={() => toggleUSP(usp.id)}
             >
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${usp.color} text-white`}>
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-4">
+                  <div className={`p-3 rounded-xl ${usp.color} text-white shadow-lg`}>
                     {usp.icon}
                   </div>
                   <div>
-                    <CardTitle className="text-lg">{usp.title}</CardTitle>
-                    <p className="text-sm text-slate-600">{usp.description}</p>
+                    <CardTitle className="text-sm font-black uppercase tracking-tight">{usp.title}</CardTitle>
+                    <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{usp.description}</p>
                   </div>
                 </div>
               </CardHeader>
               
               {expandedUSPs.has(usp.id) && (
-                <CardContent className="border-t pt-4">
+                <CardContent className="border-t border-slate-100 dark:border-slate-800 pt-6 space-y-6 animate-in slide-in-from-top-2 duration-300">
                   <div className="space-y-4">
                     <div>
-                      <h4 className="font-semibold text-sm mb-3 text-slate-800">Key Features</h4>
-                      <div className="space-y-3">
+                      <h4 className="text-[11px] font-black mb-4 text-slate-800 dark:text-slate-100 uppercase tracking-[0.2em]">Key Capabilities</h4>
+                      <div className="space-y-4">
                         {usp.differentiators.map((diff, idx) => (
-                          <div key={idx} className="flex items-center gap-3">
-                            <div className="flex items-center gap-2 min-w-0 flex-1">
-                              <div className="p-2 bg-slate-100 rounded-full">
+                          <div key={idx} className="flex items-center gap-4 group">
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                              <div className="p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl group-hover:bg-blue-500/10 transition-colors">
                                 {diff.icon}
                               </div>
                               <div className="min-w-0 flex-1">
-                                <h5 className="font-semibold text-sm text-slate-800">{diff.name}</h5>
-                                <p className="text-xs text-slate-600">{diff.description}</p>
+                                <h5 className="font-black text-[11px] text-slate-800 dark:text-slate-100 uppercase tracking-tight">{diff.name}</h5>
+                                <p className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight leading-relaxed">{diff.description}</p>
                               </div>
                             </div>
                             {idx < usp.differentiators.length - 1 && (
-                              <ArrowRight className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                              <ArrowRight className="w-4 h-4 text-slate-400 flex-shrink-0 animate-pulse" />
                             )}
                           </div>
                         ))}
                       </div>
                     </div>
                     
-                    <div className="bg-slate-50 rounded-lg p-3">
-                      <h5 className="font-semibold text-xs text-slate-700 mb-1">Competitive Advantage</h5>
-                      <p className="text-xs text-slate-600">{usp.competitors}</p>
+                    <div className="bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl p-5 border border-slate-200/50 dark:border-slate-700/50">
+                      <h5 className="font-black text-[10px] text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-[0.1em] flex items-center gap-2">
+                        <Star className="w-3 h-3 text-yellow-500" /> Competitive Advantage
+                      </h5>
+                      <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight leading-relaxed">{usp.competitors}</p>
                     </div>
                     
-                    <div className="pt-2 border-t">
-                      <Badge variant="secondary" className="text-xs">
-                        Click to collapse details
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-center">
+                      <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest text-slate-400 border-none">
+                        Strategy Optimized: High Yield
                       </Badge>
                     </div>
                   </div>
@@ -196,18 +202,23 @@ export const USPPage: React.FC = () => {
       </div>
 
       {/* Competitive Advantages */}
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-slate-800">Competitive Advantages</h2>
+      <div className="space-y-8">
+        <h2 className="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-[-0.01em] ml-1 flex items-center gap-3">
+            <span className="w-1.5 h-6 bg-green-600 rounded-full" />
+            Market Value Proposition
+        </h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {competitiveAdvantages.map((advantage, idx) => (
-            <Card key={idx} className={`border ${advantage.color} hover:shadow-md transition-shadow`}>
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  {advantage.icon}
+            <Card key={idx} className={`border ${advantage.color} bg-white/50 dark:bg-slate-900/50 hover:shadow-lg transition-all duration-300 group`}>
+              <CardContent className="p-5">
+                <div className="flex items-start gap-4">
+                  <div className="mt-1 group-hover:scale-110 transition-transform duration-300">
+                    {advantage.icon}
+                  </div>
                   <div>
-                    <h3 className="font-semibold text-sm text-slate-800 mb-1">{advantage.title}</h3>
-                    <p className="text-xs text-slate-600">{advantage.description}</p>
+                    <h3 className="font-black text-[11px] text-slate-800 dark:text-slate-100 mb-1 uppercase tracking-tight">{advantage.title}</h3>
+                    <p className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight opacity-80 leading-relaxed">{advantage.description}</p>
                   </div>
                 </div>
               </CardContent>
@@ -217,43 +228,42 @@ export const USPPage: React.FC = () => {
       </div>
 
       {/* Market Position */}
-      <Card className="border-slate-200">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <Card className="border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 overflow-hidden">
+        <CardHeader className="bg-white/50 dark:bg-slate-800/20 border-b border-slate-100 dark:border-slate-800">
+          <CardTitle className="flex items-center gap-3 text-sm font-black uppercase tracking-tight">
             <Target className="w-5 h-5 text-green-600" />
-            Market Position & Value Proposition
+            ROI & Business Impact
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="bg-slate-50 rounded-lg p-4">
-            <h3 className="font-semibold mb-3 text-slate-800">Why Choose Our Solution</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <h4 className="font-medium mb-2 text-slate-700">Business Impact</h4>
-                <div className="space-y-1 text-xs text-slate-600">
-                  <div>• 80% reduction in contract review time</div>
-                  <div>• Cross-contract risk aggregation and insights</div>
-                  <div>• 95% accuracy in risk detection</div>
-                  <div>• Complete audit trail compliance</div>
-                  <div>• Portfolio-level relationship intelligence</div>
-                </div>
+        <CardContent className="p-8 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
+            <div className="p-6 rounded-2xl bg-white dark:bg-slate-800 shadow-sm ring-1 ring-slate-100 dark:ring-slate-700">
+              <h4 className="font-black text-[11px] mb-4 text-slate-800 dark:text-slate-100 uppercase tracking-[0.2em] flex items-center gap-2">
+                <Star className="w-3 h-3 text-blue-500" /> Performance Gains
+              </h4>
+              <div className="space-y-2 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">
+                <div className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-500 rounded-full" /> 80% reduction in review time</div>
+                <div className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-500 rounded-full" /> Cross-contract risk aggregation</div>
+                <div className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-500 rounded-full" /> 95% accuracy in risk detection</div>
+                <div className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-500 rounded-full" /> Portfolio relationship discovery</div>
               </div>
-              <div>
-                <h4 className="font-medium mb-2 text-slate-700">ROI & Cost Savings</h4>
-                <div className="space-y-1 text-xs text-slate-600">
-                  <div>• Reduce legal review costs by 80%</div>
-                  <div>• Prevent contract risks before signing</div>
-                  <div>• Accelerate deal closure timelines</div>
-                  <div>• Minimize compliance violations</div>
-                  <div>• Optimize contract portfolio performance</div>
-                </div>
+            </div>
+            <div className="p-6 rounded-2xl bg-white dark:bg-slate-800 shadow-sm ring-1 ring-slate-100 dark:ring-slate-700">
+              <h4 className="font-black text-[11px] mb-4 text-slate-800 dark:text-slate-100 uppercase tracking-[0.2em] flex items-center gap-2">
+                <TrendingUp className="w-3 h-3 text-green-500" /> Strategic ROI
+              </h4>
+              <div className="space-y-2 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">
+                <div className="flex items-center gap-2"><div className="w-1 h-1 bg-green-500 rounded-full" /> 80% legal review cost savings</div>
+                <div className="flex items-center gap-2"><div className="w-1 h-1 bg-green-500 rounded-full" /> Proactive risk prevention</div>
+                <div className="flex items-center gap-2"><div className="w-1 h-1 bg-green-500 rounded-full" /> Accelerated deal closure timelines</div>
+                <div className="flex items-center gap-2"><div className="w-1 h-1 bg-green-500 rounded-full" /> Optimized portfolio performance</div>
               </div>
             </div>
           </div>
           
           <div className="flex justify-center">
-            <Badge variant="secondary" className="text-xs">
-              Delivering measurable ROI through intelligent contract automation
+            <Badge variant="outline" className="border-none bg-slate-200/50 dark:bg-slate-800/50 text-[9px] font-black uppercase tracking-[0.4em] text-slate-400 py-2 px-6">
+              Value Proposition: Quantified
             </Badge>
           </div>
         </CardContent>

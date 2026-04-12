@@ -1,6 +1,6 @@
 import { EnhancedSearchParams } from '../components/search/EnhancedSearchInterface';
+import { apiRequest } from './apiClient';
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 const DEFAULT_MODEL = import.meta.env.VITE_DEFAULT_MODEL || 'gemini-2.5-flash';
 
 export interface EnhancedSearchResponse {
@@ -18,11 +18,8 @@ export interface SectionType {
 class EnhancedSearchApi {
   
   async searchContracts(params: EnhancedSearchParams): Promise<EnhancedSearchResponse> {
-    const response = await fetch('/api/contracts/search/enhanced', {
+    return apiRequest<EnhancedSearchResponse>('/api/contracts/search/enhanced', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({
         search_level: params.searchLevel,
         query: params.query || null,
@@ -33,33 +30,15 @@ class EnhancedSearchApi {
         active: params.active
       })
     });
-
-    if (!response.ok) {
-      throw new Error(`Search failed: ${response.statusText}`);
-    }
-
-    return response.json();
   }
 
   async getClauseTypes(): Promise<string[]> {
-    const response = await fetch('/api/contracts/search/clause-types');
-    
-    if (!response.ok) {
-      throw new Error(`Failed to get clause types: ${response.statusText}`);
-    }
-
-    const data = await response.json();
+    const data = await apiRequest<{clause_types: string[]}>('/api/contracts/search/clause-types');
     return data.clause_types;
   }
 
   async getSectionTypes(): Promise<SectionType[]> {
-    const response = await fetch('/api/contracts/search/section-types');
-    
-    if (!response.ok) {
-      throw new Error(`Failed to get section types: ${response.statusText}`);
-    }
-
-    const data = await response.json();
+    const data = await apiRequest<{section_types: SectionType[]}>('/api/contracts/search/section-types');
     return data.section_types;
   }
 
@@ -71,30 +50,16 @@ class EnhancedSearchApi {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch(
-      `/api/documents/enhanced/upload?model=${model}&enable_embeddings=${enableEmbeddings}`,
-      {
-        method: 'POST',
-        body: formData
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Enhanced upload failed: ${response.statusText}`);
-    }
-
-    return response.json();
+    return apiRequest(`/api/documents/enhanced/upload?model=${model}&enable_embeddings=${enableEmbeddings}`, {
+      method: 'POST',
+      body: formData,
+      timeout: 300000 // 5 minutes for processing
+    });
   }
 
   async getEmbeddingStatus(contractId: string): Promise<any> {
-    const response = await fetch(`/api/documents/enhanced/embedding-status/${contractId}`);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to get embedding status: ${response.statusText}`);
-    }
-
-    return response.json();
+    return apiRequest(`/api/documents/enhanced/embedding-status/${contractId}`);
   }
 }
 
-export const enhancedSearchApi = new EnhancedSearchApi();
+export const enhancedSearchApi = new EnhancedSearchApi();

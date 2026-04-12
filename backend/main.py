@@ -1,4 +1,5 @@
 import json
+import os
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
@@ -8,6 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from langchain_core.messages import HumanMessage, ToolMessage, AIMessage, AIMessageChunk
+from openinference.instrumentation.langchain import LangChainInstrumentor
+
 from backend.llm_manager import LLMManager
 from backend.api.document_upload import router as document_router
 from backend.api.contract_intelligence import router as intelligence_router
@@ -20,12 +23,15 @@ from backend.api.analytics import router as analytics_router
 from backend.api.strategic_api import router as strategic_router
 from backend.agents.agent_workflow_tracker import get_current_workflow_status
 from backend.shared.middleware.tracing import TracingMiddleware
-from backend.shared.utils.logger import get_logger, correlation_id_var
+from backend.shared.utils.logger import get_logger
+from backend.shared.utils.context_vars import correlation_id_var
+from backend.shared.db.postgres import get_db, AsyncSessionLocal
+
+from backend.auth.router import router as auth_router
+from backend.auth.admin_router import router as admin_router
+from backend.auth.seed import seed_admin_user
 
 logger = get_logger(__name__)
-
-import os
-from openinference.instrumentation.langchain import LangChainInstrumentor
 
 load_dotenv()
 
@@ -56,7 +62,12 @@ async def lifespan(app: FastAPI):
         app.state.llm_manager = LLMManager()
         # Create a persistent supervisor to track long-running workflows/agent status
         app.state.supervisor = SupervisorFactory.create_supervisor(app.state.llm_manager)
-        logger.info("✅ LLMManager and Supervisor initialized successfully")
+        
+        # Database setup and seed admin user
+        async with AsyncSessionLocal() as session:
+            await seed_admin_user(session)
+            
+        logger.info("✅ LLMManager, Supervisor, and Database seeded successfully")
     except Exception as e:
         logger.error(f"❌ Failed to initialize application state: {e}")
         app.state.llm_manager = None
@@ -80,7 +91,6 @@ except Exception as e:
 def get_llm_manager(request: Request):
     return request.app.state.llm_manager
 
-
 app.add_middleware(TracingMiddleware)
 
 # Configure CORS
@@ -99,7 +109,11 @@ app.add_middleware(
     allow_headers=["*"],  # Allow all headers
 )
 
-# Include routers based on environment
+# Include auth routers
+app.include_router(auth_router, prefix="/api/auth")
+app.include_router(admin_router, prefix="/api")
+
+# Include product routers
 app.include_router(document_router)
 app.include_router(intelligence_router)
 app.include_router(enhanced_search_router, prefix="/api")
@@ -184,16 +198,14 @@ def rebuild_history(history):
         item = json.loads(item_json_str)
         item_class = type_to_class.get(item["type"])
         if item_class:
-            # use pydantic BaseClass method to rebuild message model from json string dumped by model_dump_json
             messages.append(item_class.model_validate_json(item_json_str))
 
     return messages
 
 
-async def runner(model: str, prompt: str, history: str, llm_mgr: LLMManager):
+async def runner(model: str, prompt: str, history: str, llm_mgr: LLMManager, user_context: dict = None):
     logger.info(f"Processing LLM request for model '{model}'")
     
-    # history comes in from FE as stringified list of dumped model messages
     if history != "[]":
         previous_messages = rebuild_history(history)
     else:
@@ -205,17 +217,18 @@ async def runner(model: str, prompt: str, history: str, llm_mgr: LLMManager):
     corr_id = correlation_id_var.get()
     run_tags = [f"correlation_id:{corr_id}"] if corr_id else []
     
+    # Inject user context into tracing tags if available
+    from backend.shared.utils.context_vars import user_id_var, username_var
+    if user_id_var.get():
+        run_tags.append(f"user_id:{user_id_var.get()}")
+        run_tags.append(f"username:{username_var.get()}")
+    
     messages = llm_mgr.get_model_by_name(model).astream(
         input={"messages": input_messages}, 
         config={"tags": run_tags},
         stream_mode=["messages", "updates"]
     )
 
-    # for demo purposes only:
-    # - we are passing inmemory context as history around because we don't want to handle a db in this demo
-    # - "updates" stream_mode returns AIMessage instead of AIMessageChunk which is less data to pass around than chunk models
-    # - context is passed to FE and back on each /run/ endpoint call so AI is aware of the previous messages
-    # - we are not storing context on server in order we don't kill all of it's memory - in production you would store it in a db
     context = json.loads(history)
     context.append(prompt_message.model_dump_json())
 
@@ -223,7 +236,6 @@ async def runner(model: str, prompt: str, history: str, llm_mgr: LLMManager):
         if message[0] == "messages":
             chunk = message[1]
 
-            # output tool call section type
             if hasattr(chunk[0], "tool_calls") and len(chunk[0].tool_calls) > 0:
                 for tool in chunk[0].tool_calls:
                     if tool.get('name'):
@@ -238,7 +250,6 @@ async def runner(model: str, prompt: str, history: str, llm_mgr: LLMManager):
                 yield f"data: {json.dumps({'content': chunk[0].content, 'type': 'user_message'})}\n\n"
 
         if message[0] == "updates":
-            # use pydantic BaseClass method model_dump_json to dump message model to be stringified into history
             if "assistant" in message[1]:
                 for history_message in message[1]["assistant"]["messages"]:
                     context.append(history_message.model_dump_json())
@@ -252,8 +263,10 @@ async def runner(model: str, prompt: str, history: str, llm_mgr: LLMManager):
     yield f"data: {json.dumps({'content': context, 'type': 'history'})}\n\n"
     yield f"data: {json.dumps({'content': '', 'type': 'end'})}\n\n"
 
+from backend.auth.dependencies import require_permission
+from backend.auth.rbac import Permission
 
-@app.post("/api/run/")
+@app.post("/api/run/", dependencies=[Depends(require_permission(Permission.REVIEW_CONTRACT))])
 async def run(payload: RunPayload, llm_mgr: LLMManager = Depends(get_llm_manager)):
     return StreamingResponse(
         runner(model=payload.model, prompt=payload.prompt, history=payload.history, llm_mgr=llm_mgr),

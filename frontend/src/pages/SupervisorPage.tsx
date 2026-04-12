@@ -116,64 +116,68 @@ export const SupervisorPage: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-8">
-      <div className="text-center bg-white rounded-lg p-8 shadow-sm border border-slate-200">
-        <h1 className="text-3xl font-bold text-slate-800 mb-3">Supervisor Agent</h1>
-        <p className="text-lg text-slate-600 max-w-3xl mx-auto">
-          Enterprise-grade coordinator that orchestrates multi-agent workflows with error handling, 
-          quality validation, and intelligent recovery strategies.
+    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="text-center bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl rounded-2xl p-10 shadow-sm border border-slate-200 dark:border-slate-800">
+        <h1 className="text-4xl font-black text-slate-800 dark:text-slate-100 mb-4 uppercase tracking-tight">
+          Supervisor <span className="text-blue-600 dark:text-blue-400">Agent</span>
+        </h1>
+        <p className="text-sm font-bold text-slate-500 dark:text-slate-400 max-w-2xl mx-auto uppercase tracking-[0.15em]">
+          Enterprise-grade coordinator orchestrating multi-agent workflows with intelligent recovery & validation strategies.
         </p>
       </div>
 
       {/* Coordination Flows */}
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-slate-800">Coordination Flows</h2>
+      <div className="space-y-8">
+        <h2 className="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-[-0.01em] ml-1 flex items-center gap-3">
+            <span className="w-1.5 h-6 bg-blue-600 rounded-full" />
+            Coordination Flows
+        </h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {coordinationFlows.map((flow) => (
             <Card 
               key={flow.id}
-              className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                expandedFlows.has(flow.id) ? 'ring-2 ring-blue-500' : ''
+              className={`cursor-pointer transition-all duration-500 overflow-hidden bg-white/80 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 hover:shadow-2xl hover:scale-[1.01] ${
+                expandedFlows.has(flow.id) ? 'ring-2 ring-blue-500/50' : ''
               }`}
               onClick={() => toggleFlow(flow.id)}
             >
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${flow.color} text-white`}>
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-4">
+                  <div className={`p-3 rounded-xl ${flow.color} text-white shadow-lg`}>
                     {flow.icon}
                   </div>
                   <div>
-                    <CardTitle className="text-lg">{flow.title}</CardTitle>
-                    <p className="text-sm text-slate-600">{flow.description}</p>
+                    <CardTitle className="text-sm font-black uppercase tracking-tight">{flow.title}</CardTitle>
+                    <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{flow.description}</p>
                   </div>
                 </div>
               </CardHeader>
               
               {expandedFlows.has(flow.id) && (
-                <CardContent className="border-t pt-4">
-                  <div className="space-y-3">
+                <CardContent className="border-t border-slate-100 dark:border-slate-800 pt-6 space-y-4 animate-in slide-in-from-top-2 duration-300">
+                  <div className="space-y-4">
                     {flow.steps.map((step, idx) => (
-                      <div key={idx} className="flex items-center gap-3">
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
-                          <div className="p-2 bg-slate-100 rounded-full">
+                      <div key={idx} className="flex items-center gap-4 group">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl group-hover:bg-blue-500/10 transition-colors">
                             {step.icon}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <h4 className="font-semibold text-sm text-slate-800">{step.name}</h4>
-                            <p className="text-xs text-slate-600">{step.description}</p>
+                            <h4 className="font-black text-[11px] text-slate-800 dark:text-slate-100 uppercase tracking-tight">{step.name}</h4>
+                            <p className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">{step.description}</p>
                           </div>
                         </div>
                         {idx < flow.steps.length - 1 && (
-                          <ArrowRight className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                          <ArrowRight className="w-4 h-4 text-slate-400 flex-shrink-0 animate-pulse" />
                         )}
                       </div>
                     ))}
                   </div>
                   
-                  <div className="mt-4 pt-4 border-t">
-                    <Badge variant="secondary" className="text-xs">
-                      Click to collapse flow details
+                  <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <Badge variant="secondary" className="text-[9px] font-black uppercase tracking-widest bg-slate-100 dark:bg-slate-800 text-slate-500">
+                      Orchestration Snapshot
                     </Badge>
                   </div>
                 </CardContent>
@@ -184,18 +188,23 @@ export const SupervisorPage: React.FC = () => {
       </div>
 
       {/* Coordination Benefits */}
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-slate-800">Coordination Benefits</h2>
+      <div className="space-y-8">
+        <h2 className="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-[-0.01em] ml-1 flex items-center gap-3">
+            <span className="w-1.5 h-6 bg-purple-600 rounded-full" />
+            System Benefits
+        </h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {coordinationBenefits.map((benefit, idx) => (
-            <Card key={idx} className={`border ${benefit.color} hover:shadow-md transition-shadow`}>
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  {benefit.icon}
+            <Card key={idx} className={`border ${benefit.color} bg-white/50 dark:bg-slate-900/50 hover:shadow-lg transition-all duration-300 group`}>
+              <CardContent className="p-5">
+                <div className="flex items-start gap-4">
+                  <div className="mt-1 group-hover:scale-110 transition-transform duration-300">
+                    {benefit.icon}
+                  </div>
                   <div>
-                    <h3 className="font-semibold text-sm text-slate-800 mb-1">{benefit.title}</h3>
-                    <p className="text-xs text-slate-600">{benefit.description}</p>
+                    <h3 className="font-black text-[11px] text-slate-800 dark:text-slate-100 mb-1 uppercase tracking-tight">{benefit.title}</h3>
+                    <p className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight opacity-80 leading-relaxed">{benefit.description}</p>
                   </div>
                 </div>
               </CardContent>
@@ -205,41 +214,42 @@ export const SupervisorPage: React.FC = () => {
       </div>
 
       {/* Architecture Overview */}
-      <Card className="border-slate-200">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <Card className="border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 overflow-hidden">
+        <CardHeader className="bg-white/50 dark:bg-slate-800/20 border-b border-slate-100 dark:border-slate-800">
+          <CardTitle className="flex items-center gap-3 text-sm font-black uppercase tracking-tight">
             <Brain className="w-5 h-5 text-purple-600" />
-            Supervisor Architecture
+            Architecture Blueprint
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="bg-slate-50 rounded-lg p-4">
-            <h3 className="font-semibold mb-3 text-slate-800">SOLID Principles Implementation</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <h4 className="font-medium mb-2 text-slate-700">Design Patterns</h4>
-                <div className="space-y-1 text-xs text-slate-600">
-                  <div>• Template Method (BaseAdapter)</div>
-                  <div>• Strategy Pattern (Validation)</div>
-                  <div>• Factory Pattern (Agent creation)</div>
-                  <div>• Circuit Breaker (Failure protection)</div>
-                </div>
+        <CardContent className="p-8 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
+            <div className="p-6 rounded-2xl bg-white dark:bg-slate-800 shadow-sm ring-1 ring-slate-100 dark:ring-slate-700">
+              <h4 className="font-black text-[11px] mb-4 text-slate-800 dark:text-slate-100 uppercase tracking-[0.2em] flex items-center gap-2">
+                <Zap className="w-3 h-3 text-blue-500" /> Design Patterns
+              </h4>
+              <div className="space-y-2 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">
+                <div className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-500 rounded-full" /> Template Method (BaseAdapter)</div>
+                <div className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-500 rounded-full" /> Strategy Pattern (Validation)</div>
+                <div className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-500 rounded-full" /> Factory Pattern (Agent creation)</div>
+                <div className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-500 rounded-full" /> Circuit Breaker (Failure protection)</div>
               </div>
-              <div>
-                <h4 className="font-medium mb-2 text-slate-700">Agentic AI Patterns</h4>
-                <div className="space-y-1 text-xs text-slate-600">
-                  <div>• Shared Context (Workflow memory)</div>
-                  <div>• Agent Communication (Message bus)</div>
-                  <div>• Quality Gates (Inter-agent validation)</div>
-                  <div>• Dynamic Discovery (Registry pattern)</div>
-                </div>
+            </div>
+            <div className="p-6 rounded-2xl bg-white dark:bg-slate-800 shadow-sm ring-1 ring-slate-100 dark:ring-slate-700">
+              <h4 className="font-black text-[11px] mb-4 text-slate-800 dark:text-slate-100 uppercase tracking-[0.2em] flex items-center gap-2">
+                <Shield className="w-3 h-3 text-purple-500" /> Agentic AI Patterns
+              </h4>
+              <div className="space-y-2 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">
+                <div className="flex items-center gap-2"><div className="w-1 h-1 bg-purple-500 rounded-full" /> Shared Context (Workflow memory)</div>
+                <div className="flex items-center gap-2"><div className="w-1 h-1 bg-purple-500 rounded-full" /> Agent Communication (Message bus)</div>
+                <div className="flex items-center gap-2"><div className="w-1 h-1 bg-purple-500 rounded-full" /> Quality Gates (Inter-agent validation)</div>
+                <div className="flex items-center gap-2"><div className="w-1 h-1 bg-purple-500 rounded-full" /> Dynamic Discovery (Registry pattern)</div>
               </div>
             </div>
           </div>
           
           <div className="flex justify-center">
-            <Badge variant="secondary" className="text-xs">
-              Enterprise-grade coordination following software engineering best practices
+            <Badge variant="outline" className="border-none bg-slate-200/50 dark:bg-slate-800/50 text-[9px] font-black uppercase tracking-[0.4em] text-slate-400 py-2 px-6">
+              Engineering Governance: Enabled
             </Badge>
           </div>
         </CardContent>

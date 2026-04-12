@@ -8,7 +8,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 WORKDIR /app
 
 # Copy dependency files first (for better caching)
-COPY uv.lock pyproject.toml ./
+COPY pyproject.toml ./
 
 # Install dependencies (this layer will be cached)
 RUN uv sync
@@ -21,5 +21,5 @@ ENV PYTHONPATH=/app
 
 EXPOSE 8000
 
-# Run the application from the backend directory using production-ready 'run' (disables reloader)
-CMD ["uv", "run", "fastapi", "run", "backend/main.py", "--host", "0.0.0.0", "--port", "8000"]
+# Run migrations then start the application
+CMD ["sh", "-c", "uv run alembic -c backend/alembic.ini upgrade head && uv run fastapi run backend/main.py --host 0.0.0.0 --port 8000"]

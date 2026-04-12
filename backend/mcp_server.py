@@ -6,7 +6,7 @@ from fastmcp import FastMCP
 from backend.infrastructure.policy_repository import PolicyRepository
 from backend.infrastructure.contract_repository import Neo4jContractRepository
 from backend.agents.enhanced_cuad_tools import EnhancedPrecedentMatcherTool
-from backend.mcp.decorators import mcp_tool_wrapper
+from backend.mcp_extensions.decorators import mcp_tool_wrapper
 from backend.shared.utils.mcp_logger import get_mcp_logger
 
 # Initialize FastMCP server

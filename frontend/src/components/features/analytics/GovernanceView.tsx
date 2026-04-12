@@ -13,6 +13,8 @@ interface GovernanceViewProps {
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
+import { ShadowFilter } from '../../shared/ui/CommonFilters';
+
 export const GovernanceView: React.FC<GovernanceViewProps> = ({ data }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -65,11 +67,17 @@ export const GovernanceView: React.FC<GovernanceViewProps> = ({ data }) => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
+      <ShadowFilter />
       {/* KPI Style Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {kpis.map((kpi, idx) => (
-          <Card key={idx} className="border-none shadow-xl shadow-slate-200/50 dark:shadow-none dark:bg-slate-900/50 hover:scale-[1.02] transition-all duration-300">
+          <Card key={idx} className="border-none shadow-xl shadow-slate-200/50 dark:shadow-none dark:bg-slate-900/50 hover:scale-[1.02] transition-all duration-300 relative overflow-hidden">
             <CardContent className="p-6">
+              {data.is_extrapolated && (
+                  <div className="absolute top-0 right-0 bg-amber-500 text-[8px] font-black text-white px-2 py-0.5 rounded-bl-lg uppercase tracking-tighter z-10">
+                      Estimated
+                  </div>
+              )}
               <div className="flex items-start justify-between mb-4">
                 <div className={`p-3 rounded-2xl ${kpi.bg} dark:bg-slate-800 ${kpi.color}`}>
                   <kpi.icon className="w-5 h-5" />
@@ -114,6 +122,7 @@ export const GovernanceView: React.FC<GovernanceViewProps> = ({ data }) => {
                   outerRadius={80}
                   paddingAngle={5}
                   dataKey="value"
+                  filter="url(#pieShadow)"
                 >
                   {data.activity_distribution.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
