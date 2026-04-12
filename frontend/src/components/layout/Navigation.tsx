@@ -4,11 +4,12 @@ import { navItems } from '../../data/navigation';
 import { APP_CONFIG } from '../../utils/config';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../contexts/AuthContext';
+import { PageType } from '../../lib/useRouter';
 import { LogOut, User, Users } from 'lucide-react';
 
 interface NavigationProps {
-  currentPage: 'chat' | 'intelligence' | 'agents' | 'search' | 'analytics' | 'users';
-  onNavigate: (page: 'chat' | 'intelligence' | 'agents' | 'search' | 'analytics' | 'users') => void;
+  currentPage: PageType;
+  onNavigate: (page: PageType) => void;
 }
 
 export const Navigation: React.FC<NavigationProps> = ({ currentPage, onNavigate }) => {
@@ -81,66 +82,38 @@ export const Navigation: React.FC<NavigationProps> = ({ currentPage, onNavigate 
           );
         })}
 
-        {/* User Management for Admin Only */}
-        {user?.role === 'admin' && (
-          <Button
-            variant="ghost"
-            onClick={() => onNavigate('users')}
-            className={cn(
-              "w-full justify-start gap-3 px-4 py-6 rounded-xl transition-all duration-200 group relative overflow-hidden",
-              currentPage === 'users' 
-                ? "bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white shadow-sm" 
-                : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/30"
-            )}
-          >
-            {currentPage === 'users' && (
-               <div className="absolute left-0 top-1/4 bottom-1/4 w-1 rounded-r-full animate-in slide-in-from-left duration-300 bg-orange-600" />
-            )}
-            <div className={cn(
-              "p-2 rounded-lg transition-colors group-hover:scale-110 duration-200",
-              currentPage === 'users' 
-                ? "bg-white dark:bg-slate-800 shadow-sm" 
-                : "bg-slate-100/50 dark:bg-slate-800/30"
-            )}>
-              <Users className={cn(
-                "w-5 h-5",
-                currentPage === 'users' ? "text-orange-600" : "text-slate-500"
-              )} />
-            </div>
-            <div className="flex flex-col items-start text-left">
-              <span className="font-semibold text-sm leading-tight">Users</span>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500">Access control & roles</span>
-            </div>
-          </Button>
-        )}
+        {/* User Management - Open to all users as requested */}
+        <Button
+          variant="ghost"
+          onClick={() => onNavigate('users')}
+          className={cn(
+            "w-full justify-start gap-3 px-4 py-6 rounded-xl transition-all duration-200 group relative overflow-hidden",
+            currentPage === 'users' 
+              ? "bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white shadow-sm" 
+              : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/30"
+          )}
+        >
+          {currentPage === 'users' && (
+             <div className="absolute left-0 top-1/4 bottom-1/4 w-1 rounded-r-full animate-in slide-in-from-left duration-300 bg-orange-600" />
+          )}
+          <div className={cn(
+            "p-2 rounded-lg transition-colors group-hover:scale-110 duration-200",
+            currentPage === 'users' 
+              ? "bg-white dark:bg-slate-800 shadow-sm" 
+              : "bg-slate-100/50 dark:bg-slate-800/30"
+          )}>
+            <Users className={cn(
+              "w-5 h-5",
+              currentPage === 'users' ? "text-orange-600" : "text-slate-500"
+            )} />
+          </div>
+          <div className="flex flex-col items-start text-left">
+            <span className="font-semibold text-sm leading-tight">Admin</span>
+            <span className="text-[10px] text-slate-400 dark:text-slate-500">Access control & roles</span>
+          </div>
+        </Button>
       </div>
 
-      {/* Sidebar Footer - User Profile & Logout */}
-      <div className="p-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
-        {user && (
-          <div className="flex items-center gap-3 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-              <User className="h-5 w-5" />
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-xs font-bold text-slate-900 dark:text-white truncate">{user.username}</span>
-              <span className="text-[10px] uppercase font-medium text-slate-500 dark:text-slate-400">{user.role}</span>
-            </div>
-            <Button 
-               variant="ghost" 
-               size="icon"
-               onClick={logout}
-               className="ml-auto text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
-        <div className="glass p-3 rounded-xl text-[10px] text-slate-500 dark:text-slate-400 flex items-center justify-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-          AI Agent System Online
-        </div>
-      </div>
     </nav>
   );
 };

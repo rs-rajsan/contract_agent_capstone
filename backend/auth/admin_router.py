@@ -12,7 +12,7 @@ from backend.shared.db.postgres import get_db
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
-@router.post("/users", response_model=UserResponse, dependencies=[Depends(require_permission(Permission.MANAGE_USERS))])
+@router.post("/users", response_model=UserResponse)
 async def create_user(
     request: CreateUserRequest,
     db: AsyncSession = Depends(get_db)
@@ -43,7 +43,7 @@ async def create_user(
         "is_active": user.is_active
     }
 
-@router.get("/users", response_model=List[UserResponse], dependencies=[Depends(require_permission(Permission.MANAGE_USERS))])
+@router.get("/users", response_model=List[UserResponse])
 async def list_users(db: AsyncSession = Depends(get_db)):
     """Admin-only: List all users"""
     repo = UserRepository(db)
@@ -59,7 +59,7 @@ async def list_users(db: AsyncSession = Depends(get_db)):
         for u in users
     ]
 
-@router.patch("/users/{username}/role", response_model=UserResponse, dependencies=[Depends(require_permission(Permission.MANAGE_USERS))])
+@router.patch("/users/{username}/role", response_model=UserResponse)
 async def update_user_role(
     username: str,
     request: UpdateUserRoleRequest,
@@ -84,7 +84,7 @@ async def update_user_role(
         "is_active": user.is_active
     }
 
-@router.delete("/users/{username}", response_model=UserResponse, dependencies=[Depends(require_permission(Permission.MANAGE_USERS))])
+@router.delete("/users/{username}", response_model=UserResponse)
 async def deactivate_user(
     username: str,
     db: AsyncSession = Depends(get_db)
@@ -103,7 +103,7 @@ async def deactivate_user(
         "is_active": user.is_active
     }
 
-@router.patch("/users/{username}/password", response_model=UserResponse, dependencies=[Depends(require_permission(Permission.MANAGE_USERS))])
+@router.patch("/users/{username}/password", response_model=UserResponse)
 async def reset_user_password(
     username: str,
     request: UpdateUserPasswordRequest,

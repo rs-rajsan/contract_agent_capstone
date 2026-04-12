@@ -29,7 +29,11 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiRequest<T>(path: string, options?: RequestInit): Promise<T> {
+export interface ApiRequestOptions extends RequestInit {
+  timeout?: number;
+}
+
+export async function apiRequest<T>(path: string, options?: ApiRequestOptions): Promise<T> {
   const token = tokenStore.get();
   // Using a robust fallback for correlation ID in case randomUUID isn't available
   const correlationId = typeof crypto.randomUUID === 'function' 
@@ -59,16 +63,19 @@ export async function apiRequest<T>(path: string, options?: RequestInit): Promis
     Object.assign(headers, options.headers);
   }
 
-  // Handle FormData where we don't want to specify Content-Type manually
-  if (options?.body instanceof FormData) {
-    delete headers['Content-Type'];
-  }
+  // Handle Timeout
+  const timeout = options?.timeout || 60000; // Default 60s
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
 
   try {
     const response = await fetch(`${BACKEND_URL}${path}`, {
       ...options,
       headers,
+      signal: controller.signal
     });
+    
+    clearTimeout(id);
 
     if (response.status === 401) {
       // Auto-logout event
@@ -88,9 +95,14 @@ export async function apiRequest<T>(path: string, options?: RequestInit): Promis
     }
 
     return response.json();
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof ApiError) throw error;
     
+    if (error.name === 'AbortError') {
+      logger.error(`API Request Timed Out (${timeout}ms): ${path}`, { correlationId });
+      throw new Error(`Request timed out after ${timeout/1000} seconds. Please try again.`);
+    }
+
     const message = error instanceof Error ? error.message : String(error);
     logger.error(`API Fetch Failure: ${path}`, { correlationId, error: message });
     throw error;

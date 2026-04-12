@@ -1,5 +1,7 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Request
 from datetime import datetime
+import os
+import glob
 
 from typing import Dict, List, Any, Optional
 import logging
@@ -9,6 +11,7 @@ from backend.agents.optimized_cuad_tools import BatchProcessor
 import asyncio
 
 from backend.shared.utils.logger import get_logger
+from backend.shared.constants.error_cd_status_master import get_status_metadata
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/api/monitoring", tags=["monitoring"])
@@ -241,6 +244,42 @@ async def get_system_info():
         logger.error(f"System info failed: {e}")
         raise HTTPException(status_code=500, detail=f"System info failed: {str(e)}")
 
+@router.post("/logs/ingest")
+async def ingest_frontend_logs(log_data: Dict[str, Any]):
+    """
+    Ingests frontend logs and writes them to the unified agent audit file.
+    Enriches with architectural metadata if a status_code is provided.
+    """
+    try:
+        level_str = log_data.get("level", "INFO").upper()
+        message = log_data.get("message", "No message provided")
+        context = log_data.get("context", {})
+        status_code = log_data.get("status_code")
+        
+        # Enrich context with status code metadata if provided
+        if status_code:
+            metadata = get_status_metadata(int(status_code))
+            context.update(metadata)
+            context["status_code"] = status_code
+        
+        # Map string level to logging numeric level
+        level = getattr(logging, level_str, logging.INFO)
+        
+        # Log via the centralized backend logger
+        logger.log(
+            level,
+            message,
+            extra={
+                "component": "frontend-ui",
+                **context
+            }
+        )
+        
+        return {"status": "success"}
+    except Exception as e:
+        # We don't want log ingestion failures to crash the frontend
+        return {"status": "error", "message": str(e)}
+
 @router.get("/system/health")
 async def system_health_check(request: Request):
     """
@@ -256,7 +295,6 @@ async def system_health_check(request: Request):
     results = await health_manager.run_full_diagnostic()
     
     # Unified Audit Logging: Forward results to the standard system logger
-    # The JsonFormatter will automatically include correlation_id and metadata
     for res in results:
         logger.info(
             f"Health check component '{res['agent_name']}' returned {res['status_code']}",
@@ -270,4 +308,52 @@ async def system_health_check(request: Request):
         "status": "healthy" if all_ok else "unhealthy",
         "results": results,
         "timestamp": datetime.utcnow().isoformat() + "Z"
+    }
+
+def cleanup_logs_task():
+    """ Enforce 500MB quota on logs directory by pruning oldest backup files """
+    log_dir = os.path.join(os.getcwd(), "logs")
+    if not os.path.exists(log_dir):
+        return
+
+    MAX_SIZE_BYTES = 500 * 1024 * 1024 # 500MB
+    files = glob.glob(os.path.join(log_dir, "*"))
+    files.sort(key=os.path.getmtime) # Oldest first
+
+    total_size = sum(os.path.getsize(f) for f in files)
+    
+    if total_size > MAX_SIZE_BYTES:
+        logger.warning(f"Log quota exceeded ({total_size} bytes). Pruning oldest backups...")
+        for f in files:
+            if total_size <= MAX_SIZE_BYTES:
+                break
+            # Only prune backup/rotated files (ending in digits or .1, .2, etc)
+            # Never prune the active .jsonl files
+            if not f.endswith(".jsonl"):
+                f_size = os.path.getsize(f)
+                os.remove(f)
+                total_size -= f_size
+                logger.info(f"Pruned log backup: {os.path.basename(f)}")
+
+@router.on_event("startup")
+async def startup_housekeeping():
+    """ Run log cleanup on startup """
+    cleanup_logs_task()
+
+@router.get("/logs/stats")
+async def get_log_stats():
+    """ Return health statistics for the unified logging system """
+    log_dir = os.path.join(os.getcwd(), "logs")
+    if not os.path.exists(log_dir):
+        return {"total_size_mb": 0, "file_count": 0}
+    
+    files = glob.glob(os.path.join(log_dir, "*"))
+    total_size = sum(os.path.getsize(f) for f in files)
+    
+    return {
+        "status": "healthy",
+        "total_size_mb": round(total_size / (1024 * 1024), 2),
+        "file_count": len(files),
+        "quota_mb": 500,
+        "location": log_dir
     }

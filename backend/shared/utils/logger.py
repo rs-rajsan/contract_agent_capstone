@@ -147,7 +147,7 @@ def setup_logging(level: int = logging.INFO):
     
     try:
         file_handler = logging.handlers.RotatingFileHandler(
-            log_file, maxBytes=10*1024*1024, backupCount=5
+            log_file, maxBytes=20*1024*1024, backupCount=10
         )
         file_handler.setFormatter(formatter)
         handlers.append(file_handler)

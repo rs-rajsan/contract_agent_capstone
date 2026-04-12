@@ -1,13 +1,14 @@
 import { FC, useState, useEffect } from 'react';
-import { AlertTriangle, Activity, Shield, DollarSign, Calendar } from 'lucide-react';
+import { Activity, Shield, DollarSign, Calendar } from 'lucide-react';
 import { analyticsApi, AnalyticsResponse, GovernanceResponse, CostingResponse } from '../services/analyticsApi';
 import { AuditorView } from '../components/features/analytics/AuditorView';
 import { GovernanceView } from '../components/features/analytics/GovernanceView';
 import { CostingView } from '../components/features/analytics/CostingView';
+import { HeartbeatInsights } from './HeartbeatInsights';
 
 export const AnalyticsPage: FC = () => {
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'auditor' | 'governance' | 'costing'>('auditor');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'heartbeat' | 'governance' | 'costing'>('analytics');
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d' | '90d' | 'custom'>('30d');
   const [startDate, setStartDate] = useState(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
@@ -15,7 +16,6 @@ export const AnalyticsPage: FC = () => {
   const [auditorData, setAuditorData] = useState<AnalyticsResponse | null>(null);
   const [governanceData, setGovernanceData] = useState<GovernanceResponse | null>(null);
   const [costingData, setCostingData] = useState<CostingResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
@@ -28,9 +28,8 @@ export const AnalyticsPage: FC = () => {
       setAuditorData(aData);
       setGovernanceData(gData);
       setCostingData(cData);
-      setError(null);
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch analytics data');
+      console.error('Failed to fetch analytics data', err);
     } finally {
       setLoading(false);
     }
@@ -40,10 +39,17 @@ export const AnalyticsPage: FC = () => {
     if (timeRange !== 'custom') {
         fetchData();
     }
-  }, [timeRange, activeTab]);
+  }, [timeRange]);
 
   if (loading && !auditorData) {
-// ... (lines 41-67) ...
+    return (
+      <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-950">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin" />
+          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Hydrating Analytics Engine...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -54,7 +60,7 @@ export const AnalyticsPage: FC = () => {
             <div className="space-y-2">
                 <div className="flex items-center gap-3">
                     <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight font-display">
-                        {activeTab === 'auditor' ? "Auditor's Intelligence" : activeTab === 'governance' ? "Governance & Activity" : "Financial Audit & Costing"}
+                        {activeTab === 'analytics' ? "Audit Analytics" : activeTab === 'heartbeat' ? "Agent Heartbeat" : activeTab === 'governance' ? "Governance & Activity" : "Financial Audit & Costing"}
                     </h1>
                     <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full animate-pulse">
                         <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
@@ -62,8 +68,10 @@ export const AnalyticsPage: FC = () => {
                     </div>
                 </div>
                 <p className="text-slate-500 dark:text-slate-400 max-w-2xl text-sm leading-relaxed font-sans">
-                    {activeTab === 'auditor' 
+                    {activeTab === 'analytics' 
                     ? "Real-time accountability and performance metrics for the agentic pipeline. Visualized from the Trace-First JSONL audit stream."
+                    : activeTab === 'heartbeat'
+                    ? "Live diagnostic telemetry and health status for all autonomous agents in the orchestration layer."
                     : activeTab === 'governance'
                     ? "Enterprise-grade visibility into user actions, data compliance, and system-wide audit trails from the audit.jsonl ledger."
                     : "Strategic insights into AI expenditure, token efficiency, and forward-looking budget projections for leadership."}
@@ -87,16 +95,30 @@ export const AnalyticsPage: FC = () => {
         <div className="space-y-4">
             <div className="flex items-center gap-8 border-b border-slate-200 dark:border-slate-800">
             <button 
-                onClick={() => setActiveTab('auditor')}
+                onClick={() => setActiveTab('analytics')}
                 className={`relative flex items-center gap-2 text-sm font-bold transition-all p-[2px] pb-3 ${
-                activeTab === 'auditor' 
+                activeTab === 'analytics' 
                     ? 'text-indigo-600 dark:text-indigo-400' 
                     : 'text-slate-400 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-400'
                 }`}
             >
                 <Shield size={16} />
-                AI Auditor
-                {activeTab === 'auditor' && (
+                Audit Analytics
+                {activeTab === 'analytics' && (
+                <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-indigo-600 dark:bg-indigo-400 rounded-t-full" />
+                )}
+            </button>
+            <button 
+                onClick={() => setActiveTab('heartbeat')}
+                className={`relative flex items-center gap-2 text-sm font-bold transition-all p-[2px] pb-3 ${
+                activeTab === 'heartbeat' 
+                    ? 'text-indigo-600 dark:text-indigo-400' 
+                    : 'text-slate-400 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-400'
+                }`}
+            >
+                <Activity size={16} />
+                Agent Heartbeat
+                {activeTab === 'heartbeat' && (
                 <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-indigo-600 dark:bg-indigo-400 rounded-t-full" />
                 )}
             </button>
@@ -108,7 +130,7 @@ export const AnalyticsPage: FC = () => {
                     : 'text-slate-400 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-400'
                 }`}
             >
-                <Activity size={16} />
+                <Shield size={16} />
                 Governance
                 {activeTab === 'governance' && (
                 <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-indigo-600 dark:bg-indigo-400 rounded-t-full" />
@@ -187,16 +209,18 @@ export const AnalyticsPage: FC = () => {
       </div>
 
       {/* Conditional View Rendering */}
-      {loading ? (
+      {loading && activeTab !== 'heartbeat' ? (
           <div className="flex items-center justify-center h-[400px]">
               <div className="w-8 h-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin" />
           </div>
-      ) : activeTab === 'auditor' ? (
-        <AuditorView data={auditorData} />
+      ) : activeTab === 'analytics' ? (
+        auditorData && <AuditorView data={auditorData} />
+      ) : activeTab === 'heartbeat' ? (
+        <HeartbeatInsights />
       ) : activeTab === 'governance' ? (
-        <GovernanceView data={governanceData} />
+        governanceData && <GovernanceView data={governanceData} />
       ) : (
-        <CostingView data={costingData} />
+        costingData && <CostingView data={costingData} />
       )}
     </div>
   );

@@ -19,67 +19,71 @@ export const WorkflowsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8">
-      <div className="text-center bg-white rounded-lg p-8 shadow-sm border border-slate-200">
-        <h1 className="text-3xl font-bold text-slate-800 mb-3">AI Workflows</h1>
-        <p className="text-lg text-slate-600 max-w-3xl mx-auto">
-          Multi-agent workflows that orchestrate contract processing and analysis.
+    <div className="space-y-12 animate-in fade-in duration-700">
+      <div className="text-center bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl rounded-2xl p-10 shadow-sm border border-slate-200 dark:border-slate-800">
+        <h1 className="text-4xl font-black text-slate-800 dark:text-slate-100 mb-4 uppercase tracking-tight">
+          AI <span className="text-blue-600 dark:text-blue-400">Workflows</span>
+        </h1>
+        <p className="text-sm font-bold text-slate-500 dark:text-slate-400 max-w-2xl mx-auto uppercase tracking-[0.15em]">
+          Multi-agent orchestration paths for contract processing and autonomous analysis.
         </p>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-8">
         {Object.entries(workflows).map(([key, workflow]) => (
           <Card 
             key={key} 
-            className={`overflow-hidden cursor-pointer transition-all duration-200 ${
-              activeWorkflows.has(key) ? 'ring-2 ring-blue-500 shadow-lg' : 'hover:shadow-md'
+            className={`overflow-hidden cursor-pointer transition-all duration-500 bg-white/80 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 hover:shadow-2xl hover:scale-[1.005] ${
+              activeWorkflows.has(key) ? 'ring-2 ring-blue-500 shadow-xl' : 'hover:shadow-md'
             }`}
             onClick={() => toggleWorkflow(key)}
           >
-            <CardHeader className="bg-slate-50">
+            <CardHeader className="bg-slate-50/50 dark:bg-slate-800/20 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-500 text-white rounded-lg">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-blue-500 text-white rounded-xl shadow-lg">
                     {workflow.icon}
                   </div>
                   <div>
-                    <CardTitle className="text-xl">{workflow.title}</CardTitle>
-                    <p className="text-slate-600">{workflow.description}</p>
+                    <CardTitle className="text-sm font-black uppercase tracking-tight">{workflow.title}</CardTitle>
+                    <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{workflow.description}</p>
                   </div>
                 </div>
-                <Badge variant="outline">Click to expand</Badge>
+                <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest text-slate-400 border-slate-200">
+                  {activeWorkflows.has(key) ? 'Active' : 'Click to Visualize'}
+                </Badge>
               </div>
             </CardHeader>
             {activeWorkflows.has(key) && (
-              <CardContent className="p-6 border-t">
-                <div className="flex items-center justify-between">
+              <CardContent className="p-8 border-t border-slate-100 dark:border-slate-800 bg-white/30 dark:bg-slate-900/30 animate-in slide-in-from-top-2 duration-300">
+                <div className="flex items-center justify-between overflow-x-auto pb-4 gap-6">
                   {workflow.steps.map((step, idx) => (
                     <React.Fragment key={idx}>
-                      <div className="flex flex-col items-center text-center max-w-32">
-                        <div className="p-3 bg-slate-100 rounded-full mb-2 hover:bg-blue-100 transition-colors">
+                      <div className="flex flex-col items-center text-center min-w-[140px] group">
+                        <div className="p-4 bg-white dark:bg-slate-800 rounded-2xl shadow-sm mb-4 group-hover:bg-blue-500/10 transition-colors ring-1 ring-slate-100 dark:ring-slate-700">
                           {step.icon}
                         </div>
-                        <h4 className={`font-semibold text-sm mb-1 ${getStepTextColor(step)}`}>
+                        <h4 className={`text-[11px] font-black mb-1 uppercase tracking-tight ${getStepTextColor(step)}`}>
                           {step.agent}
                         </h4>
-                        <p className="text-xs text-slate-600 mb-2">{step.description}</p>
-                        <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded border">
+                        <p className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight mb-3 line-clamp-2">{step.description}</p>
+                        <div className="text-[8px] font-black text-blue-600 dark:text-blue-400 bg-blue-500/5 px-2.5 py-1 rounded-full border border-blue-500/10 uppercase tracking-widest">
                           {step.tech}
                         </div>
                       </div>
                       {idx < workflow.steps.length - 1 && (
-                        <ArrowRight className="w-5 h-5 text-slate-400 mx-2 animate-pulse" />
+                        <div className="flex-1 flex justify-center">
+                            <ArrowRight className="w-5 h-5 text-slate-300 dark:text-slate-700 mx-2 animate-pulse" />
+                        </div>
                       )}
                     </React.Fragment>
                   ))}
                 </div>
                 
-                <div className="mt-6 pt-4 border-t">
-                  <div className="flex justify-center">
-                    <Badge variant="secondary">
-                      {getWorkflowBadgeText(key)}
-                    </Badge>
-                  </div>
+                <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-center">
+                  <Badge variant="secondary" className="px-6 py-1.5 bg-slate-100 dark:bg-slate-800 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 border-none">
+                    {getWorkflowBadgeText(key)}
+                  </Badge>
                 </div>
               </CardContent>
             )}

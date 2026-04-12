@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 
-export type PageType = 'chat' | 'intelligence' | 'agents' | 'search' | 'analytics' | 'login' | 'users';
+export type PageType = 'chat' | 'intelligence' | 'agents' | 'search' | 'analytics' | 'login' | 'users' | 'insights';
 
 interface RouterContextType {
   currentPage: PageType;

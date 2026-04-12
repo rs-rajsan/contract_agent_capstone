@@ -1,17 +1,14 @@
 import React, { useState, useCallback } from 'react';
 import { Card } from '../../shared/ui/card';
 import { Loader } from '../../shared/ui/loader';
-<<<<<<< HEAD
 import { Badge } from '../../shared/ui/badge';
 import { 
   AlertTriangle, 
-  Loader2 as LoaderIcon, 
-  Upload 
+  Upload,
+  Zap
 } from 'lucide-react';
 import { cn } from '../../../lib/utils';
-=======
 import { apiRequest } from '../../../services/apiClient';
->>>>>>> sree_repo/sree_branch
 
 interface DocumentUploadProps {
   onUploadComplete?: (result: UploadResult) => void;

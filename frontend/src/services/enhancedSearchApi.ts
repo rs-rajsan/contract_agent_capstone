@@ -52,7 +52,8 @@ class EnhancedSearchApi {
 
     return apiRequest(`/api/documents/enhanced/upload?model=${model}&enable_embeddings=${enableEmbeddings}`, {
       method: 'POST',
-      body: formData
+      body: formData,
+      timeout: 300000 // 5 minutes for processing
     });
   }
 
@@ -61,6 +62,4 @@ class EnhancedSearchApi {
   }
 }
 
-export const enhancedSearchApi = new EnhancedSearchApi();
-
-export const enhancedSearchApi = new EnhancedSearchApi();
+export const enhancedSearchApi = new EnhancedSearchApi();

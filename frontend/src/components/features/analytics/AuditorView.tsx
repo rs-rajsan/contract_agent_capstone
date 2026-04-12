@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
-import { Shield, Activity, AlertTriangle, Clock, TrendingUp, CheckCircle, Search } from 'lucide-react';
+import { Activity, AlertTriangle, Clock, TrendingUp, CheckCircle, Search } from 'lucide-react';
 import { 
   ResponsiveContainer, 
   BarChart, 
@@ -42,7 +42,7 @@ export const AuditorView: React.FC<AuditorViewProps> = ({ data }) => {
     { 
         title: 'System Health', 
         value: data.summary.system_health, 
-        icon: Shield, 
+        icon: CheckCircle, 
         color: 'text-green-500', 
         bg: 'bg-green-50',
         desc: 'Based on integrity checks'
@@ -64,7 +64,7 @@ export const AuditorView: React.FC<AuditorViewProps> = ({ data }) => {
   }));
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
       {/* KPI Stream */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {kpis.map((kpi, idx) => (
@@ -186,7 +186,7 @@ export const AuditorView: React.FC<AuditorViewProps> = ({ data }) => {
 
       <div className="flex flex-col lg:flex-row gap-6">
           <div className="flex-1 p-6 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg overflow-hidden relative">
-            <Shield className="absolute -right-8 -bottom-8 w-48 h-48 text-white/10 rotate-12" />
+            <CheckCircle className="absolute -right-8 -bottom-8 w-48 h-48 text-white/10 rotate-12" />
             <h4 className="text-lg font-bold mb-2">Immutable Accountability</h4>
             <p className="text-white/80 text-xs leading-relaxed max-w-lg">
                 This dashboard uses <strong>Aggregator Nodes</strong> to stream directly from the <code>unified_agent_audit.jsonl</code>. 

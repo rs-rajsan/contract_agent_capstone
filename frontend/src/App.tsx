@@ -6,14 +6,13 @@ import { IntelligencePage } from './pages/IntelligencePage';
 import { DocumentationPage } from './pages/DocumentationPage';
 import { SearchPage } from './pages/SearchPage';
 import { LoginPage } from './pages/LoginPage';
-import { UserManagementPage } from '@/pages/UserManagementPage';
+import { UserManagementPage } from './pages/UserManagementPage';
 import { ErrorBoundary } from './components/shared/ErrorBoundary';
 import { ContractHistoryProvider } from './contexts/ContractHistoryContext';
 import { ModelProvider } from './contexts/ModelContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { ProtectedRoute } from './components/shared/ProtectedRoute';
 import { useRouter, RouterProvider } from './lib/useRouter';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Loader2 } from 'lucide-react';
 import { Button } from './components/shared/ui/button';
 import { APP_CONFIG } from './utils/config';
 import { cn } from './lib/utils';
@@ -33,24 +32,40 @@ function MainApp() {
     setIsSidebarOpen(false);
   };
 
+  // Sync logic for when we LOG IN or LOG OUT
   useEffect(() => {
     if (isLoading) return;
 
     if (isAuthenticated && currentPage === 'login') {
       navigate('intelligence');
-    } else if (!isAuthenticated && currentPage !== 'login') {
-      navigate('login');
     }
+    // Note: Implicit redirect for logged-out users is handled by the render logic below
   }, [isAuthenticated, currentPage, navigate, isLoading]);
 
+  // STAGE 1: System Health Diagnostic (Must pass before anything else)
   if (!hasCheckedHealth) {
     return <DiagnosticScreen onComplete={() => setHasCheckedHealth(true)} />;
   }
 
-  if (currentPage === 'login') {
+  // STAGE 2: Identity Session Validation (Re-hydrating auth on refresh)
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Authenticating Identity Vault...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // STAGE 3: Authentication Gateway
+  // If not authenticated, we block the App Shell entirely and force the Login Page
+  if (!isAuthenticated) {
     return <LoginPage />;
   }
 
+  // STAGE 4: App Shell & Orchestration (Authenticated Users Only)
   const renderPage = () => {
     switch (currentPage) {
       case 'chat':
@@ -69,6 +84,9 @@ function MainApp() {
         return <AnalyticsPage />;
       case 'users':
         return <UserManagementPage />;
+      case 'login':
+        // Fallback in case state hasn't transitioned yet
+        return <IntelligencePage />;
       default:
         return <IntelligencePage />;
     }
@@ -132,7 +150,5 @@ function App() {
     </RouterProvider>
   );
 }
-
-export default App;
 
 export default App;

@@ -24,6 +24,8 @@ class AppConfig:
     # Financial & Costing Configuration
     AI_BUDGET_MONTHLY = float(os.getenv("AI_BUDGET_MONTHLY", "1200.0"))
     AI_PRICING = {
+        "gemini-2.5-pro": {"input": 1.25, "output": 5.00},
+        "gemini-2.5-flash": {"input": 0.10, "output": 0.40},
         "gemini-1.5-pro": {"input": 1.25, "output": 5.00},
         "gemini-1.5-flash": {"input": 0.075, "output": 0.30},
         "gemini-2.0-flash": {"input": 0.10, "output": 0.40},
