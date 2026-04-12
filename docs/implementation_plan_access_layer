@@ -1,0 +1,463 @@
+# Auth & Authorization Implementation Plan
+## Contract Intelligence Capstone
+
+### Background
+The existing application has:
+- **Backend**: FastAPI, Neo4j (Aura cloud), centralized JSON logger ([get_logger](file:///c:/Capstone/contract_agent_capstone/backend/shared/utils/logger.py#45-52)) + [TracingMiddleware](file:///c:/Capstone/contract_agent_capstone/backend/shared/middleware/tracing.py#9-33) with `correlation_id_var`
+- **Frontend**: Vite/React/TypeScript, simple hash-router ([useRouter](file:///c:/Capstone/contract_agent_capstone/frontend/src/lib/useRouter.ts#5-17)), no auth context
+- **Infrastructure**: Docker Compose with `backend`, [ui](file:///c:/Capstone/contract_agent_capstone/backend/main.py#136-154), `phoenix` services only — **no PostgreSQL service**
+- **No existing authentication or authorization** of any kind
+
+This plan adds authentication (Step 1) and RBAC authorization (Step 2) on top of the existing stack while reusing all existing logging, middleware, and dependency injection patterns.
+
+---
+
+## Gap Analysis (Additions vs. Original Plan)
+
+| Gap | Resolution |
+|---|---|
+| `console.log` in frontend is a security risk | **New** `frontend/src/utils/logger.ts` — structured, level-aware frontend logger; no `console.*` anywhere in auth/RBAC code |
+| All existing API services use raw `fetch` with **no auth headers** | **New** `frontend/src/services/apiClient.ts` — centralized fetch wrapper that attaches `Authorization: Bearer` + `X-Correlation-ID` on every request |
+| 401 responses not handled globally → silent dead requests | `apiClient` intercepts 401 → clears token and fires `AuthContext.logout()` |
+| [useRouter](file:///c:/Capstone/contract_agent_capstone/frontend/src/lib/useRouter.ts#5-17) has no `'login'` page type | Extend [PageType](file:///c:/Capstone/contract_agent_capstone/frontend/src/lib/useRouter.ts#3-4) union in [useRouter.ts](file:///c:/Capstone/contract_agent_capstone/frontend/src/lib/useRouter.ts); `AuthContext` calls `navigate('login')` on logout |
+| Hardcoded `http://localhost:8000` in [enhancedSearchApi.ts](file:///c:/Capstone/contract_agent_capstone/frontend/src/services/enhancedSearchApi.ts) | All services migrated to use `apiClient`, which reads `import.meta.env.VITE_BACKEND_URL` |
+| No database migration tooling (only `create_all`) | Add **Alembic** for version-controlled schema migrations; `create_all` kept only as fallback for dev |
+| [JsonFormatter](file:///c:/Capstone/contract_agent_capstone/backend/shared/utils/logger.py#10-31) doesn't emit `user_id` from token | Extend [TracingMiddleware](file:///c:/Capstone/contract_agent_capstone/backend/shared/middleware/tracing.py#9-33) to decode JWT (no exception on failure) and store `user_id` in a new `ContextVar`; [JsonFormatter](file:///c:/Capstone/contract_agent_capstone/backend/shared/utils/logger.py#10-31) emits it automatically |
+| Frontend sends no correlation ID | `apiClient.ts` generates a UUID per request and sets `X-Correlation-ID` header, mirroring the backend middleware |
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> **PostgreSQL is a new infrastructure dependency.** A `postgres` service will be added to [docker-compose.yml](file:///c:/Capstone/contract_agent_capstone/docker-compose.yml). Existing Neo4j data/graphs are unaffected. PG is used *only* for the `users` table.
+
+> [!WARNING]
+> **CORS configuration will be tightened** — the current `allow_origins=["*"]` will remain for now (dev environment) but a note will be added for production hardening. Let me know if you want it locked down immediately.
+
+> [!IMPORTANT]
+> **JWT Secret needs to be added to [.env](file:///c:/Capstone/contract_agent_capstone/.env)** (`JWT_SECRET_KEY`). This is required before running. The plan will generate a placeholder; production deployments must rotate this.
+
+---
+
+## Step 1 – Authentication (MVP-1: Core + MVP-2: Enhancements)
+
+### MVP-1 Goals
+- PostgreSQL `users` table with hashed passwords (Argon2)
+- `POST /api/auth/login` → returns JWT access token
+- `GET /api/auth/me` → returns current user info
+- Auto-seed `admin` user at startup if none exists
+- Frontend login page, `AuthContext`, and protected route wrapper
+
+### MVP-2 Enhancements (after MVP-1 is stable)
+- Refresh tokens with sliding expiry stored in DB
+- `POST /api/auth/logout` with server-side token invalidation
+- Rate limiting on `/api/auth/login` endpoint (via `slowapi`)
+- HTTPS cookie transport in production
+
+---
+
+### Infrastructure Changes
+
+#### [MODIFY] [docker-compose.yml](file:///c:/Capstone/contract_agent_capstone/docker-compose.yml)
+- Add `postgres:16` service with persistent volume, health-check
+- Pass `DATABASE_URL` env var to `backend` service
+- Add `depends_on: postgres` on `backend`
+
+#### [MODIFY] [.env](file:///c:/Capstone/contract_agent_capstone/.env) / [.env.example](file:///c:/Capstone/contract_agent_capstone/.env.example)
+```
+# Auth / PostgreSQL
+DATABASE_URL=postgresql+asyncpg://pguser:pgpassword@postgres:5432/contract_intel
+JWT_SECRET_KEY=CHANGE_ME_IN_PRODUCTION_32_CHARS_MIN
+JWT_ALGORITHM=HS256
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=60
+ADMIN_DEFAULT_PASSWORD=Admin@1234!
+
+# Alembic (auto-populated from DATABASE_URL — no extra config)
+```
+
+---
+
+### Backend – New `auth` Package
+
+#### [NEW] `backend/auth/__init__.py`
+Empty package marker.
+
+#### [NEW] `backend/auth/schemas.py`
+Pydantic v2 request/response schemas (separate from SQLAlchemy models — SRP):
+```python
+class LoginRequest(BaseModel): username: str; password: str
+class TokenResponse(BaseModel): access_token: str; token_type: str; user: UserResponse
+class UserResponse(BaseModel): id: str; username: str; role: str; is_active: bool
+class CreateUserRequest(BaseModel): username: str; password: str; role: UserRole
+```
+
+#### [NEW] `backend/auth/models.py`
+SQLAlchemy async `User` model:
+```python
+class UserRole(str, Enum): admin | reviewer | approver | viewer
+class User(Base):
+    id: UUID, username: str (unique), hashed_password: str
+    role: UserRole, is_active: bool, created_at, updated_at
+```
+
+#### [NEW] `backend/auth/repository.py`
+`UserRepository` (async SQLAlchemy Session, injected via FastAPI `Depends`):
+- `get_by_username(username)` → `User | None`
+- `create(username, hashed_password, role)` → `User`
+- `list_all()` → `list[User]`
+- `update_role(user_id, role)` → `User`
+- `deactivate(user_id)` → `User`
+
+*Applies Repository Pattern + SRP (SOLID)*
+
+#### [NEW] `backend/auth/password.py`
+```python
+def hash_password(plain: str) -> str   # argon2-cffi
+def verify_password(plain: str, hashed: str) -> bool
+```
+*Pure functions — no side effects (DRY, easily testable)*
+
+#### [NEW] `backend/auth/jwt_service.py`
+```python
+def create_access_token(subject: str, role: str, extra: dict) -> str
+def decode_token(token: str) -> TokenPayload  # raises HTTPException 401
+```
+Uses `python-jose[cryptography]`.
+
+#### [NEW] `backend/auth/dependencies.py`
+FastAPI dependency factory functions:
+```python
+async def get_current_user(token: str = Depends(oauth2_scheme), ...) -> User
+def require_role(*roles: UserRole):
+    async def dep(user: User = Depends(get_current_user)) -> User: ...
+    return dep
+```
+*Strategy / Decorator pattern — reusable across all routers*
+
+#### [NEW] `backend/auth/seed.py`
+```python
+async def seed_admin_user(session: AsyncSession) -> None:
+    """Idempotent: creates admin only if no users exist."""
+```
+Called inside [main.py](file:///c:/Capstone/contract_agent_capstone/backend/main.py) [lifespan](file:///c:/Capstone/contract_agent_capstone/backend/main.py#43-49) startup.
+
+#### [NEW] `backend/auth/router.py`
+```
+POST /api/auth/login          → LoginRequest → TokenResponse
+GET  /api/auth/me             → UserResponse  [requires: get_current_user]
+POST /api/auth/logout         → MVP-2 (stub returns 200 for now)
+```
+
+---
+
+### Backend – Shared Database Layer
+
+#### [NEW] `backend/shared/db/__init__.py`
+
+#### [NEW] `backend/shared/db/alembic/`
+Alembic config + initial migration for `users` table. `alembic upgrade head` is called inside the [lifespan](file:///c:/Capstone/contract_agent_capstone/backend/main.py#43-49) startup instead of raw `create_all` in production.  
+`create_all` is retained as a fast-path for CI/unit tests.
+
+#### [NEW] `backend/shared/db/postgres.py`
+```python
+engine = create_async_engine(DATABASE_URL, pool_pre_ping=True)
+AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
+
+async def get_db() -> AsyncGenerator[AsyncSession, None]: ...
+async def create_tables() -> None: ...  # called at startup
+```
+*Single responsibility: connection lifecycle management*
+
+---
+
+### Backend – Extend Existing Middleware
+
+#### [MODIFY] [backend/shared/middleware/tracing.py](file:///c:/Capstone/contract_agent_capstone/backend/shared/middleware/tracing.py)
+After correlation ID is set, silently attempt JWT decode (no exception on failure — unauthenticated requests still pass):
+```python
+correlation_id_var.set(correlation_id)
+_try_set_user_context(request)   # sets user_id_var + username_var; never raises
+logger.info("Incoming request")  # JsonFormatter auto-includes all context vars
+```
+This keeps [TracingMiddleware](file:///c:/Capstone/contract_agent_capstone/backend/shared/middleware/tracing.py#9-33) as the **single** place that populates per-request context (SRP).
+
+#### [NEW] `backend/shared/utils/context_vars.py`
+Centralised ContextVar registry (SRP, DRY — avoid ContextVar sprawl):
+```python
+correlation_id_var: ContextVar[str]   # existing, moved here
+user_id_var: ContextVar[str]          # new
+username_var: ContextVar[str]         # new
+```
+All existing imports of `correlation_id_var` from [logger.py](file:///c:/Capstone/contract_agent_capstone/backend/shared/utils/logger.py) are updated to import from here.
+
+#### [MODIFY] [backend/shared/utils/logger.py](file:///c:/Capstone/contract_agent_capstone/backend/shared/utils/logger.py)
+Import from `context_vars.py`. [JsonFormatter](file:///c:/Capstone/contract_agent_capstone/backend/shared/utils/logger.py#10-31) emits `correlation_id`, `user_id`, and `username` automatically — zero changes needed in individual log call sites (DRY).
+
+---
+
+### Backend – Wire into [main.py](file:///c:/Capstone/contract_agent_capstone/backend/main.py)
+
+#### [MODIFY] [backend/main.py](file:///c:/Capstone/contract_agent_capstone/backend/main.py)
+```python
+from backend.auth.router import router as auth_router
+from backend.shared.db.postgres import create_tables
+from backend.auth.seed import seed_admin_user
+
+@asynccontextmanager
+async def lifespan(app):
+    await create_tables()
+    async with AsyncSessionLocal() as session:
+        await seed_admin_user(session)
+    app.state.llm_manager = LLMManager()
+    yield
+
+app.include_router(auth_router, prefix="/api")
+```
+
+---
+
+### Frontend
+
+#### [NEW] `frontend/src/utils/logger.ts`
+Structured, **no-`console.*`** frontend logger:
+```typescript
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+const isDev = import.meta.env.DEV;
+function log(level: LogLevel, message: string, context?: Record<string, unknown>) {
+  // dev: formatted output to avoid leaking in prod builds
+  // prod: silent (or forward to a backend /api/logs endpoint in MVP-2)
+}
+export const logger = { debug, info, warn, error };
+```
+**No `console.log`, `console.warn`, or `console.error` in any auth or RBAC code.** ESLint rule `no-console` will be added to [eslint.config.js](file:///c:/Capstone/contract_agent_capstone/frontend/eslint.config.js) to enforce this codebase-wide.
+
+#### [NEW] `frontend/src/services/apiClient.ts`
+Centralised fetch wrapper — single responsibility, applied to ALL API calls (DRY):
+```typescript
+export async function apiRequest<T>(path: string, options?: RequestInit): Promise<T> {
+  const token = tokenStore.get();           // reads from memory (not localStorage directly)
+  const correlationId = crypto.randomUUID();
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-Correlation-ID': correlationId,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...options?.headers,
+  };
+  const res = await fetch(`${BACKEND_URL}${path}`, { ...options, headers });
+  if (res.status === 401) {
+    authEventBus.emit('unauthorized');       // AuthContext listens → logout + redirect
+  }
+  if (!res.ok) throw new ApiError(res.status, await res.json());
+  return res.json();
+}
+```
+
+#### [NEW] `frontend/src/services/authApi.ts`
+```typescript
+export const authApi = {
+  login(username: string, password: string): Promise<TokenResponse>   // uses apiClient
+  me(): Promise<UserProfile>                                           // uses apiClient
+  logout(): void                                                       // clears tokenStore
+}
+```
+
+#### [NEW] `frontend/src/contexts/AuthContext.tsx`
+```typescript
+interface AuthState { user: UserProfile | null; isLoading: boolean; isAuthenticated: boolean }
+export const AuthProvider, useAuth
+// Token stored in memory (module-level tokenStore) — NOT directly in localStorage
+// sessionStorage used for persistence across page refresh (safer than localStorage)
+// Validates on mount via /api/auth/me using apiClient
+// Listens on authEventBus for 'unauthorized' → auto-logout
+```
+
+#### [NEW] `frontend/src/pages/LoginPage.tsx`
+Styled login form using Tailwind (already in [package.json](file:///c:/Capstone/contract_agent_capstone/frontend/package.json) — confirmed). On success, calls `AuthContext.login()` → navigates to last page. Uses `logger.info('Login attempt')`, **not** `console.log`.
+
+#### [NEW] `frontend/src/components/shared/ProtectedRoute.tsx`
+```tsx
+export function ProtectedRoute({ children }: { children: ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) return <Spinner />;
+  if (!isAuthenticated) { navigate('login'); return null; }
+  return <>{children}</>;
+}
+```
+
+#### [MODIFY] [frontend/src/lib/useRouter.ts](file:///c:/Capstone/contract_agent_capstone/frontend/src/lib/useRouter.ts)
+Extend [PageType](file:///c:/Capstone/contract_agent_capstone/frontend/src/lib/useRouter.ts#3-4) union to include `'login'`. No other changes needed.
+
+#### [MODIFY] [frontend/src/App.tsx](file:///c:/Capstone/contract_agent_capstone/frontend/src/App.tsx)
+Wrap everything in `<AuthProvider>`. Add `'login'` case to [renderPage](file:///c:/Capstone/contract_agent_capstone/frontend/src/App.tsx#16-34). All existing pages wrapped in `<ProtectedRoute>`.
+
+#### [MODIFY] [frontend/src/components/layout/Navigation.tsx](file:///c:/Capstone/contract_agent_capstone/frontend/src/components/layout/Navigation.tsx)
+Add user avatar/role badge and logout button using `useAuth()`. Uses `logger.info`, never `console.*`.
+
+#### [MODIFY] [frontend/src/services/enhancedSearchApi.ts](file:///c:/Capstone/contract_agent_capstone/frontend/src/services/enhancedSearchApi.ts)
+Migrate all `fetch()` calls to use `apiClient`. Remove hardcoded `http://localhost:8000` — reads `VITE_BACKEND_URL` via `apiClient`.
+
+---
+
+## Step 2 – Authorization / RBAC (MVP-1: Role Guards + MVP-2: Contract-Level Permissions)
+
+### MVP-1 Goals
+- Four roles: `admin`, `reviewer`, `approver`, `viewer`
+- Every existing API endpoint annotated with `require_role(...)` dependency
+- Admin-only: create/list/update/deactivate users
+- Frontend: hide/disable actions based on role
+
+### MVP-2 Enhancements
+- Contract-level ownership/assignment checks (only assigned reviewers can review a contract)
+- Audit trail for permission denials stored to PG `access_audit_log` table
+- Team-based roles (e.g., `reviewer:team_a`)
+
+---
+
+### Backend – RBAC Layer
+
+#### [NEW] `backend/auth/rbac.py`
+Permission matrix (Policy pattern, OCP-compliant — add new roles without touching callers):
+```python
+class Permission(str, Enum):
+    VIEW_CONTRACT | UPLOAD_CONTRACT | REVIEW_CONTRACT
+    APPROVE_CONTRACT | MANAGE_USERS | VIEW_AUDIT_LOGS | ...
+
+ROLE_PERMISSIONS: dict[UserRole, set[Permission]] = {
+    UserRole.admin:    {all permissions},
+    UserRole.approver: {VIEW, REVIEW, APPROVE, VIEW_AUDIT_LOGS},
+    UserRole.reviewer: {VIEW, UPLOAD, REVIEW},
+    UserRole.viewer:   {VIEW},
+}
+
+def has_permission(user: User, perm: Permission) -> bool: ...
+def require_permission(perm: Permission) -> Depends: ...
+```
+
+#### [NEW] `backend/auth/contract_permissions.py`  *(MVP-2)*
+```python
+async def assert_can_access_contract(user: User, contract_id: str, required_perm: Permission, db: AsyncSession) -> None:
+    # Checks: role-level permission AND optional contract-level assignment
+```
+
+#### [NEW] `backend/auth/admin_router.py`
+```
+POST   /api/admin/users              → create user  [admin only]
+GET    /api/admin/users              → list users   [admin only]
+PATCH  /api/admin/users/{id}/role   → update role  [admin only]
+DELETE /api/admin/users/{id}        → deactivate   [admin only]
+```
+
+#### [MODIFY] All existing API routers in `backend/api/`
+Add `require_role(...)` or `require_permission(...)` dependency to each route. Example:
+```python
+# document_upload.py
+@router.post("/documents/upload", dependencies=[Depends(require_permission(Permission.UPLOAD_CONTRACT))])
+```
+
+Routes and their minimum required role:
+
+| Endpoint Group | Minimum Role |
+|---|---|
+| `GET /api/contracts/*` | `viewer` |
+| `POST /documents/upload` | `reviewer` |
+| `POST /intelligence/*` | `reviewer` |
+| `POST /approve/*` | `approver` |
+| `GET /audit/*` | `approver` |
+| `GET /monitoring/*` | `admin` |
+| `POST /admin/*` | `admin` |
+
+---
+
+### Frontend – RBAC Guards
+
+#### [NEW] `frontend/src/hooks/usePermissions.ts`
+```typescript
+export function usePermissions() {
+  const { user } = useAuth();
+  return {
+    can: (perm: Permission) => ROLE_PERMISSIONS[user.role].has(perm),
+    isAdmin: user?.role === 'admin',
+    isReviewer: user?.role === 'reviewer',
+    isApprover: user?.role === 'approver',
+  }
+}
+```
+
+#### [MODIFY] `frontend/src/components/layout/Navigation.tsx`
+Hide admin-only nav items based on `usePermissions()`.
+
+#### [MODIFY] Existing pages (`IntelligencePage`, `SearchPage`, etc.)
+Wrap action buttons with `can(Permission.REVIEW_CONTRACT)` guards. Disable or hide upload buttons for `viewer` role.
+
+---
+
+## Design Principles Applied
+
+| Principle | Where Applied |
+|---|---|
+| **SRP** | Each auth module has one job: `password.py` → hashing, `jwt_service.py` → tokens, `repository.py` → DB |
+| **OCP** | `rbac.py` permission matrix — add new roles without modifying callers |
+| **LSP** | Role hierarchy is enforced via set-based permissions, not inheritance |
+| **DIP** | `get_current_user`, `get_db` are injected via FastAPI `Depends`, not imported directly |
+| **DRY** | `require_role`/`require_permission` are factories — one definition, applied everywhere |
+| **Repository Pattern** | `UserRepository` abstracts all DB operations |
+| **Strategy Pattern** | `require_permission(perm)` is a configurable dependency strategy per endpoint |
+| **Agentic AI Pattern** | Auth context (`user_id`, `role`) is injected into all LLM request tags so agent traces are actor-attributed |
+
+---
+
+## Verification Plan
+
+### New Packages Required
+```
+# backend/pyproject.toml additions:
+asyncpg
+sqlalchemy[asyncio]
+argon2-cffi
+python-jose[cryptography]
+alembic
+httpx   # already used in tests
+pytest-asyncio  # for async test support
+```
+
+```
+# frontend — no new npm packages needed
+# uuid generation: crypto.randomUUID() (built into modern browsers)
+# token storage: sessionStorage (built-in)
+```
+
+### Automated Tests
+New file: `backend/tests/test_auth_api.py`
+
+**Run command:**
+```bash
+cd c:\Capstone\contract_agent_capstone\backend
+python -m pytest tests/test_auth_api.py -v
+```
+
+Tests to write:
+1. `test_login_success` — POST `/api/auth/login` with seeded admin credentials → 200 + token
+2. `test_login_wrong_password` → 401
+3. `test_me_authenticated` — GET `/api/auth/me` with valid bearer token → 200 + user info
+4. `test_me_unauthenticated` → 401
+5. `test_protected_endpoint_rejects_viewer` — viewer calls upload endpoint → 403
+6. `test_admin_create_user` — admin creates a new reviewer → 201
+7. `test_non_admin_cannot_create_user` — reviewer tries `/api/admin/users` → 403
+8. `test_seed_idempotent` — `seed_admin_user` run twice creates only one admin
+
+**Run command for all existing tests:**
+```bash
+cd c:\Capstone\contract_agent_capstone\backend
+python -m pytest tests/ -v
+```
+
+### Manual Browser Verification
+1. Start stack: `docker compose up --build`
+2. Open `http://localhost:3000`
+3. You should be **redirected to `/login`** (not logged in)
+4. Enter `admin` / `Admin@1234!` → you should land on the Intelligence page with a user avatar in the nav
+5. Open Network tab → confirm `Authorization: Bearer <token>` header is on API requests
+6. Check backend Docker logs → confirm JSON log lines contain `correlation_id` and `user_id` fields
+7. Log out → confirm redirect to login page and token cleared from `localStorage`
+8. As `viewer` role user: confirm Upload button is hidden/disabled on the Documents page

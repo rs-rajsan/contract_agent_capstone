@@ -20,6 +20,14 @@ services:
       - GEMINI_PRO_MODEL=${GEMINI_PRO_MODEL-gemini-1.5-pro}
       - MODEL_ALIAS_MAP=${MODEL_ALIAS_MAP-}
       - MCP_PORT=${MCP_PORT-8100}
+      - DATABASE_URL=${DATABASE_URL:-postgresql+asyncpg://pguser:pgpassword@postgres:5432/contract_intel}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-CHANGE_ME_IN_PRODUCTION_32_CHARS_MIN}
+      - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+      - JWT_ACCESS_TOKEN_EXPIRE_MINUTES=${JWT_ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+      - ADMIN_DEFAULT_PASSWORD=${ADMIN_DEFAULT_PASSWORD:-Admin@1234!}
+    depends_on:
+      - redis
+      - postgres
     networks:
       - net
     x-develop:
@@ -63,7 +71,26 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: pguser
+      POSTGRES_PASSWORD: pgpassword
+      POSTGRES_DB: contract_intel
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pguser -d contract_intel"]
+      interval: 5s
+      timeout: 5s
       retries: 5
 
 networks:
   net:
+
+volumes:
+  pgdata:
