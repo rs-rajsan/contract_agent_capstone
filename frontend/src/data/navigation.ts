@@ -28,7 +28,7 @@ export const navItems: NavItem[] = [
     label: 'Analysis',
     icon: Brain, 
     color: 'blue',
-    description: 'The Aequitas intelligence engine'
+    description: 'Advanced contract analysis engine'
   },
   {
     id: 'chat',
