@@ -18,13 +18,32 @@ import { APP_CONFIG } from './utils/config';
 import { cn } from './lib/utils';
 import { DiagnosticScreen } from './components/shared/DiagnosticScreen';
 import { AnalyticsPage } from './pages/AnalyticsPage';
+import { useSystemSettings } from './hooks/useSystemSettings';
 import './App.css';
 
 function MainApp() {
   const { currentPage, navigate } = useRouter();
   const { isLoading, isAuthenticated } = useAuth();
+  const { updateSetting, isDiagnosticsEnabled } = useSystemSettings();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [hasCheckedHealth, setHasCheckedHealth] = useState(false);
+
+  // Handle URL parameter sync for temporary/forensic bypass
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('skipDiagnostics') === 'true') {
+      updateSetting('skipDiagnostics', true);
+      // Clean URL to avoid confusion
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [updateSetting]);
+
+  // STAGE 0: Check if diagnostics are globally disabled via Persistent Settings
+  useEffect(() => {
+    if (!isDiagnosticsEnabled) {
+      setHasCheckedHealth(true);
+    }
+  }, [isDiagnosticsEnabled]);
 
   // Close sidebar when navigating on mobile
   const handleNavigate = (page: any) => {
@@ -43,7 +62,7 @@ function MainApp() {
   }, [isAuthenticated, currentPage, navigate, isLoading]);
 
   // STAGE 1: System Health Diagnostic (Must pass before anything else)
-  if (!hasCheckedHealth) {
+  if (isDiagnosticsEnabled && !hasCheckedHealth) {
     return <DiagnosticScreen onComplete={() => setHasCheckedHealth(true)} />;
   }
 
@@ -83,6 +102,7 @@ function MainApp() {
       case 'analytics':
         return <AnalyticsPage />;
       case 'users':
+      case 'settings':
         return <UserManagementPage />;
       case 'login':
         // Fallback in case state hasn't transitioned yet
@@ -111,6 +131,19 @@ function MainApp() {
         style={{ width: APP_CONFIG.LAYOUT.SIDEBAR_WIDTH }}
       >
         <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
+        
+        {/* Global Persistence/Bypass Indicator */}
+        {!isDiagnosticsEnabled && (
+          <div className="absolute bottom-6 left-6 right-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-2 duration-700">
+             <div className="flex items-center gap-2 mb-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-amber-600">Unprotected Mode</span>
+             </div>
+             <p className="text-[9px] font-bold text-slate-500 uppercase leading-tight">
+                System diagnostics are currently bypassed via persistent settings.
+             </p>
+          </div>
+        )}
       </aside>
 
       {/* Main Content Area */}

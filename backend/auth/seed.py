@@ -1,7 +1,7 @@
 import os
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from backend.auth.models import User, UserRole
+from backend.auth.models import User, UserRole, UserStatus
 from backend.auth.password import hash_password
 from backend.shared.utils.logger import get_logger
 
@@ -20,7 +20,13 @@ async def seed_admin_user(session: AsyncSession) -> None:
             username="admin",
             hashed_password=hash_password(admin_password),
             role=UserRole.admin,
-            is_active=True
+            first_name="System",
+            last_name="Administrator",
+            job_title="Core Platform Engineer",
+            department="Security Operations",
+            email="admin@secure.internal",
+            is_active=True,
+            status=UserStatus.active
         )
         session.add(admin_user)
         try:

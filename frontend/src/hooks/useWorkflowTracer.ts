@@ -8,6 +8,7 @@ export interface AgentExecution {
   output_summary: string;
   processing_time_ms: number;
   error_message?: string;
+  error_code?: number;
 }
 
 export interface WorkflowStatus {

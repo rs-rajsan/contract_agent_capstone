@@ -18,18 +18,41 @@ ROLE_PERMISSIONS: dict[UserRole, set[Permission]] = {
         Permission.MANAGE_USERS,
         Permission.VIEW_AUDIT_LOGS,
     },
-    UserRole.approver: {
+    UserRole.executive: {
         Permission.VIEW_CONTRACT,
-        Permission.REVIEW_CONTRACT,
-        Permission.APPROVE_CONTRACT,
         Permission.VIEW_AUDIT_LOGS,
     },
-    UserRole.reviewer: {
+    UserRole.ops_lead: {
+        Permission.VIEW_CONTRACT,
+        Permission.VIEW_AUDIT_LOGS,
+    },
+    UserRole.analyst: {
         Permission.VIEW_CONTRACT,
         Permission.UPLOAD_CONTRACT,
         Permission.REVIEW_CONTRACT,
     },
-    UserRole.viewer: {
+    UserRole.auditor: {
+        Permission.VIEW_CONTRACT,
+        Permission.VIEW_AUDIT_LOGS,
+    },
+    UserRole.risk_manager: {
+        Permission.VIEW_CONTRACT,
+        Permission.REVIEW_CONTRACT,
+        Permission.VIEW_AUDIT_LOGS,
+    },
+    UserRole.hitl_supervisor: {
+        Permission.VIEW_CONTRACT,
+        Permission.REVIEW_CONTRACT,
+        Permission.APPROVE_CONTRACT,
+    },
+    UserRole.ba: {
+        Permission.VIEW_CONTRACT,
+    },
+    UserRole.ai_dev: {
+        Permission.VIEW_CONTRACT,
+        Permission.VIEW_AUDIT_LOGS,
+    },
+    UserRole.qa: {
         Permission.VIEW_CONTRACT,
     },
 }

@@ -5,6 +5,19 @@ export interface UserProfile {
   username: string;
   role: string;
   is_active: boolean;
+  status: string;
+  first_name?: string;
+  last_name?: string;
+  middle_name?: string;
+  email?: string;
+  phone_number?: string;
+  job_title?: string;
+  department?: string;
+  created_at?: string;
+  created_by?: string;
+  updated_at?: string;
+  updated_by?: string;
+  last_login?: string;
 }
 
 export interface TokenResponse {

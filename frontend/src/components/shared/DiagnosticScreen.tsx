@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { ShieldCheck, AlertCircle, CheckCircle2, Loader2, Database, Network, Cpu, Server } from 'lucide-react';
+import { ShieldCheck, AlertCircle, CheckCircle2, Loader2, Database, Network, Cpu, Server, SkipForward } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useSystemSettings } from '../../hooks/useSystemSettings';
 
 interface DiagnosticResult {
   agent_name: string;
@@ -19,6 +20,19 @@ export const DiagnosticScreen: React.FC<DiagnosticScreenProps> = ({ onComplete }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const { updateSetting } = useSystemSettings();
+  const [showSkip, setShowSkip] = useState(false);
+
+  // Show skip button after 3 seconds to ensure user sees the diagnostics first
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSkip(true), 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleBypass = () => {
+    updateSetting('skipDiagnostics', true);
+    onComplete();
+  };
 
   useEffect(() => {
     const runDiagnostics = async () => {
@@ -160,12 +174,33 @@ export const DiagnosticScreen: React.FC<DiagnosticScreenProps> = ({ onComplete }
         )}
 
         {!error && loading && (
-            <div className="mt-8 flex flex-col items-center gap-3">
+            <div className="mt-8 flex flex-col items-center gap-6">
                 <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium italic">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Connecting to Intelligence Infrastructure...
                 </div>
+
+                {showSkip && (
+                   <button 
+                     onClick={handleBypass}
+                     className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all duration-300 group animate-in slide-in-from-bottom-2"
+                   >
+                      <SkipForward className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Bypass System Checks</span>
+                   </button>
+                )}
             </div>
+        )}
+
+        {error && showSkip && (
+          <div className="mt-6 text-center">
+             <button 
+               onClick={handleBypass}
+               className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 underline underline-offset-4"
+             >
+               Skip checks and enter unprotected mode
+             </button>
+          </div>
         )}
 
         {/* Brand Footer */}

@@ -16,6 +16,8 @@ from typing import Optional
 from backend.agents.agent_workflow_tracker import workflow_tracker
 
 from backend.shared.utils.logger import get_logger
+from backend.shared.constants.error_cd_status_master import MasterStatusCodes, get_status_metadata
+from backend.shared.utils.context_vars import correlation_id_var
 logger = get_logger(__name__)
 
 # Create router
@@ -420,7 +422,20 @@ async def upload_pdf(
             elif 'loading_step' in locals():
                 workflow_tracker.error_agent(loading_step, str(e))
                     
-            raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
+            # Standardized System Error (500) using Master Registry
+            error_metadata = get_status_metadata(MasterStatusCodes.INTERNAL_ERROR)
+            correlation_id = correlation_id_var.get() or "unknown"
+            
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "error_code": MasterStatusCodes.INTERNAL_ERROR,
+                    "error_condition": error_metadata["error_condition"],
+                    "user_message": error_metadata["user_message"],
+                    "technical_detail": f"Processing failed: {str(e)}",
+                    "correlation_id": correlation_id
+                }
+            )
         finally:
             logger.info(f"=== UPLOAD END: {file.filename if file else 'unknown'} ===")
 
@@ -524,7 +539,19 @@ async def upload_pdf_stream(
         raise
     except Exception as e:
         logger.error(f"Streaming PDF upload failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        error_metadata = get_status_metadata(MasterStatusCodes.INTERNAL_ERROR)
+        correlation_id = correlation_id_var.get() or "unknown"
+        
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error_code": MasterStatusCodes.INTERNAL_ERROR,
+                "error_condition": error_metadata["error_condition"],
+                "user_message": error_metadata["user_message"],
+                "technical_detail": str(e),
+                "correlation_id": correlation_id
+            }
+        )
 
 @router.get("/status")
 async def get_upload_status(llm_mgr: LLMManager = Depends(get_llm_manager)):

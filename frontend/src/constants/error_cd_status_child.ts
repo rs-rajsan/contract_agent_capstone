@@ -13,6 +13,7 @@ export enum StatusChild {
   TIMEOUT = 408,
   CONFIG_ERROR = 412,
   RATE_LIMIT = 429,
+  VALIDATION_ERROR = 422,
 
   // Server/Infrastructure Errors (5xx)
   INTERNAL_ERROR = 500,

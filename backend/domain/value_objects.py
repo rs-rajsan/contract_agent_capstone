@@ -12,6 +12,7 @@ class ProcessingStatus(Enum):
 class ProcessingResult:
     status: ProcessingStatus
     contract_id: Optional[str] = None
+    status_code: Optional[int] = None
     message: str = ""
     error: Optional[str] = None
 

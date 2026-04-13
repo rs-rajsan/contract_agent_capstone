@@ -7,6 +7,7 @@ from .quality_manager import QualityManager
 from .agent_factory import AgentFactory
 from .circuit_breaker import CircuitBreakerManager
 from .retry_manager import RetryManager
+from backend.shared.constants.error_cd_status_master import MasterStatusCodes, get_status_metadata
 
 from backend.shared.utils.logger import get_logger
 logger = get_logger(__name__)
@@ -69,9 +70,24 @@ class SupervisorAgent:
                 
             except Exception as e:
                 logger.error(f"❌ Step failed: {step['agent_id']} - {str(e)}")
+                
+                # Semantic Error Mapping for Agentic Reasoning
+                status_code = MasterStatusCodes.INTERNAL_ERROR
+                if "validation" in str(e).lower():
+                    status_code = MasterStatusCodes.VAL_FAILURE
+                elif "timeout" in str(e).lower():
+                    status_code = MasterStatusCodes.AGENT_TIMEOUT
+                
+                meta = get_status_metadata(status_code)
+                
                 error_result = AgentResult(
                     status="error",
-                    data={"error": str(e)},
+                    data={
+                        "error": str(e),
+                        "status_code": int(status_code),
+                        "error_condition": meta["error_condition"],
+                        "user_message": meta["user_message"]
+                    },
                     confidence=0.0,
                     agent_id=step["agent_id"]
                 )

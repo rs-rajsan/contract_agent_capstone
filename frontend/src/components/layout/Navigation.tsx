@@ -5,7 +5,7 @@ import { APP_CONFIG } from '../../utils/config';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../contexts/AuthContext';
 import { PageType } from '../../lib/useRouter';
-import { LogOut, User, Users } from 'lucide-react';
+import { LogOut, User, ShieldCheck } from 'lucide-react';
 
 interface NavigationProps {
   currentPage: PageType;
@@ -13,7 +13,7 @@ interface NavigationProps {
 }
 
 export const Navigation: React.FC<NavigationProps> = ({ currentPage, onNavigate }) => {
-  const { user, logout } = useAuth();
+  const { user: authUser, logout: handleLogout } = useAuth();
 
   return (
     <nav className="flex flex-col h-full bg-white dark:bg-slate-900 shadow-sm transition-all duration-300">
@@ -88,32 +88,51 @@ export const Navigation: React.FC<NavigationProps> = ({ currentPage, onNavigate 
           onClick={() => onNavigate('users')}
           className={cn(
             "w-full justify-start gap-3 px-4 py-6 rounded-xl transition-all duration-200 group relative overflow-hidden",
-            currentPage === 'users' 
+            currentPage === 'users' || currentPage === 'settings'
               ? "bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white shadow-sm" 
               : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/30"
           )}
         >
-          {currentPage === 'users' && (
+          {(currentPage === 'users' || currentPage === 'settings') && (
              <div className="absolute left-0 top-1/4 bottom-1/4 w-1 rounded-r-full animate-in slide-in-from-left duration-300 bg-orange-600" />
           )}
           <div className={cn(
             "p-2 rounded-lg transition-colors group-hover:scale-110 duration-200",
-            currentPage === 'users' 
+            currentPage === 'users' || currentPage === 'settings'
               ? "bg-white dark:bg-slate-800 shadow-sm" 
               : "bg-slate-100/50 dark:bg-slate-800/30"
           )}>
-            <Users className={cn(
+            <ShieldCheck className={cn(
               "w-5 h-5",
-              currentPage === 'users' ? "text-orange-600" : "text-slate-500"
+              (currentPage === 'users' || currentPage === 'settings') ? "text-orange-600" : "text-slate-500"
             )} />
           </div>
           <div className="flex flex-col items-start text-left">
-            <span className="font-semibold text-sm leading-tight">Admin</span>
-            <span className="text-[10px] text-slate-400 dark:text-slate-500">Access control & roles</span>
+            <span className="font-semibold text-sm leading-tight">Admin Portal</span>
+            <span className="text-[10px] text-slate-400 dark:text-slate-500">Authority & Control Hub</span>
           </div>
         </Button>
       </div>
 
+      {/* User Session Footer */}
+      <div className="p-4 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex items-center gap-3 px-3 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white">
+            <User className="w-4 h-4" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
+              {authUser?.username || 'Admin User'}
+            </p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+              Enterprise Access
+            </p>
+          </div>
+          <Button variant="ghost" size="icon" onClick={handleLogout} className="h-8 w-8 text-slate-400 hover:text-red-500 transition-colors">
+            <LogOut className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
     </nav>
   );
 };

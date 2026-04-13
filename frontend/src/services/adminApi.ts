@@ -6,6 +6,14 @@ export interface CreateUserRequest {
   username: string;
   password: string;
   role: string;
+  first_name?: string;
+  last_name?: string;
+  middle_name?: string;
+  email?: string;
+  phone_number?: string;
+  job_title?: string;
+  department?: string;
+  status: string;
 }
 
 export interface UpdateUserRoleRequest {
@@ -67,6 +75,18 @@ export const adminApi = {
       });
     } catch (error) {
       logger.error('Failed to reset user password in adminApi', { error, username });
+      throw error;
+    }
+  },
+  
+  updateUserProfile: async (username: string, data: Partial<UserProfile>): Promise<UserProfile> => {
+    try {
+      return await apiRequest<UserProfile>(`/api/admin/users/${encodeURIComponent(username)}/profile`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+    } catch (error) {
+      logger.error('Failed to update user profile in adminApi', { error, username });
       throw error;
     }
   }

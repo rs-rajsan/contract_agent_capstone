@@ -34,24 +34,44 @@ class AuditLogger:
     def __init__(self):
         from backend.infrastructure.contract_repository import Neo4jContractRepository
         self.repository = Neo4jContractRepository()
-        self.jsonl_log_path = os.path.join(os.getcwd(), "logs", "audit.jsonl")
+        
+        # Use the unified log path from the shared configuration
+        if os.path.exists("/app"):
+            log_dir = "/app/logs"
+        else:
+            root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            log_dir = os.path.join(root_dir, "logs")
+            
+        self.jsonl_log_path = os.path.join(log_dir, "unified_agent_audit.jsonl")
         
         # Ensure logs directory exists
         os.makedirs(os.path.dirname(self.jsonl_log_path), exist_ok=True)
 
-        # Initialize dedicated rotating logger for audit.jsonl
-        self.audit_file_logger = logging.getLogger("legacy_audit")
+        # Initialize dedicated logger for unified audit trail
+        self.audit_file_logger = logging.getLogger("unified_audit_trail")
         self.audit_file_logger.setLevel(logging.INFO)
         if not self.audit_file_logger.handlers:
             from logging.handlers import RotatingFileHandler
             handler = RotatingFileHandler(
                 self.jsonl_log_path, maxBytes=20*1024*1024, backupCount=10
             )
-            # Use raw JSON line format without extra logging noise
+            # Use raw JSON line format to ensure forensic compatibility
             handler.setFormatter(logging.Formatter('%(message)s'))
             self.audit_file_logger.addHandler(handler)
     
-    # ... (PII masking methods remain the same)
+    def _mask_pii(self, data: Any) -> Any:
+        """Mask common PII patterns like emails and specific identifiers."""
+        if isinstance(data, str):
+            # Mask emails (e.g., user@example.com -> [EMAIL_MASKED])
+            data = re.sub(r'[\w\.-]+@[\w\.-]+\.\w+', '[EMAIL_MASKED]', data)
+            # Mask common 9-digit patterns (e.g., SSN-like or internal IDs)
+            data = re.sub(r'\b\d{3}-\d{2}-\d{4}\b', '[ID_MASKED]', data)
+            return data
+        elif isinstance(data, dict):
+            return {k: self._mask_pii(v) for k, v in data.items()}
+        elif isinstance(data, list):
+            return [self._mask_pii(i) for i in data]
+        return data
 
     def log_event(
         self,
@@ -72,27 +92,29 @@ class AuditLogger:
         masked_metadata = self._mask_pii(metadata or {})
         masked_error = self._mask_pii(error_details) if error_details else None
         
-        # 1. JSONL Logging (Now using Rotating Handler)
+        # 1. JSONL Logging (Unified Agent Audit Log)
         try:
             log_entry = {
+                "timestamp": timestamp + "Z",
+                "service_name": "contract-agent-backend",
+                "status": "success" if status == "success" else "error",
+                "message": f"Audit: {event_type.value} - {action}",
                 "audit_id": audit_id,
-                "timestamp": timestamp,
                 "event_type": event_type.value,
                 "resource_id": resource_id,
                 "action": action,
                 "user_id": user_id,
                 "tenant_id": tenant_id,
-                "status": status,
-                "metadata": masked_metadata,
-                "error_details": masked_error
+                "component": "audit-logger",
+                "payload": masked_metadata,
+                "error": masked_error
             }
             
-            # Write to rotating JSONL
+            # Write to rotating Unified JSONL
             self.audit_file_logger.info(json.dumps(log_entry))
                 
-            logger.info(f"Audit JSONL rotated: {event_type.value}")
         except Exception as e:
-            logger.error(f"Failed to log to JSONL: {e}")
+            logger.error(f"Failed to log to Unified Audit: {e}")
 
         # 2. Neo4j Logging (Existing)
         try:
