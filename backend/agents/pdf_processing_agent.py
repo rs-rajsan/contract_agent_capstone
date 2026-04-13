@@ -7,6 +7,7 @@ from backend.infrastructure.contract_analyzer import LLMContractAnalyzer
 from backend.infrastructure.contract_repository import Neo4jContractRepository
 import logging
 import json
+from backend.shared.constants.error_cd_status_master import MasterStatusCodes
 
 from backend.shared.utils.logger import get_logger
 logger = get_logger(__name__)
@@ -23,6 +24,7 @@ def extract_text_node(state: PDFProcessingState) -> PDFProcessingState:
         logger.error(f"Text extraction failed: {e}")
         return {**state, "processing_result": ProcessingResult(
             status=ProcessingStatus.ERROR,
+            status_code=int(MasterStatusCodes.INTERNAL_ERROR),
             error=f"Text extraction failed: {str(e)}"
         )}
 
@@ -31,6 +33,7 @@ def analyze_contract_node(state: PDFProcessingState, llm=None) -> PDFProcessingS
     if not state.get("extracted_text"):
         return {**state, "processing_result": ProcessingResult(
             status=ProcessingStatus.ERROR,
+            status_code=int(MasterStatusCodes.VAL_FAILURE),
             error="No text to analyze"
         )}
     
@@ -60,6 +63,7 @@ def analyze_contract_node(state: PDFProcessingState, llm=None) -> PDFProcessingS
         logger.error(f"Contract analysis failed: {e}")
         return {**state, "processing_result": ProcessingResult(
             status=ProcessingStatus.ERROR,
+            status_code=int(MasterStatusCodes.INTERNAL_ERROR),
             error=f"Analysis failed: {str(e)}"
         )}
 
@@ -70,6 +74,7 @@ def store_contract_node(state: PDFProcessingState) -> PDFProcessingState:
     if not contract_data:
         return {**state, "processing_result": ProcessingResult(
             status=ProcessingStatus.ERROR,
+            status_code=int(MasterStatusCodes.VAL_FAILURE),
             error="No contract data to store"
         )}
     
@@ -114,6 +119,7 @@ def store_contract_node(state: PDFProcessingState) -> PDFProcessingState:
         logger.error(f"Storage failed: {e}")
         return {**state, "processing_result": ProcessingResult(
             status=ProcessingStatus.ERROR,
+            status_code=int(MasterStatusCodes.INTERNAL_ERROR),
             error=f"Storage failed: {str(e)}"
         )}
 

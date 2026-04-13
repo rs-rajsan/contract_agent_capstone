@@ -8,6 +8,7 @@ from backend.auth.jwt_service import decode_token
 from backend.auth.repository import UserRepository
 from backend.auth.models import User
 from backend.auth.rbac import Permission, has_permission
+from backend.shared.utils.context_vars import user_id_var, username_var
 
 logger = get_logger(__name__)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
@@ -27,6 +28,11 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Inactive user or user not found",
         )
+    
+    # Sync context for Agentic Tracing (Audit/Phoenix compliance)
+    user_id_var.set(str(user.id))
+    username_var.set(user.username)
+    
     return user
 
 def require_permission(perm: Permission) -> Callable:

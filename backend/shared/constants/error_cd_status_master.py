@@ -15,6 +15,7 @@ class MasterStatusCodes(IntEnum):
     TIMEOUT = 408
     CONFIG_ERROR = 412
     RATE_LIMIT = 429
+    VALIDATION_ERROR = 422
     
     # Server/Infrastructure Errors (5xx)
     INTERNAL_ERROR = 500
@@ -70,6 +71,10 @@ def get_status_metadata(code: int) -> Dict[str, Any]:
         MasterStatusCodes.RATE_LIMIT: {
             "error_condition": "RateLimitError",
             "user_message": "Service rate-limited or Quota exhausted."
+        },
+        MasterStatusCodes.VALIDATION_ERROR: {
+            "error_condition": "ValidationError",
+            "user_message": "Invalid request parameters detected. Please verify your input before retry."
         },
         MasterStatusCodes.INTERNAL_ERROR: {
             "error_condition": "SystemError",

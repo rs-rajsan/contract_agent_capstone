@@ -31,6 +31,7 @@ class AgentExecution:
     output_summary: str = ""
     processing_time_ms: int = 0
     error_message: str = None
+    error_code: Any = None
     input_tokens: int = 0
     output_tokens: int = 0
     model_name: str = ""
@@ -123,11 +124,12 @@ class WorkflowTracker:
         operation_var.set("")
         span_id_var.set("")
         
-    def error_agent(self, execution: AgentExecution, error_message: str):
+    def error_agent(self, execution: AgentExecution, error_message: str, error_code: Any = None):
         """Mark an agent execution as failed"""
         execution.end_time = datetime.now()
         execution.status = AgentStatus.ERROR
         execution.error_message = error_message
+        execution.error_code = error_code
         execution.processing_time_ms = int((execution.end_time - execution.start_time).total_seconds() * 1000)
         
         logger.error(f"❌ AGENT FAILED: {execution.agent_name}", extra={"latency_ms": execution.processing_time_ms})
@@ -190,8 +192,13 @@ class WorkflowTracker:
             return ""
         
         # Check for failures
-        if any(e.status == AgentStatus.ERROR for e in executions):
-            return "Pipeline Halted"
+        failed = next((e for e in executions if e.status == AgentStatus.ERROR), None)
+        if failed:
+            from backend.shared.constants.error_cd_status_master import get_status_metadata, MasterStatusCodes
+            # Resolve high-fidelity message from master registry
+            error_code = failed.error_code or int(MasterStatusCodes.INTERNAL_ERROR)
+            meta = get_status_metadata(error_code)
+            return meta["user_message"]
             
         # Find the currently processing agent (most recent first)
         active = next((e for e in reversed(executions) if e.status == AgentStatus.PROCESSING), None)
@@ -227,7 +234,8 @@ class WorkflowTracker:
                 "input_summary": e.input_summary,
                 "output_summary": e.output_summary,
                 "processing_time_ms": e.processing_time_ms,
-                "error_message": e.error_message
+                "error_message": e.error_message,
+                "error_code": e.error_code
             } for e in executions],
             "data_flow": [{
                 "from_agent": executions[i].agent_name,

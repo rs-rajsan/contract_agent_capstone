@@ -3,10 +3,12 @@ import os
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Depends, Request
-from fastapi.responses import StreamingResponse
+from fastapi import FastAPI, Depends, Request, status
+from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel
+from backend.shared.constants.error_cd_status_master import MasterStatusCodes, get_status_metadata
 
 from langchain_core.messages import HumanMessage, ToolMessage, AIMessage, AIMessageChunk
 from openinference.instrumentation.langchain import LangChainInstrumentor
@@ -93,21 +95,81 @@ def get_llm_manager(request: Request):
 
 app.add_middleware(TracingMiddleware)
 
-# Configure CORS
+# Configure CORS with explicit defaults for local production stability
 try:
-    cors_origins_str = os.getenv("CORS_ALLOWED_ORIGINS", '["*"]')
-    allow_origins = json.loads(cors_origins_str)
+    # Look for the environment variable, but ALWAYS include local dev origins if we're in development
+    cors_origins_str = os.getenv("CORS_ALLOWED_ORIGINS")
+    if cors_origins_str:
+        allow_origins = json.loads(cors_origins_str)
+    else:
+        # Default restricted list rather than '*' for security with allow_credentials=True
+        allow_origins = [
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5173"
+        ]
+        logger.info(f"Using default secure CORS origins: {allow_origins}")
 except Exception as e:
-    logger.warning(f"Failed to parse CORS_ALLOWED_ORIGINS, defaulting to ['*']: {e}")
-    allow_origins = ["*"]
+    logger.warning(f"Failed to parse CORS_ALLOWED_ORIGINS, falling back to local defaults: {e}")
+    allow_origins = ["http://localhost:3000", "http://localhost:5173"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_credentials=True,
     allow_origins=allow_origins,
-    allow_methods=["*"],  # Allow all methods
-    allow_headers=["*"],  # Allow all headers
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """
+    Standardizes Pydantic validation errors (422) using MasterStatusCodes.
+    Maps technical schema errors to VAL_FAILURE (802).
+    """
+    error_metadata = get_status_metadata(MasterStatusCodes.VALIDATION_ERROR)
+    correlation_id = correlation_id_var.get() or "unknown"
+    
+    logger.error(f"Validation Error [422]: {exc.errors()}", extra={"correlation_id": correlation_id})
+    
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "error_code": MasterStatusCodes.VALIDATION_ERROR,
+            "error_condition": error_metadata["error_condition"],
+            "user_message": error_metadata["user_message"],
+            "technical_detail": str(exc.errors()),
+            "correlation_id": correlation_id
+        }
+    )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """
+    Catch-all for internal system failures (500) using MasterStatusCodes.
+    Maps unknown failures to INTERNAL_ERROR (500).
+    """
+    error_metadata = get_status_metadata(MasterStatusCodes.INTERNAL_ERROR)
+    correlation_id = correlation_id_var.get() or "unknown"
+    
+    logger.error(f"Global System Exception [500]: {str(exc)}", extra={"correlation_id": correlation_id})
+    import traceback
+    logger.debug(f"Traceback: {traceback.format_exc()}")
+    
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "error_code": MasterStatusCodes.INTERNAL_ERROR,
+            "error_condition": error_metadata["error_condition"],
+            "user_message": error_metadata["user_message"],
+            "technical_detail": "Execution failed during orchestration. See correlation ID for trace.",
+            "correlation_id": correlation_id
+        }
+    )
+
 
 # Include auth routers
 app.include_router(auth_router, prefix="/api/auth")

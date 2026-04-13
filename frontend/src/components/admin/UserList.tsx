@@ -1,187 +1,164 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../shared/ui/card';
+import React, { useMemo } from 'react';
+import { Card, CardContent } from '../shared/ui/card';
 import { Button } from '../shared/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../shared/ui/select';
-import { adminApi } from '../../services/adminApi';
 import { UserProfile } from '../../services/authApi';
+import { Search, Edit3, UserMinus, Shield, Filter, UserCheck, ShieldAlert, Activity } from 'lucide-react';
+import { getAllRoles } from '../../constants/roles';
+import { cn } from '../../lib/utils';
 
 interface UserListProps {
   users: UserProfile[];
-  onUserUpdated: () => void;
+  isLoading?: boolean;
+  onEdit: (user: UserProfile) => void;
+  onDeactivate: (username: string) => void;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
 }
 
-export const UserList: React.FC<UserListProps> = ({ users, onUserUpdated }) => {
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [updatingUser, setUpdatingUser] = useState<string | null>(null);
-  const [resettingPasswordFor, setResettingPasswordFor] = useState<string | null>(null);
-  const [newPassword, setNewPassword] = useState('');
+export const UserList: React.FC<UserListProps> = ({ 
+  users, 
+  isLoading, 
+  onEdit, 
+  onDeactivate,
+  searchQuery,
+  onSearchChange
+}) => {
+  const allRolesList = useMemo(() => getAllRoles(), []);
 
-  const handleRoleChange = async (username: string, newRole: string) => {
-    setUpdatingUser(username);
-    setError(null);
-    setSuccess(null);
-    try {
-      await adminApi.updateUserRole(username, newRole);
-      setSuccess(`Role updated for ${username}`);
-      onUserUpdated();
-    } catch (err: any) {
-      setError(err?.data?.detail || err.message || `Failed to update role for ${username}`);
-    } finally {
-      setUpdatingUser(null);
-    }
-  };
-
-  const handleDeactivate = async (username: string) => {
-    if (!window.confirm(`Are you sure you want to deactivate ${username}?`)) return;
-    
-    setUpdatingUser(username);
-    setError(null);
-    setSuccess(null);
-    try {
-      await adminApi.deactivateUser(username);
-      setSuccess(`User ${username} deactivated successfully`);
-      onUserUpdated();
-    } catch (err: any) {
-      setError(err?.data?.detail || err.message || `Failed to deactivate ${username}`);
-    } finally {
-      setUpdatingUser(null);
-    }
-  };
-
-  const handleResetPassword = async (username: string) => {
-    if (!newPassword) return;
-    
-    setUpdatingUser(username);
-    setError(null);
-    setSuccess(null);
-    try {
-      await adminApi.resetUserPassword(username, newPassword);
-      setSuccess(`Password reset for ${username} successfully`);
-      setResettingPasswordFor(null);
-      setNewPassword('');
-    } catch (err: any) {
-      setError(err?.data?.detail || err.message || `Failed to reset password for ${username}`);
-    } finally {
-      setUpdatingUser(null);
-    }
+  const getRoleBadge = (roleId: string) => {
+    const roleDef = allRolesList.find(r => r.id === roleId);
+    if (!roleDef) return { label: roleId, color: 'text-slate-500', bg: 'bg-slate-100', icon: Shield };
+    return {
+      label: roleDef.name,
+      color: roleDef.color,
+      bg: roleDef.bg,
+      icon: roleDef.icon
+    };
   };
 
   return (
-    <Card className="flex flex-col h-full">
-      <CardHeader>
-        <CardTitle>Existing Users</CardTitle>
-      </CardHeader>
-      <CardContent className="flex-1 overflow-auto">
-        {error && <div className="p-3 mb-4 text-sm text-red-600 bg-red-50 rounded-md">{error}</div>}
-        {success && <div className="p-3 mb-4 text-sm text-green-600 bg-green-50 rounded-md">{success}</div>}
+    <div className="space-y-6">
+      {/* Search and Filters Bar */}
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800">
+        <div className="relative flex-1 w-full max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search by username or role..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl">
+            <Filter className="w-3 h-3 text-slate-400" />
+            <span className="text-[10px] font-black uppercase tracking-tight text-slate-500">Filters</span>
+          </div>
+        </div>
+      </div>
 
-        <div className="overflow-x-auto w-full">
-          <table className="w-full text-sm text-left border-collapse min-w-[700px]">
-            <thead className="bg-slate-50 text-slate-700">
-              <tr>
-                <th className="p-3 border-b border-slate-200 font-medium w-auto">Username</th>
-                <th className="p-3 border-b border-slate-200 font-medium w-24">Status</th>
-                <th className="p-3 border-b border-slate-200 font-medium w-40">Role</th>
-                <th className="p-3 border-b border-slate-200 font-medium text-right w-64">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u) => (
-                <tr key={u.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                  <td className="p-3 font-medium">{u.username}</td>
-                  <td className="p-3">
-                    <span className={`px-2 py-1 text-xs rounded-full ${u.is_active ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-700'}`}>
-                      {u.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td className="p-3">
-                    <div className="flex w-32 items-center">
-                      <Select 
-                        value={u.role} 
-                        onValueChange={(val) => handleRoleChange(u.username, val)}
-                        disabled={!u.is_active || updatingUser === u.username}
-                      >
-                        <SelectTrigger className="h-8">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="admin">Admin</SelectItem>
-                          <SelectItem value="approver">Approver</SelectItem>
-                          <SelectItem value="reviewer">Reviewer</SelectItem>
-                          <SelectItem value="viewer">Viewer</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </td>
-                  <td className="p-3 text-right whitespace-nowrap w-64">
-                    <div className="flex items-center justify-end gap-2 flex-nowrap">
-                      {resettingPasswordFor === u.username ? (
-                        <div className="flex items-center gap-2 flex-nowrap">
-                          <input
-                            type="password"
-                            placeholder="New password"
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                            className="h-8 w-32 rounded-md border p-2 text-xs flex-shrink-0"
-                          />
-                          <Button
-                            size="sm"
-                            onClick={() => handleResetPassword(u.username)}
-                            disabled={!newPassword || updatingUser === u.username}
-                            className="flex-shrink-0"
-                          >
-                            Save
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setResettingPasswordFor(null);
-                              setNewPassword('');
-                            }}
-                            className="flex-shrink-0"
-                          >
-                            Cancel
-                          </Button>
+      <Card className="border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden rounded-3xl">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead className="bg-slate-50 dark:bg-slate-900/80">
+                <tr>
+                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Identity Agent</th>
+                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Professional Identity</th>
+                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Security Tier</th>
+                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 text-center">Status</th>
+                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 text-right">Orchestration</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {users.map((user) => {
+                  const badge = getRoleBadge(user.role);
+                  const Icon = badge.icon;
+                  
+                  return (
+                    <tr key={user.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 text-[10px] font-black uppercase">
+                            {user.first_name?.[0] || user.username.slice(0, 1)}{user.last_name?.[0] || user.username.slice(1, 2)}
+                          </div>
+                          <div>
+                            <div className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-tight">
+                              {user.first_name} {user.last_name}
+                            </div>
+                            <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">@{user.username}</div>
+                          </div>
                         </div>
-                      ) : (
-                        <div className="flex items-center gap-2 flex-nowrap">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={!u.is_active || updatingUser === u.username}
-                            onClick={() => setResettingPasswordFor(u.username)}
-                            className="flex-shrink-0"
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                            {user.job_title || 'N/A'}
+                          </div>
+                          <div className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">
+                            {user.email || 'NO_EMAIL@SECURE.INTERNAL'}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className={cn("inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tight", badge.bg, badge.color)}>
+                          <Icon className="w-3 h-3" />
+                          {badge.label}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex justify-center">
+                          <div className={cn(
+                            "flex items-center gap-1.5 px-2.5 py-1 rounded-lg border",
+                            user.status === 'active' 
+                              ? "bg-emerald-500/5 text-emerald-600 border-emerald-500/20" 
+                              : user.status === 'inactive'
+                                ? "bg-amber-500/5 text-amber-600 border-amber-500/20"
+                                : "bg-red-500/5 text-red-600 border-red-500/20"
+                          )}>
+                            {user.status === 'active' ? <UserCheck className="w-3 h-3" /> : user.status === 'inactive' ? <Activity className="w-3 h-3" /> : <ShieldAlert className="w-3 h-3" />}
+                            <span className="text-[9px] font-black uppercase tracking-widest">{user.status || 'Active'}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => onEdit(user)}
+                            className="h-8 px-3 rounded-lg text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10"
                           >
-                            Reset Pwd
+                            <Edit3 className="w-3.5 h-3.5 mr-2" />
+                            <span className="text-[10px] font-black uppercase">Edit</span>
                           </Button>
                           <Button 
-                            variant="outline" 
+                            variant="ghost" 
                             size="sm" 
-                            disabled={!u.is_active || updatingUser === u.username || u.username === 'admin'}
-                            onClick={() => handleDeactivate(u.username)}
-                            className="flex-shrink-0 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                            disabled={user.status !== 'active' || user.username === 'admin'}
+                            onClick={() => onDeactivate(user.username)}
+                            className="h-8 px-3 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-30"
                           >
-                            Deactivate
+                            <UserMinus className="w-3.5 h-3.5 mr-2" />
+                            <span className="text-[10px] font-black uppercase">Revoke</span>
                           </Button>
                         </div>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {users.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="p-4 text-center text-slate-500">
-                    No users found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </CardContent>
-    </Card>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {users.length === 0 && !isLoading && (
+            <div className="p-20 flex flex-col items-center justify-center bg-white dark:bg-slate-950">
+              <Search className="w-10 h-10 text-slate-200 mb-4" />
+              <div className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">No agents found matching criteria</div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };

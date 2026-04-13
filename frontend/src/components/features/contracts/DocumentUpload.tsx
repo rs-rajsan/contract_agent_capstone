@@ -74,9 +74,8 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('model', modelSelection);
 
-      const result = await apiRequest<UploadResult>('/api/documents/upload', {
+      const result = await apiRequest<UploadResult>(`/api/documents/upload?model=${encodeURIComponent(modelSelection)}`, {
         method: 'POST',
         body: formData
       });
@@ -102,7 +101,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       setUploadResult({
         filename: file.name,
         status: 'error',
-        details: error instanceof Error ? error.message : error.data?.detail || 'Upload failed',
+        details: error.data?.user_message || (error instanceof Error ? error.message : error.data?.detail || 'Upload failed'),
         model_used: modelSelection
       });
       clearInterval(pollWorkflow);
