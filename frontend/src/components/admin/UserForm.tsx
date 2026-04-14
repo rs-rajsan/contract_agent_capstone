@@ -158,7 +158,7 @@ export const UserForm: React.FC<UserFormProps> = ({
                       disabled={mode === 'edit'}
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-950 !border !border-mandatory focus:!border-mandatory/80 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-mandatory/10 disabled:bg-slate-50 dark:disabled:bg-slate-900 disabled:text-slate-400 transition-all uppercase"
+                      className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-950 !border !border-mandatory focus:!border-mandatory/80 rounded-lg text-sm font-bold focus:ring-4 focus:ring-mandatory/10 disabled:bg-slate-50 dark:disabled:bg-slate-900 disabled:text-slate-400 transition-all uppercase"
                       placeholder="e.g. AGENT_DOE"
                     />
                   </div>
@@ -174,7 +174,7 @@ export const UserForm: React.FC<UserFormProps> = ({
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className={cn(
-                      "w-full px-4 py-3 bg-white dark:bg-slate-950 !border rounded-2xl text-sm font-bold focus:ring-4 transition-all",
+                      "w-full px-4 py-3 bg-white dark:bg-slate-950 !border rounded-lg text-sm font-bold focus:ring-4 transition-all",
                       mode === 'create' 
                         ? "!border-mandatory focus:!border-mandatory/80 focus:ring-mandatory/10" 
                         : "!border-optional focus:!border-optional/80 focus:ring-optional/10"
@@ -199,7 +199,7 @@ export const UserForm: React.FC<UserFormProps> = ({
                     type="text"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 !border !border-optional focus:!border-optional/80 rounded-xl text-xs font-bold focus:ring-4 focus:ring-optional/10 transition-all"
+                    className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 !border !border-optional focus:!border-optional/80 rounded-lg text-xs font-bold focus:ring-4 focus:ring-optional/10 transition-all"
                     placeholder="John"
                   />
                 </div>
@@ -209,7 +209,7 @@ export const UserForm: React.FC<UserFormProps> = ({
                     type="text"
                     value={middleName}
                     onChange={(e) => setMiddleName(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 !border !border-optional focus:!border-optional/80 rounded-xl text-xs font-bold focus:ring-4 focus:ring-optional/5 transition-all"
+                    className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 !border !border-optional focus:!border-optional/80 rounded-lg text-xs font-bold focus:ring-4 focus:ring-optional/5 transition-all"
                     placeholder="Quincy"
                   />
                 </div>
@@ -219,7 +219,7 @@ export const UserForm: React.FC<UserFormProps> = ({
                     type="text"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 !border !border-optional focus:!border-optional/80 rounded-xl text-xs font-bold focus:ring-4 focus:ring-optional/10 transition-all"
+                    className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 !border !border-optional focus:!border-optional/80 rounded-lg text-xs font-bold focus:ring-4 focus:ring-optional/10 transition-all"
                     placeholder="Doe"
                   />
                 </div>
@@ -235,7 +235,7 @@ export const UserForm: React.FC<UserFormProps> = ({
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 !border !border-optional focus:!border-optional/80 rounded-xl text-xs font-bold focus:ring-4 focus:ring-optional/10 transition-all"
+                className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 !border !border-optional focus:!border-optional/80 rounded-lg text-xs font-bold focus:ring-4 focus:ring-optional/10 transition-all"
                 placeholder="doe@enterprise.com"
               />
             </div>
@@ -248,7 +248,7 @@ export const UserForm: React.FC<UserFormProps> = ({
                 type="tel"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 !border !border-blue-500 focus:!border-blue-600 rounded-xl text-xs font-bold focus:ring-4 focus:ring-blue-500/5 transition-all"
+                className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 !border !border-blue-500 focus:!border-blue-600 rounded-lg text-xs font-bold focus:ring-4 focus:ring-blue-500/5 transition-all"
                 placeholder="+1 555-0123"
               />
             </div>
@@ -262,7 +262,7 @@ export const UserForm: React.FC<UserFormProps> = ({
                 type="text"
                 value={jobTitle}
                 onChange={(e) => setJobTitle(e.target.value)}
-                className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 !border !border-blue-500 focus:!border-blue-600 rounded-xl text-xs font-bold focus:ring-4 focus:ring-blue-500/5 transition-all"
+                className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 !border !border-blue-500 focus:!border-blue-600 rounded-lg text-xs font-bold focus:ring-4 focus:ring-blue-500/5 transition-all"
                 placeholder="Senior Legal Analyst"
               />
             </div>
@@ -275,7 +275,7 @@ export const UserForm: React.FC<UserFormProps> = ({
                 type="text"
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
-                className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 !border !border-blue-500 focus:!border-blue-600 rounded-xl text-xs font-bold focus:ring-4 focus:ring-blue-500/5 transition-all"
+                className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 !border !border-blue-500 focus:!border-blue-600 rounded-lg text-xs font-bold focus:ring-4 focus:ring-blue-500/5 transition-all"
                 placeholder="Legal Operations"
               />
             </div>
@@ -284,7 +284,7 @@ export const UserForm: React.FC<UserFormProps> = ({
             <div className="md:col-span-1 space-y-2">
               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Capability Tier</label>
               <Select value={role} onValueChange={setRole}>
-                <SelectTrigger className="w-full px-4 py-3 bg-white dark:bg-slate-950 !border !border-mandatory focus:!border-mandatory/80 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-mandatory/10 transition-all">
+                <SelectTrigger className="w-full px-4 py-3 bg-white dark:bg-slate-950 !border !border-mandatory focus:!border-mandatory/80 rounded-lg text-sm font-bold focus:ring-4 focus:ring-mandatory/10 transition-all">
                   <SelectValue placeholder="Select functional tier" />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl shadow-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
@@ -309,7 +309,7 @@ export const UserForm: React.FC<UserFormProps> = ({
             <div className="md:col-span-1 space-y-2">
               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Account Status</label>
               <Select value={status} onValueChange={setStatus} disabled={mode === 'create'}>
-                <SelectTrigger className="w-full px-4 py-3 bg-white dark:bg-slate-950 !border !border-optional focus:!border-optional/80 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-optional/10 transition-all">
+                <SelectTrigger className="w-full px-4 py-3 bg-white dark:bg-slate-950 !border !border-optional focus:!border-optional/80 rounded-lg text-sm font-bold focus:ring-4 focus:ring-optional/10 transition-all">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl shadow-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
@@ -336,7 +336,7 @@ export const UserForm: React.FC<UserFormProps> = ({
             </div>
           </div>
 
-          <Button type="submit" disabled={isLoading} className="w-full h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-blue-600/20 transition-all active:scale-95">
+          <Button type="submit" disabled={isLoading} className="w-full h-12 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-blue-600/20 transition-all active:scale-95">
             {isLoading ? (
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />

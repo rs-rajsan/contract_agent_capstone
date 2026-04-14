@@ -47,11 +47,11 @@ export const UserList: React.FC<UserListProps> = ({
             placeholder="Search by username or role..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all"
+            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all"
           />
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg">
             <Filter className="w-3 h-3 text-slate-400" />
             <span className="text-[10px] font-black uppercase tracking-tight text-slate-500">Filters</span>
           </div>
